@@ -1,0 +1,6 @@
+{
+  "_comment": "预留：未来可将 mock 种子数据外置为 JSON。当前 mock 数据由 lib/shared/data/mock_data_source.dart 内置生成。",
+  "centerCity": "Shenzhen Nanshan",
+  "centerLat": 22.5429,
+  "centerLng": 113.9414
+}
