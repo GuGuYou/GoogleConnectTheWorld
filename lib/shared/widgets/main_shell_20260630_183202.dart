@@ -1,0 +1,116 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/l10n/app_text.dart';
+import '../../core/theme/app_colors.dart';
+
+/// 底部 4 Tab 主框架：玻璃拟态导航栏 + 霓虹高亮
+class MainShell extends ConsumerWidget {
+  final StatefulNavigationShell shell;
+  const MainShell({super.key, required this.shell});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = [
+      (_NavItem(Icons.explore_outlined, Icons.explore, ref.tr('tab_discover'))),
+      (_NavItem(Icons.near_me_outlined, Icons.near_me, ref.tr('tab_nearby'))),
+      (_NavItem(Icons.groups_outlined, Icons.groups, ref.tr('tab_groups'))),
+      (_NavItem(Icons.celebration_outlined, Icons.celebration, ref.tr('tab_activity'))),
+      (_NavItem(Icons.person_outline, Icons.person, ref.tr('tab_profile'))),
+    ];
+
+    return Scaffold(
+      extendBody: true,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        switchInCurve: Curves.easeOutCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween(begin: const Offset(0, 0.02), end: Offset.zero).animate(animation),
+            child: child,
+          ),
+        ),
+        child: KeyedSubtree(key: ValueKey(shell.currentIndex), child: shell),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.bg1.withOpacity(0.92),
+          border: const Border(top: BorderSide(color: AppColors.divider)),
+          boxShadow: [
+            BoxShadow(color: AppColors.neonPurple.withOpacity(0.18), blurRadius: 20),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 64,
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  Expanded(
+                    child: _NavButton(
+                      item: items[i],
+                      active: shell.currentIndex == i,
+                      onTap: () => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  _NavItem(this.icon, this.activeIcon, this.label);
+}
+
+class _NavButton extends StatelessWidget {
+  final _NavItem item;
+  final bool active;
+  final VoidCallback onTap;
+  const _NavButton({required this.item, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkResponse(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedScale(
+            scale: active ? 1.18 : 1.0,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutBack,
+            child: ShaderMask(
+              blendMode: BlendMode.srcIn,
+              shaderCallback: (b) => (active
+                      ? AppColors.pinkPurple
+                      : const LinearGradient(
+                          colors: [AppColors.textMuted, AppColors.textMuted]))
+                  .createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
+              child: Icon(active ? item.activeIcon : item.icon, size: 25),
+            ),
+          ),
+          const SizedBox(height: 3),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 220),
+            style: TextStyle(
+              fontSize: 11,
+              color: active ? AppColors.neonPink : AppColors.textMuted,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+            ),
+            child: Text(item.label),
+          ),
+        ],
+      ),
+    );
+  }
+}
