@@ -72,7 +72,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: AppColors.neonGradient,
-                    boxShadow: [BoxShadow(color: AppColors.neonPink.withOpacity(0.5), blurRadius: 30)],
+                    boxShadow: [BoxShadow(color: AppColors.neonPink.withValues(alpha: 0.5), blurRadius: 30)],
                   ),
                   child: const Icon(Icons.hub, size: 48, color: Colors.white),
                 ).animate().scale(duration: 500.ms),

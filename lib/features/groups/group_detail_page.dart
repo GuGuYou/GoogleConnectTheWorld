@@ -158,11 +158,11 @@ class _VoiceRoomCard extends ConsumerWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
-          colors: [AppColors.neonGreen.withOpacity(0.18), AppColors.bg1],
+          colors: [AppColors.neonGreen.withValues(alpha: 0.18), AppColors.bg1],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: AppColors.neonGreen.withOpacity(0.4)),
+        border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

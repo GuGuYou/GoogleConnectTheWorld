@@ -56,7 +56,7 @@ class GuguMascot extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.bg2,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: mood.color.withOpacity(0.5)),
+              border: Border.all(color: mood.color.withValues(alpha: 0.5)),
             ),
             child: Text(bubble!, style: TextStyle(color: mood.color, fontSize: 12, fontWeight: FontWeight.w600)),
           ),
@@ -67,9 +67,9 @@ class GuguMascot extends StatelessWidget {
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: RadialGradient(colors: [mood.color.withOpacity(0.4), AppColors.bg2]),
+            gradient: RadialGradient(colors: [mood.color.withValues(alpha: 0.4), AppColors.bg2]),
             border: Border.all(color: mood.color, width: 2),
-            boxShadow: [BoxShadow(color: mood.color.withOpacity(0.5), blurRadius: 20)],
+            boxShadow: [BoxShadow(color: mood.color.withValues(alpha: 0.5), blurRadius: 20)],
           ),
           alignment: Alignment.center,
           child: Text(

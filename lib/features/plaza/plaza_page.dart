@@ -108,7 +108,7 @@ class _PlazaPageState extends ConsumerState<PlazaPage>
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [_floorTop, _floorTop.withOpacity(0)],
+                  colors: [_floorTop, _floorTop.withValues(alpha: 0)],
                 ),
               ),
             ),
@@ -145,7 +145,7 @@ class _PlazaPageState extends ConsumerState<PlazaPage>
                       Text(
                         'GUGU NET CAFÉ',
                         style: AppTextStyles.caption.copyWith(
-                          color: _gridColor.withOpacity(0.6),
+                          color: _gridColor.withValues(alpha: 0.6),
                           letterSpacing: 3,
                           fontSize: 9,
                         ),
@@ -171,7 +171,7 @@ class _PlazaPageState extends ConsumerState<PlazaPage>
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [_floorTop.withOpacity(0.92), _floorTop.withOpacity(0)],
+                    colors: [_floorTop.withValues(alpha: 0.92), _floorTop.withValues(alpha: 0)],
                   ),
                 ),
                 alignment: Alignment.center,
@@ -179,9 +179,9 @@ class _PlazaPageState extends ConsumerState<PlazaPage>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.06),
+                    color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _gridColor.withOpacity(0.25)),
+                    border: Border.all(color: _gridColor.withValues(alpha: 0.25)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -226,9 +226,9 @@ class _PlazaPageState extends ConsumerState<PlazaPage>
               colors: [Color(0xFF161B33), Color(0xFF0E1226)],
             ),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: screen.withOpacity(0.4)),
+            border: Border.all(color: screen.withValues(alpha: 0.4)),
             boxShadow: [
-              BoxShadow(color: screen.withOpacity(0.25), blurRadius: 30),
+              BoxShadow(color: screen.withValues(alpha: 0.25), blurRadius: 30),
             ],
           ),
           child: Column(
@@ -497,10 +497,10 @@ class _Workstation extends StatelessWidget {
                   colors: [Color(0xFF3A4366), Color(0xFF222A4A)],
                 ),
                 borderRadius: BorderRadius.circular(7),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withValues(alpha: 0.4),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -517,7 +517,7 @@ class _Workstation extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF161B30),
                 borderRadius: BorderRadius.circular(3),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
               ),
             ),
           ),
@@ -563,14 +563,14 @@ class _Monitor extends StatelessWidget {
                 color: const Color(0xFF05060E),
                 border: Border.all(
                   color: lit
-                      ? color.withOpacity(0.8)
-                      : Colors.white.withOpacity(0.08),
+                      ? color.withValues(alpha: 0.8)
+                      : Colors.white.withValues(alpha: 0.08),
                   width: 1.5,
                 ),
                 boxShadow: lit
                     ? [
                         BoxShadow(
-                          color: color.withOpacity(0.55 * intensity),
+                          color: color.withValues(alpha: 0.55 * intensity),
                           blurRadius: 18,
                           spreadRadius: 1,
                         ),
@@ -621,8 +621,8 @@ class _ScreenPainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          color.withOpacity(0.85 * intensity),
-          color.withOpacity(0.25 * intensity),
+          color.withValues(alpha: 0.85 * intensity),
+          color.withValues(alpha: 0.25 * intensity),
           const Color(0xFF06070F),
         ],
         stops: const [0.0, 0.55, 1.0],
@@ -632,7 +632,7 @@ class _ScreenPainter extends CustomPainter {
     // 高光斑
     final glowPaint = Paint()
       ..shader = RadialGradient(
-        colors: [Colors.white.withOpacity(0.35 * intensity), Colors.transparent],
+        colors: [Colors.white.withValues(alpha: 0.35 * intensity), Colors.transparent],
       ).createShader(Rect.fromCircle(
           center: Offset(size.width * 0.32, size.height * 0.32),
           radius: size.width * 0.5));
@@ -640,14 +640,14 @@ class _ScreenPainter extends CustomPainter {
 
     // 扫描线
     final line = Paint()
-      ..color = Colors.black.withOpacity(0.18)
+      ..color = Colors.black.withValues(alpha: 0.18)
       ..strokeWidth = 0.8;
     for (double y = 0; y < size.height; y += 3) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), line);
     }
 
     // 底部"任务栏"亮条
-    final bar = Paint()..color = Colors.white.withOpacity(0.5 * intensity);
+    final bar = Paint()..color = Colors.white.withValues(alpha: 0.5 * intensity);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(4, size.height - 7, size.width * 0.5, 2.5),
@@ -690,7 +690,7 @@ class _SeatedUser extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: isMe
-                      ? [accent.withOpacity(0.9), accent.withOpacity(0.4)]
+                      ? [accent.withValues(alpha: 0.9), accent.withValues(alpha: 0.4)]
                       : const [Color(0xFF2C3358), Color(0xFF1A2038)],
                 ),
                 borderRadius: const BorderRadius.vertical(
@@ -700,7 +700,7 @@ class _SeatedUser extends StatelessWidget {
                 border: Border.all(
                   color: isMe
                       ? accent
-                      : Colors.white.withOpacity(0.08),
+                      : Colors.white.withValues(alpha: 0.08),
                   width: isMe ? 1.5 : 1,
                 ),
               ),
@@ -738,13 +738,13 @@ class _NameTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: highlight
-            ? AppColors.neonPink.withOpacity(0.22)
-            : Colors.white.withOpacity(0.07),
+            ? AppColors.neonPink.withValues(alpha: 0.22)
+            : Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: highlight
               ? AppColors.neonPink
-              : Colors.white.withOpacity(0.12),
+              : Colors.white.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -759,7 +759,7 @@ class _NameTag extends StatelessWidget {
               boxShadow: online
                   ? [
                       BoxShadow(
-                          color: AppColors.neonGreen.withOpacity(0.8),
+                          color: AppColors.neonGreen.withValues(alpha: 0.8),
                           blurRadius: 5)
                     ]
                   : null,
@@ -772,7 +772,7 @@ class _NameTag extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 11,
                 fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -794,17 +794,17 @@ class _NeonSign extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _PlazaPageState._gridColor.withOpacity(0.6)),
+        border: Border.all(color: _PlazaPageState._gridColor.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
-              color: _PlazaPageState._gridColor.withOpacity(0.35),
+              color: _PlazaPageState._gridColor.withValues(alpha: 0.35),
               blurRadius: 24),
-          BoxShadow(color: AppColors.neonPink.withOpacity(0.2), blurRadius: 30),
+          BoxShadow(color: AppColors.neonPink.withValues(alpha: 0.2), blurRadius: 30),
         ],
         gradient: LinearGradient(
           colors: [
-            _PlazaPageState._gridColor.withOpacity(0.10),
-            AppColors.neonPink.withOpacity(0.10),
+            _PlazaPageState._gridColor.withValues(alpha: 0.10),
+            AppColors.neonPink.withValues(alpha: 0.10),
           ],
         ),
       ),
@@ -839,7 +839,7 @@ class _FloorPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = _PlazaPageState._gridColor.withOpacity(0.12)
+      ..color = _PlazaPageState._gridColor.withValues(alpha: 0.12)
       ..strokeWidth = 1;
     final w = size.width;
     final h = size.height;
@@ -855,7 +855,7 @@ class _FloorPainter extends CustomPainter {
 
     // 横向线：间距随高度指数变化，越往下越疏
     final hPaint = Paint()
-      ..color = _PlazaPageState._gridColor.withOpacity(0.08)
+      ..color = _PlazaPageState._gridColor.withValues(alpha: 0.08)
       ..strokeWidth = 1;
     for (int i = 1; i <= 20; i++) {
       final f = i / 20;
@@ -883,9 +883,9 @@ class _GlassIconButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.08),
+          color: Colors.white.withValues(alpha: 0.08),
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.15)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
         ),
         child: Icon(icon, size: 17, color: Colors.white),
       ),
@@ -903,9 +903,9 @@ class _OnlinePill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
+        color: Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.neonGreen.withOpacity(0.4)),
+        border: Border.all(color: AppColors.neonGreen.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -918,7 +918,7 @@ class _OnlinePill extends StatelessWidget {
               color: AppColors.neonGreen,
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.neonGreen.withOpacity(0.8), blurRadius: 6),
+                    color: AppColors.neonGreen.withValues(alpha: 0.8), blurRadius: 6),
               ],
             ),
           ),

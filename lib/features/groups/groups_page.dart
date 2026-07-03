@@ -87,7 +87,7 @@ class _GroupCard extends ConsumerWidget {
               height: 76,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [group.tag.color.withOpacity(0.85), AppColors.bg1],
+                  colors: [group.tag.color.withValues(alpha: 0.85), AppColors.bg1],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),

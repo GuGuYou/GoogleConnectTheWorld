@@ -86,7 +86,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  color: AppColors.bg1.withOpacity(0.5),
+                  color: AppColors.bg1.withValues(alpha: 0.5),
                   child: Row(
                     children: [
                       const Icon(Icons.tag, size: 14, color: AppColors.neonPurple),

@@ -37,7 +37,7 @@ class UserDetailPage extends ConsumerWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [user.tags.first.color.withOpacity(0.7), AppColors.bg0],
+                colors: [user.tags.first.color.withValues(alpha: 0.7), AppColors.bg0],
               ),
             ),
           ),
@@ -157,9 +157,9 @@ class UserDetailPage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.16),
+        color: color.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.6)),
+        border: Border.all(color: color.withValues(alpha: 0.6)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

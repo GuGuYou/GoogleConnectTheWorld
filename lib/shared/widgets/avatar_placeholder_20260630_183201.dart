@@ -51,7 +51,7 @@ class AvatarPlaceholder extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             boxShadow: glow
-                ? [BoxShadow(color: colors.first.withOpacity(0.6), blurRadius: 16)]
+                ? [BoxShadow(color: colors.first.withValues(alpha: 0.6), blurRadius: 16)]
                 : null,
           ),
           padding: EdgeInsets.all(border),
@@ -76,7 +76,7 @@ class AvatarPlaceholder extends StatelessWidget {
                 color: AppColors.neonGreen,
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.bg0, width: 2),
-                boxShadow: [BoxShadow(color: AppColors.neonGreen.withOpacity(0.7), blurRadius: 6)],
+                boxShadow: [BoxShadow(color: AppColors.neonGreen.withValues(alpha: 0.7), blurRadius: 6)],
               ),
             ),
           ),

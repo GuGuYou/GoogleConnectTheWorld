@@ -135,7 +135,7 @@ class DiscoverPage extends ConsumerWidget {
                 decoration: BoxDecoration(
                   gradient: AppColors.pinkPurple,
                   borderRadius: BorderRadius.circular(30),
-                  boxShadow: [BoxShadow(color: AppColors.neonPink.withOpacity(0.5), blurRadius: 18)],
+                  boxShadow: [BoxShadow(color: AppColors.neonPink.withValues(alpha: 0.5), blurRadius: 18)],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -172,7 +172,7 @@ class _TypeChip extends StatelessWidget {
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
-            color: active ? color.withOpacity(0.16) : AppColors.bg2,
+            color: active ? color.withValues(alpha: 0.16) : AppColors.bg2,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: active ? color : AppColors.glassBorder),
           ),
@@ -210,7 +210,7 @@ class _PlazaEntry extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: AppColors.neonPurple.withOpacity(0.35), blurRadius: 22, offset: const Offset(0, 8)),
+            BoxShadow(color: AppColors.neonPurple.withValues(alpha: 0.35), blurRadius: 22, offset: const Offset(0, 8)),
           ],
         ),
         child: Row(
@@ -221,7 +221,7 @@ class _PlazaEntry extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(colors: [Color(0xFF31E6FF), AppColors.neonPink]),
-                boxShadow: [BoxShadow(color: const Color(0xFF31E6FF).withOpacity(0.5), blurRadius: 14)],
+                boxShadow: [BoxShadow(color: const Color(0xFF31E6FF).withValues(alpha: 0.5), blurRadius: 14)],
               ),
               child: const Icon(Icons.sports_esports, color: Colors.white, size: 24),
             ),
@@ -239,7 +239,7 @@ class _PlazaEntry extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.12),
+                color: Colors.white.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_forward, color: Colors.white, size: 16),

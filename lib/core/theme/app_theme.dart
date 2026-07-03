@@ -37,7 +37,7 @@ class AppTheme {
       ),
       dividerColor: AppColors.divider,
       iconTheme: const IconThemeData(color: AppColors.textSecondary),
-      splashColor: AppColors.neonPurple.withOpacity(0.15),
+      splashColor: AppColors.neonPurple.withValues(alpha: 0.15),
       highlightColor: Colors.transparent,
     );
   }

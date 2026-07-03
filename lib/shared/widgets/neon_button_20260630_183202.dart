@@ -57,7 +57,7 @@ class _NeonButtonState extends State<NeonButton> {
             boxShadow: (enabled && !widget.secondary)
                 ? [
                     BoxShadow(
-                      color: AppColors.neonPink.withOpacity(0.32),
+                      color: AppColors.neonPink.withValues(alpha: 0.32),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),

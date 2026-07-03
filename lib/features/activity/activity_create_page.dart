@@ -128,7 +128,7 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
                       child: Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.04),
+                          color: Colors.white.withValues(alpha: 0.04),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -173,7 +173,7 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
         hintText: hint,
         hintStyle: AppTextStyles.caption,
         filled: true,
-        fillColor: Colors.white.withOpacity(0.04),
+        fillColor: Colors.white.withValues(alpha: 0.04),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

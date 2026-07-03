@@ -36,10 +36,10 @@ class MainShell extends ConsumerWidget {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.bg1.withOpacity(0.92),
+          color: AppColors.bg1.withValues(alpha: 0.92),
           border: const Border(top: BorderSide(color: AppColors.divider)),
           boxShadow: [
-            BoxShadow(color: AppColors.neonPurple.withOpacity(0.18), blurRadius: 20),
+            BoxShadow(color: AppColors.neonPurple.withValues(alpha: 0.18), blurRadius: 20),
           ],
         ),
         child: SafeArea(

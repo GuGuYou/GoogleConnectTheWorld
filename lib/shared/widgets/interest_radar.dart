@@ -43,7 +43,7 @@ class _RadarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2 * 0.62;
-    final cats = kTagCategories;
+    const cats = kTagCategories;
     final n = cats.length;
     final angleStep = 2 * math.pi / n;
 
@@ -112,7 +112,7 @@ class _RadarPainter extends CustomPainter {
         path,
         Paint()
           ..style = PaintingStyle.fill
-          ..color = color.withOpacity(0.18));
+          ..color = color.withValues(alpha: 0.18));
     canvas.drawPath(
         path,
         Paint()

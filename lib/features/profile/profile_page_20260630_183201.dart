@@ -73,7 +73,7 @@ class ProfilePage extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: personality.color.withOpacity(0.18),
+                        color: personality.color.withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: personality.color),
                       ),
@@ -113,7 +113,7 @@ class ProfilePage extends ConsumerWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   gradient: AppColors.cyanPurple,
-                  boxShadow: [BoxShadow(color: AppColors.neonPurple.withOpacity(0.35), blurRadius: 18, offset: const Offset(0, 6))],
+                  boxShadow: [BoxShadow(color: AppColors.neonPurple.withValues(alpha: 0.35), blurRadius: 18, offset: const Offset(0, 6))],
                 ),
                 child: Row(
                   children: [
@@ -243,7 +243,7 @@ class _StatusSelector extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppColors.bg2,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _color(current).withOpacity(0.6)),
+          border: Border.all(color: _color(current).withValues(alpha: 0.6)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

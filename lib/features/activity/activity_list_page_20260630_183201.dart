@@ -72,11 +72,11 @@ class ActivityListPage extends ConsumerWidget {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(18),
                               gradient: LinearGradient(
-                                colors: [a.tag.color, a.tag.color.withOpacity(0.7)],
+                                colors: [a.tag.color, a.tag.color.withValues(alpha: 0.7)],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              boxShadow: [BoxShadow(color: a.tag.color.withOpacity(0.3), blurRadius: 16, offset: const Offset(0, 8))],
+                              boxShadow: [BoxShadow(color: a.tag.color.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 8))],
                             ),
                             padding: const EdgeInsets.all(16),
                             child: Column(

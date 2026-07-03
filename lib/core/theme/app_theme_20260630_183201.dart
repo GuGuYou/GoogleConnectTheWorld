@@ -41,7 +41,7 @@ class AppTheme {
       ),
       dividerColor: AppColors.divider,
       iconTheme: const IconThemeData(color: AppColors.textSecondary),
-      splashColor: AppColors.neonPink.withOpacity(0.12),
+      splashColor: AppColors.neonPink.withValues(alpha: 0.12),
       highlightColor: Colors.transparent,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,

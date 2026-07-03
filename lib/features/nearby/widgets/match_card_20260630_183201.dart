@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/l10n/app_text.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/distance.dart';
@@ -20,13 +19,13 @@ class MatchCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [AppColors.bg2, AppColors.bg1],
         ),
         border: Border.all(color: AppColors.glassBorder),
-        boxShadow: [BoxShadow(color: AppColors.neonPurple.withOpacity(0.25), blurRadius: 30)],
+        boxShadow: [BoxShadow(color: AppColors.neonPurple.withValues(alpha: 0.25), blurRadius: 30)],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -41,7 +40,7 @@ class MatchCard extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [u.tags.first.color.withOpacity(0.6), AppColors.bg0],
+                      colors: [u.tags.first.color.withValues(alpha: 0.6), AppColors.bg0],
                     ),
                   ),
                 ),

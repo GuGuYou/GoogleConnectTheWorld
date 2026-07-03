@@ -104,7 +104,7 @@ class _DistanceChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           gradient: active ? AppColors.cyanPurple : null,
-          color: active ? null : Colors.white.withOpacity(0.05),
+          color: active ? null : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: active ? Colors.transparent : AppColors.glassBorder),
         ),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
-import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/mock_data_source.dart';
@@ -112,7 +111,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       style: AppTextStyles.body.copyWith(color: Colors.white),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white.withOpacity(0.04),
+        fillColor: Colors.white.withValues(alpha: 0.04),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       ),
     );

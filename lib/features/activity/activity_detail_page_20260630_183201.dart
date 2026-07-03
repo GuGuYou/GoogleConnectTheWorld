@@ -195,11 +195,11 @@ class _TeamUpBlock extends ConsumerWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
-          colors: [AppColors.neonPink.withOpacity(0.16), AppColors.bg1],
+          colors: [AppColors.neonPink.withValues(alpha: 0.16), AppColors.bg1],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: AppColors.neonPink.withOpacity(0.4)),
+        border: Border.all(color: AppColors.neonPink.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,11 +265,11 @@ class _MemoryBlock extends ConsumerWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
-          colors: [AppColors.neonCyan.withOpacity(0.16), AppColors.bg1],
+          colors: [AppColors.neonCyan.withValues(alpha: 0.16), AppColors.bg1],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: AppColors.neonCyan.withOpacity(0.4)),
+        border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

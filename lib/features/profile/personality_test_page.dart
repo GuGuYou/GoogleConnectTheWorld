@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/l10n/app_text.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -119,9 +118,9 @@ class _PersonalityTestPageState extends ConsumerState<PersonalityTestPage> {
             height: 130,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(colors: [p.color.withOpacity(0.5), AppColors.bg2]),
+              gradient: RadialGradient(colors: [p.color.withValues(alpha: 0.5), AppColors.bg2]),
               border: Border.all(color: p.color, width: 2),
-              boxShadow: [BoxShadow(color: p.color.withOpacity(0.5), blurRadius: 30)],
+              boxShadow: [BoxShadow(color: p.color.withValues(alpha: 0.5), blurRadius: 30)],
             ),
             child: Icon(p.icon, size: 60, color: p.color),
           ).animate().scale(curve: Curves.easeOutBack, duration: 500.ms),

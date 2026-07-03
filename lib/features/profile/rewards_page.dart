@@ -120,7 +120,7 @@ class RewardsPage extends ConsumerWidget {
                       height: 40,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: lv.color.withOpacity(0.18),
+                        color: lv.color.withValues(alpha: 0.18),
                         border: Border.all(color: lv.color),
                       ),
                       child: Icon(lv.icon, color: lv.color, size: 20),
