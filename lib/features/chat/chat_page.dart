@@ -7,6 +7,7 @@ import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
+import '../avatar/widgets/virtual_avatar_view.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
 import '../../shared/widgets/ip_tag_chip.dart';
 import '../../shared/widgets/neon_background.dart';
@@ -63,7 +64,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 child: Row(
                   children: [
                     IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back)),
-                    AvatarPlaceholder(seed: peer.avatarSeed, label: peer.nickname, size: 40, online: peer.online),
+                    peer.virtualAvatar != null
+                        ? VirtualAvatarView(avatar: peer.virtualAvatar!, size: 40, online: peer.online)
+                        : AvatarPlaceholder(seed: peer.avatarSeed, label: peer.nickname, size: 40, online: peer.online),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(

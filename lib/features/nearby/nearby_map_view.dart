@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/mock_data_source.dart';
 import '../../shared/data/repositories.dart';
+import '../avatar/widgets/virtual_avatar_view.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/ip_tag_chip.dart';
@@ -110,7 +111,9 @@ class NearbyMapView extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  AvatarPlaceholder(seed: n.user.avatarSeed, label: n.user.nickname, size: 56, online: n.user.online),
+                  n.user.virtualAvatar != null
+                      ? VirtualAvatarView(avatar: n.user.virtualAvatar!, size: 56, online: n.user.online)
+                      : AvatarPlaceholder(seed: n.user.avatarSeed, label: n.user.nickname, size: 56, online: n.user.online),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

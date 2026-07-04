@@ -1,10 +1,12 @@
 import 'ip_tag.dart';
+import 'virtual_avatar.dart';
 
 /// 用户资料模型
 class UserProfile {
   final String id;
   final String nickname;
   final String avatarSeed; // 用于生成占位头像渐变
+  final VirtualAvatar? virtualAvatar;
   final String bio;
   final List<IpTag> tags;
   final double lat;
@@ -18,6 +20,7 @@ class UserProfile {
     required this.id,
     required this.nickname,
     required this.avatarSeed,
+    this.virtualAvatar,
     required this.bio,
     required this.tags,
     required this.lat,
@@ -32,11 +35,13 @@ class UserProfile {
     String? nickname,
     String? bio,
     List<IpTag>? tags,
+    VirtualAvatar? virtualAvatar,
   }) {
     return UserProfile(
       id: id,
       nickname: nickname ?? this.nickname,
       avatarSeed: avatarSeed,
+      virtualAvatar: virtualAvatar ?? this.virtualAvatar,
       bio: bio ?? this.bio,
       tags: tags ?? this.tags,
       lat: lat,

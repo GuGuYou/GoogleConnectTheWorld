@@ -121,7 +121,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 NeonButton(
                   label: ref.tr('login_btn'),
                   icon: Icons.login,
-                  onPressed: () => context.go('/tag-select'),
+                  onPressed: () => context.go('/avatar-setup'),
                 ),
                 const SizedBox(height: 16),
                 Text(ref.tr('agree_tip'), style: AppTextStyles.caption, textAlign: TextAlign.center),

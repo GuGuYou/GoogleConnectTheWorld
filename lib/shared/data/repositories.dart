@@ -6,9 +6,20 @@ import '../models/feed_post.dart';
 import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
+import '../models/virtual_avatar.dart';
+import 'avatar_generator_repository.dart';
 import 'mock_data_source.dart';
 
 final mockProvider = Provider<MockDataSource>((ref) => MockDataSource.instance);
+
+final avatarGeneratorProvider = Provider<AvatarGeneratorRepository>(
+  (ref) => MockAvatarGeneratorRepository(),
+);
+
+final avatarByUserIdProvider = Provider.family<VirtualAvatar?, String>((ref, userId) {
+  if (userId == 'me') return ref.watch(currentUserProvider).virtualAvatar;
+  return ref.watch(mockProvider).userById(userId).virtualAvatar;
+});
 
 /// 当前登录用户（可编辑：标签、昵称、简介）
 final currentUserProvider =
@@ -25,6 +36,11 @@ class CurrentUserNotifier extends Notifier<UserProfile> {
 
   void updateProfile({String? nickname, String? bio}) {
     state = state.copyWith(nickname: nickname, bio: bio);
+    ref.read(mockProvider).me = state;
+  }
+
+  void updateVirtualAvatar(VirtualAvatar avatar) {
+    state = state.copyWith(virtualAvatar: avatar);
     ref.read(mockProvider).me = state;
   }
 }

@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
+import '../../features/avatar/widgets/virtual_avatar_view.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/gradient_text.dart';
 import '../../shared/widgets/ip_tag_chip.dart';
@@ -40,7 +41,9 @@ class ProfilePage extends ConsumerWidget {
             Center(
               child: Column(
                 children: [
-                  AvatarPlaceholder(seed: me.avatarSeed, label: me.nickname, size: 100, glow: true, online: true),
+                  me.virtualAvatar != null
+                      ? VirtualAvatarView(avatar: me.virtualAvatar!, size: 100, glow: true, online: true)
+                      : AvatarPlaceholder(seed: me.avatarSeed, label: me.nickname, size: 100, glow: true, online: true),
                   const SizedBox(height: 14),
                   GradientText(me.nickname, style: AppTextStyles.h1),
                   const SizedBox(height: 4),

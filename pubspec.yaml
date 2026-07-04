@@ -20,7 +20,7 @@ dependencies:
   go_router: ^14.2.7
 
   # 国际化辅助
-  intl: ^0.19.0
+  intl: ^0.20.2
 
   # 地图
   flutter_map: ^7.0.2
@@ -38,6 +38,9 @@ dependencies:
 
   # 本地存储
   shared_preferences: ^2.3.2
+
+  # 图片选择
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

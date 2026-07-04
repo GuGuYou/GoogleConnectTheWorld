@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/distance.dart';
 import '../../shared/data/repositories.dart';
+import '../avatar/widgets/virtual_avatar_view.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
 import '../../shared/widgets/gradient_text.dart';
 import '../../shared/widgets/ip_tag_chip.dart';
@@ -55,7 +56,9 @@ class UserDetailPage extends ConsumerWidget {
                       Center(
                         child: Column(
                           children: [
-                            AvatarPlaceholder(seed: user.avatarSeed, label: user.nickname, size: 110, glow: true, online: user.online),
+                            user.virtualAvatar != null
+                                ? VirtualAvatarView(avatar: user.virtualAvatar!, size: 110, glow: true, online: user.online)
+                                : AvatarPlaceholder(seed: user.avatarSeed, label: user.nickname, size: 110, glow: true, online: user.online),
                             const SizedBox(height: 14),
                             GradientText(user.nickname, style: AppTextStyles.h1),
                             const SizedBox(height: 6),

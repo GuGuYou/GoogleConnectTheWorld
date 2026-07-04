@@ -7,6 +7,9 @@ import '../../features/activity/activity_detail_page.dart';
 import '../../features/activity/activity_list_page.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/auth/tag_select_page.dart';
+import '../../features/avatar/avatar_ai_generate_page.dart';
+import '../../features/avatar/avatar_customize_page.dart';
+import '../../features/avatar/avatar_setup_page.dart';
 import '../../features/chat/chat_list_page.dart';
 import '../../features/chat/chat_page.dart';
 import '../../features/discover/discover_page.dart';
@@ -30,6 +33,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (c, s) => const SplashPage()),
       GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingPage()),
       GoRoute(path: '/login', builder: (c, s) => const LoginPage()),
+      GoRoute(path: '/avatar-setup', builder: (c, s) => const AvatarSetupPage()),
+      GoRoute(path: '/avatar-customize', builder: (c, s) => const AvatarCustomizePage()),
+      GoRoute(path: '/avatar-ai', builder: (c, s) => const AvatarAiGeneratePage()),
       GoRoute(path: '/tag-select', builder: (c, s) => const TagSelectPage()),
 
       // 主框架：底部 4 Tab
