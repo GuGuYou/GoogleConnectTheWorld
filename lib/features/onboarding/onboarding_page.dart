@@ -115,7 +115,7 @@ class _ObView extends StatelessWidget {
             height: 180,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(colors: [data.color.withOpacity(0.35), Colors.transparent]),
+              gradient: RadialGradient(colors: [data.color.withValues(alpha: 0.35), Colors.transparent]),
             ),
             alignment: Alignment.center,
             child: Icon(data.icon, size: 92, color: data.color)

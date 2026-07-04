@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GuGu · 网咖广场预览</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --floorTop:#0A0D1C; --floorMid:#111634; --floorBottom:#1A2147;
+    --grid:#31E6FF; --pink:#FF7A66; --green:#24C281;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:'Noto Sans SC',system-ui,sans-serif;
+    background:radial-gradient(circle at 50% 20%,#1b2350,#070912 70%);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    padding:24px;gap:46px;flex-wrap:wrap;
+  }
+  .intro{max-width:280px;color:#cdd6f4}
+  .intro .logo{width:52px;height:52px;border-radius:15px;background:linear-gradient(135deg,var(--grid),var(--pink));display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:14px}
+  .intro h1{font-family:'Rajdhani';font-size:30px;font-weight:700;letter-spacing:1px;background:linear-gradient(90deg,var(--grid),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .intro p{color:#8b93b5;font-size:13.5px;margin-top:10px;line-height:1.75}
+  .intro .k{color:#cdd6f4;font-weight:600}
+
+  /* 手机外壳 */
+  .phone{
+    width:392px;height:844px;background:var(--floorTop);border-radius:46px;
+    border:10px solid #05060d;position:relative;overflow:hidden;
+    box-shadow:0 0 0 1px #1e2746,0 40px 90px rgba(0,0,0,.6),0 0 60px rgba(49,230,255,.15);
+  }
+  .notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:130px;height:26px;background:#05060d;border-radius:0 0 16px 16px;z-index:80}
+
+  /* 场景视口 */
+  #viewport{position:absolute;inset:0;overflow:hidden;cursor:grab;
+    background:linear-gradient(180deg,var(--floorTop) 0%,var(--floorMid) 45%,var(--floorBottom) 100%);}
+  #viewport.drag{cursor:grabbing}
+  #scene{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+  #floor{position:absolute;left:0;top:0;z-index:0}
+
+  /* 招牌 */
+  .signwrap{display:flex;justify-content:center;padding-top:92px}
+  .sign{display:inline-flex;align-items:center;gap:10px;padding:10px 22px;border-radius:16px;
+    border:1px solid rgba(49,230,255,.55);
+    background:linear-gradient(90deg,rgba(49,230,255,.12),rgba(255,122,102,.12));
+    box-shadow:0 0 24px rgba(49,230,255,.35),0 0 30px rgba(255,122,102,.2);}
+  .sign .ic{font-size:20px}
+  .sign .tx{font-family:'Rajdhani';font-weight:700;font-size:18px;letter-spacing:2px;
+    background:linear-gradient(90deg,var(--grid),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* 工位网格 */
+  .grid{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:22px 20px 80px;max-width:680px;margin:0 auto}
+  .ws{width:150px;height:172px;position:relative;cursor:pointer}
+  .ws:active{transform:scale(.97)}
+
+  .nametag{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:6;
+    display:flex;align-items:center;gap:5px;max-width:128px;
+    padding:4px 9px;border-radius:12px;background:rgba(255,255,255,.07);
+    border:1px solid rgba(255,255,255,.12);white-space:nowrap;overflow:hidden}
+  .nametag.me{background:rgba(255,122,102,.22);border-color:var(--pink)}
+  .nametag .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .nametag .nm{font-size:11px;color:rgba(255,255,255,.9);overflow:hidden;text-overflow:ellipsis}
+  .nametag.me .nm{font-weight:700}
+
+  .desk{position:absolute;top:70px;left:16px;right:16px;height:34px;border-radius:7px;
+    background:linear-gradient(180deg,#3A4366,#222A4A);border:1px solid rgba(255,255,255,.06);
+    box-shadow:0 4px 8px rgba(0,0,0,.4)}
+  .keyboard{position:absolute;top:78px;left:50%;transform:translateX(-50%);width:56px;height:12px;
+    border-radius:3px;background:#161B30;border:1px solid rgba(255,255,255,.08)}
+
+  .monitor{position:absolute;top:26px;left:50%;transform:translateX(-50%);z-index:4;display:flex;flex-direction:column;align-items:center}
+  .screen{width:64px;height:42px;border-radius:6px;background:#05060E;border:1.5px solid rgba(255,255,255,.08);overflow:hidden;position:relative}
+  .screen.lit{animation:breathe 2.2s ease-in-out infinite}
+  .screen .glow{position:absolute;inset:0;opacity:0}
+  .screen.lit .glow{opacity:1}
+  .screen .scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 0.8px,transparent 0.8px 3px)}
+  .screen .bar{position:absolute;left:4px;bottom:5px;width:50%;height:2.5px;border-radius:1px;background:rgba(255,255,255,.5)}
+  .stand{width:6px;height:6px;background:#2A3152}
+  .base{width:22px;height:3px;border-radius:2px;background:#2A3152}
+  @keyframes breathe{0%,100%{filter:brightness(.8)}50%{filter:brightness(1.25)}}
+
+  .seat{position:absolute;top:104px;left:50%;transform:translateX(-50%);width:64px;height:62px;z-index:5}
+  .chair{position:absolute;top:22px;left:50%;transform:translateX(-50%);width:50px;height:40px;
+    border-radius:20px 20px 8px 8px;background:linear-gradient(180deg,#2C3358,#1A2038);border:1px solid rgba(255,255,255,.08)}
+  .chair.me{border-width:1.5px}
+  .head{position:absolute;top:0;left:50%;transform:translateX(-50%);width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px;
+    border:2px solid;z-index:2}
+  .head .online{position:absolute;right:0;bottom:0;width:10px;height:10px;border-radius:50%;background:var(--green);border:2px solid var(--floorMid)}
+
+  /* HUD */
+  .hud{position:absolute;top:0;left:0;right:0;z-index:50;padding:46px 14px 0;
+    background:linear-gradient(180deg,var(--floorTop) 30%,transparent);pointer-events:none}
+  .hud .row{display:flex;align-items:center;gap:10px;pointer-events:auto}
+  .iconbtn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer}
+  .title{font-family:'Rajdhani';font-weight:700;font-size:21px;letter-spacing:1px;
+    background:linear-gradient(90deg,var(--grid),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1}
+  .subtitle{font-family:'Rajdhani';font-size:9px;letter-spacing:3px;color:rgba(49,230,255,.6)}
+  .onlinepill{margin-left:auto;display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:20px;
+    background:rgba(255,255,255,.07);border:1px solid rgba(36,194,129,.4);color:#fff;font-size:12px;font-weight:600}
+  .onlinepill .d{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+
+  .hint{position:absolute;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:center;
+    padding:0 0 26px;background:linear-gradient(0deg,var(--floorTop) 40%,transparent);pointer-events:none}
+  .hint .box{margin-top:30px;padding:9px 16px;border-radius:20px;background:rgba(255,255,255,.06);
+    border:1px solid rgba(49,230,255,.25);color:rgba(255,255,255,.75);font-size:12px;display:flex;align-items:center;gap:7px}
+
+  /* 资料卡 */
+  .scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:90;animation:fade .2s}
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:95;margin:16px;border-radius:22px;padding:18px;
+    background:linear-gradient(135deg,#161B33,#0E1226);animation:up .28s ease}
+  @keyframes up{from{transform:translateY(120%)}to{transform:none}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .sheet .top{display:flex;align-items:center;gap:12px}
+  .sheet .bighead{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:22px;border:2px solid #fff;flex-shrink:0;position:relative}
+  .sheet .nm{font-size:17px;font-weight:600;color:#fff;display:flex;align-items:center;gap:6px}
+  .sheet .meta{display:flex;align-items:center;gap:9px;margin-top:3px;font-size:12px;color:#fff9}
+  .sheet .meta .mr{color:var(--pink)}
+  .sheet .lbl{display:flex;align-items:center;gap:6px;margin-top:14px;font-size:12px;color:#fff8}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .tag{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:16px;font-size:12px;font-weight:600}
+  .btns{display:flex;gap:12px;margin-top:18px}
+  .btn{flex:1;padding:13px;border:none;border-radius:14px;font-weight:700;font-size:14px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+  .btn.primary{background:linear-gradient(90deg,#FF8A5B,#FF5E8A);box-shadow:0 6px 18px rgba(255,94,138,.35)}
+  .btn.ghost{background:rgba(255,255,255,.06);border:1px solid var(--grid)}
+  .toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:120;
+    background:rgba(20,24,48,.95);border:1px solid var(--grid);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;opacity:0;transition:.3s}
+  .toast.show{opacity:1;bottom:140px}
+  @media(max-width:860px){.intro{display:none}}
+</style>
+</head>
+<body>
+  <div class="intro">
+    <div class="logo">🎮</div>
+    <h1>网咖广场</h1>
+    <p>这是 Flutter 工程里「网咖广场」的<span class="k">网页高保真预览</span>。参考 Gather / Marvis 的 2D 虚拟空间：</p>
+    <p>· <span class="k">拖动</span>空白处可平移逛网咖<br>· <span class="k">滚轮</span>缩放场景<br>· <span class="k">点击工位</span>查看 ta 的资料并打招呼<br>· 屏幕被各自正在玩的 IP 点亮，在线=亮屏在玩</p>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+    <div id="viewport">
+      <canvas id="floor"></canvas>
+      <div id="scene"></div>
+    </div>
+
+    <div class="hud">
+      <div class="row">
+        <div class="iconbtn" title="返回">‹</div>
+        <div>
+          <div class="title">网咖广场</div>
+          <div class="subtitle">GUGU NET CAFÉ</div>
+        </div>
+        <div class="onlinepill"><span class="d"></span><span id="onlineCount">0 人在线</span></div>
+      </div>
+    </div>
+
+    <div class="hint"><div class="box">👆 拖动逛网咖 · 点击工位打招呼</div></div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+<script>
+/* ===== 数据（对齐 Flutter mock 配色/标签） ===== */
+const CAT={game:'#12B5C9',anime:'#FF7A66',drama:'#6C8CFF',comic:'#FFB23E',music:'#24C281'};
+const TAGS=[
+ {nm:'原神',cat:'game'},{nm:'英雄联盟',cat:'game'},{nm:'塞尔达',cat:'game'},
+ {nm:'艾尔登法环',cat:'game'},{nm:'动物森友会',cat:'game'},
+ {nm:'咒术回战',cat:'anime'},{nm:'海贼王',cat:'anime'},{nm:'鬼灭之刃',cat:'anime'},
+ {nm:'怪奇物语',cat:'drama'},{nm:'最后生还者',cat:'drama'},
+ {nm:'蜘蛛侠',cat:'comic'},{nm:'电子音乐',cat:'music'},{nm:'说唱',cat:'music'}
+];
+const NAMES=['AuroraByte','PixelFox','NovaRin','GlitchKoi','EchoMira','ZephyrAce','LunaVolt','CipherJin','NeonOtaku','VividHana','SaberLily','ByteMochi','RaiDenki','MistyQu','KuroNeko','SoraWave','HikariX','ChronoMei','IrisGlow','TankaShu','VelvetRei','OrbitYuki','CrimsonAo'];
+const STATUS=['在线','空闲','请勿打扰','活动中'];
+const PAL=[['#FF7A66','#6C8CFF'],['#12B5C9','#6C8CFF'],['#6C8CFF','#FF7A66'],['#12B5C9','#24C281'],['#FFB23E','#FF7A66'],['#24C281','#12B5C9']];
+
+function rnd(seed){let x=Math.sin(seed)*10000;return x-Math.floor(x);}
+function buildUsers(){
+  const arr=[];
+  // 我
+  arr.push({id:'me',nm:'YOU',me:true,online:true,status:'在线',
+    tags:[TAGS[0],TAGS[3],TAGS[5]],match:100,verified:true});
+  for(let i=0;i<NAMES.length;i++){
+    const r=rnd(i+1);
+    const tcount=2+Math.floor(rnd(i+7)*3);
+    const tags=[];const used=new Set();
+    for(let k=0;k<tcount;k++){const ti=Math.floor(rnd(i*3+k+1)*TAGS.length);if(!used.has(ti)){used.add(ti);tags.push(TAGS[ti]);}}
+    const online=r>0.32;
+    arr.push({id:'u'+i,nm:NAMES[i],me:false,online,
+      status:online?STATUS[Math.floor(rnd(i+2)*4)]:'离线',
+      tags:tags.length?tags:[TAGS[i%TAGS.length]],
+      match:12+Math.floor(rnd(i+5)*87),
+      verified:rnd(i+9)>0.75,
+      age:18+Math.floor(rnd(i+11)*12)});
+  }
+  // 按匹配度排序（我固定第一）
+  const me=arr.shift();
+  arr.sort((a,b)=>b.match-a.match);
+  return [me,...arr];
+}
+const USERS=buildUsers();
+function palOf(id){let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))>>>0;return PAL[h%PAL.length];}
+
+/* ===== 渲染工位 ===== */
+function wsHTML(u){
+  const tag=u.tags[0];const screen=CAT[tag.cat];const lit=u.online;
+  const p=palOf(u.id);const init=u.nm[0].toUpperCase();
+  return `<div class="ws" data-id="${u.id}">
+    <div class="nametag ${u.me?'me':''}">
+      <span class="dot" style="background:${u.online?'var(--green)':'#98A1B6'};${u.online?'box-shadow:0 0 5px var(--green)':''}"></span>
+      <span class="nm">${u.nm}</span>
+    </div>
+    <div class="monitor">
+      <div class="screen ${lit?'lit':''}" style="${lit?'border-color:'+screen+'cc;box-shadow:0 0 16px '+screen+'88':''}">
+        <div class="glow" style="background:linear-gradient(180deg,${screen}dd,${screen}40 55%,#06070f)"></div>
+        <div class="scan"></div>
+        ${lit?'<div class="bar"></div>':''}
+      </div>
+      <div class="stand"></div><div class="base"></div>
+    </div>
+    <div class="desk"></div>
+    <div class="keyboard"></div>
+    <div class="seat">
+      <div class="chair ${u.me?'me':''}" style="${u.me?'background:linear-gradient(180deg,'+screen+'e6,'+screen+'66);border-color:'+screen:''}"></div>
+      <div class="head" style="background:linear-gradient(135deg,${p[0]},${p[1]});border-color:${u.me?screen:'rgba(255,255,255,.5)'}">${init}${u.online?'<span class="online"></span>':''}</div>
+    </div>
+  </div>`;
+}
+
+const scene=document.getElementById('scene');
+scene.innerHTML=`<div class="signwrap"><div class="sign"><span class="ic">🎮</span><span class="tx">GUGU · NET CAFÉ</span></div></div>
+  <div class="grid">${USERS.map(wsHTML).join('')}</div>`;
+
+document.getElementById('onlineCount').textContent=USERS.filter(u=>u.online).length+' 人在线';
+
+/* ===== 地板透视网格 ===== */
+function drawFloor(){
+  const c=document.getElementById('floor');
+  const w=scene.offsetWidth||392, h=scene.offsetHeight||900;
+  c.width=w;c.height=h;
+  const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle='rgba(49,230,255,.12)';ctx.lineWidth=1;
+  const vpx=w/2, vpy=-h*0.35, lines=14;
+  for(let i=0;i<=lines;i++){const x=w*i/lines;ctx.beginPath();ctx.moveTo(x,h);ctx.lineTo(vpx,vpy);ctx.stroke();}
+  ctx.strokeStyle='rgba(49,230,255,.08)';
+  for(let i=1;i<=20;i++){const f=i/20;const y=h*(1-Math.pow(1-f,2.2));ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+}
+
+/* ===== 平移 + 缩放 ===== */
+const vp=document.getElementById('viewport');
+let scale=1, tx=0, ty=0, dragging=false, sx=0, sy=0, moved=0;
+function fit(){
+  const vw=vp.clientWidth;
+  scale=Math.min(1, vw/(scene.offsetWidth||392));
+  tx=(vw-(scene.offsetWidth||392)*scale)/2; ty=0;
+  apply();
+}
+function apply(){scene.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;}
+function clamp(){
+  const vw=vp.clientWidth, vh=vp.clientHeight;
+  const sw=(scene.offsetWidth||392)*scale, sh=(scene.offsetHeight||900)*scale;
+  const m=120;
+  tx=Math.min(m, Math.max(vw-sw-m, tx));
+  ty=Math.min(m, Math.max(vh-sh-m, ty));
+}
+vp.addEventListener('pointerdown',e=>{dragging=true;moved=0;sx=e.clientX-tx;sy=e.clientY-ty;vp.classList.add('drag');vp.setPointerCapture(e.pointerId);});
+vp.addEventListener('pointermove',e=>{if(!dragging)return;const nx=e.clientX-sx,ny=e.clientY-sy;moved+=Math.abs(nx-tx)+Math.abs(ny-ty);tx=nx;ty=ny;clamp();apply();});
+vp.addEventListener('pointerup',e=>{dragging=false;vp.classList.remove('drag');});
+vp.addEventListener('wheel',e=>{e.preventDefault();const old=scale;scale=Math.min(2.4,Math.max(0.35,scale*(e.deltaY<0?1.1:0.9)));
+  const rect=vp.getBoundingClientRect();const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  tx=mx-(mx-tx)*(scale/old);ty=my-(my-ty)*(scale/old);clamp();apply();},{passive:false});
+
+/* ===== 点击工位 ===== */
+scene.addEventListener('click',e=>{
+  if(moved>6)return; // 拖动时不触发
+  const ws=e.target.closest('.ws');if(!ws)return;
+  const u=USERS.find(x=>x.id===ws.dataset.id);if(!u||u.me)return;
+  openSheet(u);
+});
+function openSheet(u){
+  closeSheet();
+  const screen=CAT[u.tags[0].cat];const p=palOf(u.id);const init=u.nm[0].toUpperCase();
+  const scrim=document.createElement('div');scrim.className='scrim';scrim.onclick=closeSheet;
+  const sheet=document.createElement('div');sheet.className='sheet';sheet.style.border='1px solid '+screen+'66';sheet.style.boxShadow='0 0 30px '+screen+'40';
+  const tagsHTML=u.tags.slice(0,4).map(t=>`<span class="tag" style="background:${CAT[t.cat]}22;border:1px solid ${CAT[t.cat]};color:${CAT[t.cat]}">${t.nm}</span>`).join('');
+  sheet.innerHTML=`
+    <div class="top">
+      <div class="bighead" style="background:linear-gradient(135deg,${p[0]},${p[1]});box-shadow:0 0 16px ${p[0]}99">${init}${u.online?'<span class="online" style="position:absolute;right:2px;bottom:2px;width:12px;height:12px;border-radius:50%;background:var(--green);border:2px solid #161B33"></span>':''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="nm">${u.nm}${u.verified?' <span style="color:var(--grid);font-size:15px">✔</span>':''}</div>
+        <div class="meta">
+          <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:${u.online?'var(--green)':'#98A1B6'}"></span>${u.status}</span>
+          <span class="mr">匹配度 ${u.match}%</span>
+        </div>
+      </div>
+    </div>
+    <div class="lbl">🎮 正在玩</div>
+    <div class="tags">${tagsHTML}</div>
+    <div class="btns">
+      <button class="btn primary" id="sayhi">👋 打招呼</button>
+      <button class="btn ghost" id="visit">查看主页</button>
+    </div>`;
+  vp.parentElement.appendChild(scrim);vp.parentElement.appendChild(sheet);
+  window._sheet=[scrim,sheet];
+  sheet.querySelector('#sayhi').onclick=()=>{closeSheet();toast('已向 '+u.nm+' 打招呼 👋');};
+  sheet.querySelector('#visit').onclick=()=>{closeSheet();toast('打开 '+u.nm+' 的主页（演示）');};
+}
+function closeSheet(){if(window._sheet){window._sheet.forEach(e=>e.remove());window._sheet=null;}}
+let toastT;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),1800);}
+
+/* init */
+requestAnimationFrame(()=>{drawFloor();fit();});
+window.addEventListener('resize',()=>{drawFloor();fit();});
+</script>
+</body>
+</html>

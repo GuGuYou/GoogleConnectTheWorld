@@ -27,7 +27,7 @@ class AboutPage extends ConsumerWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: AppColors.neonGradient,
-                    boxShadow: [BoxShadow(color: AppColors.neonPurple.withOpacity(0.5), blurRadius: 30)],
+                    boxShadow: [BoxShadow(color: AppColors.neonPurple.withValues(alpha: 0.5), blurRadius: 30)],
                   ),
                   child: const Icon(Icons.hub, size: 48, color: Colors.white),
                 ),

@@ -33,14 +33,14 @@ class IpTagChip extends ConsumerWidget {
           vertical: small ? 4 : 7,
         ),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.22) : Colors.white.withOpacity(0.04),
+          color: selected ? color.withValues(alpha: 0.22) : Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: selected ? color : color.withOpacity(0.35),
+            color: selected ? color : color.withValues(alpha: 0.35),
             width: selected ? 1.4 : 1,
           ),
           boxShadow: selected
-              ? [BoxShadow(color: color.withOpacity(0.5), blurRadius: 12)]
+              ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 12)]
               : null,
         ),
         child: Row(

@@ -47,14 +47,14 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                     height: 150,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: SweepGradient(colors: [
+                      gradient: const SweepGradient(colors: [
                         AppColors.neonPink,
                         AppColors.neonPurple,
                         AppColors.neonCyan,
                         AppColors.neonPink,
                       ]),
                       boxShadow: [
-                        BoxShadow(color: AppColors.neonPurple.withOpacity(0.6), blurRadius: 40),
+                        BoxShadow(color: AppColors.neonPurple.withValues(alpha: 0.6), blurRadius: 40),
                       ],
                     ),
                   )

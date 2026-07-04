@@ -1,0 +1,53 @@
+name: g_interest_social
+description: "LBS + IP 标签兴趣社交 App 高保真原型（Cyber Neon 风格）"
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # 状态管理
+  flutter_riverpod: ^2.5.1
+
+  # 路由
+  go_router: ^14.2.7
+
+  # 国际化辅助
+  intl: ^0.19.0
+
+  # 地图
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+
+  # 动效
+  flutter_animate: ^4.5.0
+
+  # UI
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+
+  # 卡片滑动
+  flutter_card_swiper: ^7.0.2
+
+  # 本地存储
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/data/
+    - assets/avatars/

@@ -16,17 +16,17 @@ class NeonBackground extends StatelessWidget {
           Positioned(
             top: -120,
             right: -80,
-            child: _blob(AppColors.neonPink.withOpacity(0.30), 260),
+            child: _blob(AppColors.neonPink.withValues(alpha: 0.30), 260),
           ),
           Positioned(
             bottom: -100,
             left: -90,
-            child: _blob(AppColors.neonCyan.withOpacity(0.22), 240),
+            child: _blob(AppColors.neonCyan.withValues(alpha: 0.22), 240),
           ),
           Positioned(
             top: 240,
             left: -60,
-            child: _blob(AppColors.neonPurple.withOpacity(0.20), 200),
+            child: _blob(AppColors.neonPurple.withValues(alpha: 0.20), 200),
           ),
           child,
         ],
@@ -40,7 +40,7 @@ class NeonBackground extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: RadialGradient(colors: [color, color.withOpacity(0)]),
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
       ),
     );
   }

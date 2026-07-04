@@ -30,7 +30,7 @@ class NearbyMapView extends ConsumerWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: FlutterMap(
-          options: MapOptions(
+          options: const MapOptions(
             initialCenter: LatLng(MockDataSource.centerLat, MockDataSource.centerLng),
             initialZoom: 13,
             minZoom: 10,
@@ -52,12 +52,12 @@ class NearbyMapView extends ConsumerWidget {
               ),
             ),
             // 当前用户
-            MarkerLayer(markers: [
+            const MarkerLayer(markers: [
               Marker(
                 point: LatLng(MockDataSource.centerLat, MockDataSource.centerLng),
                 width: 28,
                 height: 28,
-                child: const _MeDot(),
+                child: _MeDot(),
               ),
             ]),
             // 附近用户
@@ -151,7 +151,7 @@ class _MeDot extends StatelessWidget {
         shape: BoxShape.circle,
         color: AppColors.neonCyan,
         border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [BoxShadow(color: AppColors.neonCyan.withOpacity(0.8), blurRadius: 18)],
+        boxShadow: [BoxShadow(color: AppColors.neonCyan.withValues(alpha: 0.8), blurRadius: 18)],
       ),
     );
   }
@@ -165,9 +165,9 @@ class _UserDot extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withOpacity(0.9),
+        color: color.withValues(alpha: 0.9),
         border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.7), blurRadius: 12)],
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.7), blurRadius: 12)],
       ),
       child: const Icon(Icons.person, size: 16, color: Colors.white),
     );
@@ -185,7 +185,7 @@ class _ActivityPin extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(4),
-          boxShadow: [BoxShadow(color: color.withOpacity(0.7), blurRadius: 12)],
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.7), blurRadius: 12)],
         ),
         child: Transform.rotate(
           angle: -0.785398,

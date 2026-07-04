@@ -79,7 +79,7 @@ class _Toggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.06),
+        color: Colors.white.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -171,7 +171,7 @@ class _SwipeDeck extends ConsumerWidget {
           shape: BoxShape.circle,
           color: AppColors.bg2,
           border: Border.all(color: color, width: 2),
-          boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 14)],
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 14)],
         ),
         child: Icon(icon, color: color, size: big ? 30 : 24),
       ),

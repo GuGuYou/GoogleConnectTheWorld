@@ -32,14 +32,14 @@ class ActivityCard extends StatelessWidget {
               height: 120,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [activity.tag.color.withOpacity(0.7), AppColors.bg2],
+                  colors: [activity.tag.color.withValues(alpha: 0.7), AppColors.bg2],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
               child: Stack(
                 children: [
-                  Center(child: Icon(activity.tag.icon, size: 46, color: Colors.white.withOpacity(0.6))),
+                  Center(child: Icon(activity.tag.icon, size: 46, color: Colors.white.withValues(alpha: 0.6))),
                   Positioned(top: 10, left: 10, child: IpTagChip(tag: activity.tag, small: true)),
                   if (activity.joined)
                     Positioned(

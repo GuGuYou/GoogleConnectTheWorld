@@ -46,7 +46,7 @@ class AvatarPlaceholder extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             boxShadow: glow
-                ? [BoxShadow(color: colors.first.withOpacity(0.6), blurRadius: 16)]
+                ? [BoxShadow(color: colors.first.withValues(alpha: 0.6), blurRadius: 16)]
                 : null,
           ),
           alignment: Alignment.center,
