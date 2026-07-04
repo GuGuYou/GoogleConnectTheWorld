@@ -3,15 +3,16 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
-/// 全局主题：深色赛博霓虹
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get dark {
-    final base = ThemeData.dark(useMaterial3: true);
+  static ThemeData get dark => light;
+
+  static ThemeData get light {
+    final base = ThemeData.light(useMaterial3: true);
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.bg0,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: AppColors.neonPink,
         secondary: AppColors.neonCyan,
         tertiary: AppColors.neonPurple,
@@ -19,26 +20,44 @@ class AppTheme {
         onPrimary: Colors.white,
         onSurface: AppColors.textPrimary,
       ),
-      textTheme: GoogleFonts.notoSansScTextTheme(base.textTheme).apply(
+      textTheme: GoogleFonts.nunitoTextTheme(base.textTheme).apply(
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.rajdhani(
+        titleTextStyle: GoogleFonts.baloo2(
           fontSize: 22,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
           color: AppColors.textPrimary,
-          letterSpacing: 0.5,
         ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       dividerColor: AppColors.divider,
       iconTheme: const IconThemeData(color: AppColors.textSecondary),
-      splashColor: AppColors.neonPurple.withOpacity(0.15),
+      splashColor: AppColors.neonPink.withValues(alpha: 0.12),
       highlightColor: Colors.transparent,
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.bg2,
+        hintStyle: GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.divider),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.neonPink, width: 1.5),
+        ),
+      ),
     );
   }
 }

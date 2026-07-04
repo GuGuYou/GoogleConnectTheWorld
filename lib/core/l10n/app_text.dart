@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/locale_provider.dart';
@@ -74,6 +73,7 @@ class AppText {
       'avatar_ai_failed': '无法根据这张图片生成形象，请换一张清晰照片。',
       'avatar_ai_generate': '根据照片生成 Mock 形象',
       'avatar_ai_generating': '生成中…',
+      'avatar_recreate': '重新创建角色',
       // 标签选择
       'tag_select_title': '选择你的兴趣',
       'tag_select_desc': '至少选择 3 个，我们将为你匹配同好',
@@ -202,6 +202,7 @@ class AppText {
       'avatar_ai_failed': 'Cannot generate an avatar from this image. Try a clearer photo.',
       'avatar_ai_generate': 'Generate Mock Avatar from Photo',
       'avatar_ai_generating': 'Generating…',
+      'avatar_recreate': 'Recreate Avatar',
       'tag_select_title': 'Pick Your Interests',
       'tag_select_desc': 'Choose at least 3, we will match you with fans',
       'tag_selected': 'Selected',

@@ -19,7 +19,7 @@ class MessageBubble extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 12),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.bg2.withOpacity(0.7),
+            color: AppColors.bg2.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text('✨ ${AppText.get('zh', 'matched_tip')}', style: AppTextStyles.caption),
@@ -33,7 +33,7 @@ class MessageBubble extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         gradient: me ? AppColors.pinkPurple : null,
-        color: me ? null : Colors.white.withOpacity(0.07),
+        color: me ? null : Colors.white.withValues(alpha: 0.07),
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(16),
           topRight: const Radius.circular(16),

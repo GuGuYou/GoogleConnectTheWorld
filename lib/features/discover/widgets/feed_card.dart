@@ -54,7 +54,7 @@ class FeedCard extends StatelessWidget {
                 const SizedBox(width: 20),
                 _stat(Icons.chat_bubble_outline, post.comments),
                 const Spacer(),
-                Icon(Icons.bookmark_border, size: 18, color: AppColors.textMuted),
+                const Icon(Icons.bookmark_border, size: 18, color: AppColors.textMuted),
               ],
             ),
           ],
@@ -94,12 +94,12 @@ class _ImageGrid extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   gradient: LinearGradient(
-                    colors: [tagColor.withOpacity(0.5), AppColors.bg2],
+                    colors: [tagColor.withValues(alpha: 0.5), AppColors.bg2],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: Icon(Icons.image_outlined, color: Colors.white.withOpacity(0.4)),
+                child: Icon(Icons.image_outlined, color: Colors.white.withValues(alpha: 0.4)),
               ),
             ),
             if (i != n - 1) const SizedBox(width: 8),

@@ -14,7 +14,8 @@ import '../../shared/widgets/neon_button.dart';
 import 'widgets/virtual_avatar_view.dart';
 
 class AvatarCustomizePage extends ConsumerWidget {
-  const AvatarCustomizePage({super.key});
+  final String returnLocation;
+  const AvatarCustomizePage({super.key, this.returnLocation = '/tag-select'});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -60,7 +61,7 @@ class AvatarCustomizePage extends ConsumerWidget {
                 icon: Icons.check,
                 onPressed: () {
                   ref.read(currentUserProvider.notifier).updateVirtualAvatar(avatar);
-                  context.go('/tag-select');
+                  context.go(returnLocation);
                 },
               ),
             ],
@@ -88,7 +89,7 @@ class _StyleSegment extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           gradient: active ? AppColors.cyanPurple : null,
-          color: active ? null : Colors.white.withOpacity(0.05),
+          color: active ? null : Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: active ? Colors.transparent : AppColors.glassBorder),
         ),
@@ -129,7 +130,7 @@ class _Selector extends StatelessWidget {
                           height: 40,
                           decoration: BoxDecoration(
                             gradient: value == i ? AppColors.pinkPurple : null,
-                            color: value == i ? null : Colors.white.withOpacity(0.06),
+                            color: value == i ? null : Colors.white.withValues(alpha: 0.06),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: value == i ? Colors.transparent : AppColors.glassBorder),
                           ),

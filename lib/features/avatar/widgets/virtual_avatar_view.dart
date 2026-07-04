@@ -39,8 +39,8 @@ class VirtualAvatarView extends StatelessWidget {
             shape: avatar.style == AvatarVisualStyle.pixel ? BoxShape.rectangle : BoxShape.circle,
             borderRadius: avatar.style == AvatarVisualStyle.pixel ? BorderRadius.circular(size * 0.18) : null,
             color: colors.last,
-            boxShadow: glow ? [BoxShadow(color: colors.first.withOpacity(0.55), blurRadius: 18)] : null,
-            border: Border.all(color: Colors.white.withOpacity(0.18), width: 2),
+            boxShadow: glow ? [BoxShadow(color: colors.first.withValues(alpha: 0.55), blurRadius: 18)] : null,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 2),
           ),
           clipBehavior: Clip.antiAlias,
           child: CustomPaint(
@@ -87,7 +87,7 @@ class _CuteAvatarPainter extends CustomPainter {
     );
     canvas.drawOval(faceRect, face);
 
-    final hair = Paint()..color = colors.first.withOpacity(0.95);
+    final hair = Paint()..color = colors.first.withValues(alpha: 0.95);
     canvas.drawArc(faceRect.translate(0, -size.height * 0.1), 3.15, 3.14, true, hair);
     if (avatar.accessoryIndex == 1) {
       final bow = Paint()..color = AppColors.neonPink;

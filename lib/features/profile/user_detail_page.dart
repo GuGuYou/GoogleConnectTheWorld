@@ -37,7 +37,7 @@ class UserDetailPage extends ConsumerWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [user.tags.first.color.withOpacity(0.7), AppColors.bg0],
+                colors: [user.tags.first.color.withValues(alpha: 0.7), AppColors.bg0],
               ),
             ),
           ),

@@ -18,7 +18,8 @@ import '../../shared/widgets/neon_button.dart';
 import 'widgets/virtual_avatar_view.dart';
 
 class AvatarAiGeneratePage extends ConsumerStatefulWidget {
-  const AvatarAiGeneratePage({super.key});
+  final String returnLocation;
+  const AvatarAiGeneratePage({super.key, this.returnLocation = '/tag-select'});
 
   @override
   ConsumerState<AvatarAiGeneratePage> createState() => _AvatarAiGeneratePageState();
@@ -111,7 +112,7 @@ class _AvatarAiGeneratePageState extends ConsumerState<AvatarAiGeneratePage> {
                       child: Container(
                         height: 180,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(color: AppColors.glassBorder),
                         ),
@@ -154,7 +155,7 @@ class _AvatarAiGeneratePageState extends ConsumerState<AvatarAiGeneratePage> {
                 gradient: AppColors.cyanPurple,
                 onPressed: () {
                   ref.read(currentUserProvider.notifier).updateVirtualAvatar(ref.read(avatarDraftProvider));
-                  context.go('/tag-select');
+                  context.go(widget.returnLocation);
                 },
               ),
             ],
@@ -181,7 +182,7 @@ class _StyleButton extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           gradient: active ? AppColors.pinkPurple : null,
-          color: active ? null : Colors.white.withOpacity(0.06),
+          color: active ? null : Colors.white.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: active ? Colors.transparent : AppColors.glassBorder),
         ),

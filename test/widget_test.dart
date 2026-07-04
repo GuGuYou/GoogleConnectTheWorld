@@ -16,6 +16,7 @@ void main() {
       ),
     );
 
+    await tester.pump();
     expect(find.text('GuGu'), findsOneWidget);
   });
 }

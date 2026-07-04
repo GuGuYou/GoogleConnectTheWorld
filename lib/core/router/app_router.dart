@@ -33,9 +33,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (c, s) => const SplashPage()),
       GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingPage()),
       GoRoute(path: '/login', builder: (c, s) => const LoginPage()),
-      GoRoute(path: '/avatar-setup', builder: (c, s) => const AvatarSetupPage()),
-      GoRoute(path: '/avatar-customize', builder: (c, s) => const AvatarCustomizePage()),
-      GoRoute(path: '/avatar-ai', builder: (c, s) => const AvatarAiGeneratePage()),
+      GoRoute(path: '/avatar-setup', builder: (c, s) => AvatarSetupPage(returnLocation: s.uri.queryParameters['return'] ?? '/tag-select')),
+      GoRoute(path: '/avatar-customize', builder: (c, s) => AvatarCustomizePage(returnLocation: s.uri.queryParameters['return'] ?? '/tag-select')),
+      GoRoute(path: '/avatar-ai', builder: (c, s) => AvatarAiGeneratePage(returnLocation: s.uri.queryParameters['return'] ?? '/tag-select')),
       GoRoute(path: '/tag-select', builder: (c, s) => const TagSelectPage()),
 
       // 主框架：底部 4 Tab

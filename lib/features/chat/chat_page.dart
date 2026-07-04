@@ -115,7 +115,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                             hintText: ref.tr('chat_input_hint'),
                             hintStyle: AppTextStyles.caption,
                             filled: true,
-                            fillColor: Colors.white.withOpacity(0.05),
+                            fillColor: Colors.white.withValues(alpha: 0.05),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),

@@ -14,7 +14,8 @@ import '../../shared/widgets/neon_button.dart';
 import 'widgets/virtual_avatar_view.dart';
 
 class AvatarSetupPage extends ConsumerWidget {
-  const AvatarSetupPage({super.key});
+  final String returnLocation;
+  const AvatarSetupPage({super.key, this.returnLocation = '/tag-select'});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,7 +38,7 @@ class AvatarSetupPage extends ConsumerWidget {
                 desc: ref.tr('avatar_cute_desc'),
                 onTap: () {
                   ref.read(avatarDraftProvider.notifier).setStyle(AvatarVisualStyle.cute);
-                  context.push('/avatar-customize');
+                  context.push('/avatar-customize?return=${Uri.encodeComponent(returnLocation)}');
                 },
               ),
               const SizedBox(height: 14),
@@ -47,7 +48,7 @@ class AvatarSetupPage extends ConsumerWidget {
                 desc: ref.tr('avatar_pixel_desc'),
                 onTap: () {
                   ref.read(avatarDraftProvider.notifier).setStyle(AvatarVisualStyle.pixel);
-                  context.push('/avatar-customize');
+                  context.push('/avatar-customize?return=${Uri.encodeComponent(returnLocation)}');
                 },
               ),
               const SizedBox(height: 14),
@@ -55,13 +56,16 @@ class AvatarSetupPage extends ConsumerWidget {
                 icon: Icons.auto_awesome,
                 title: ref.tr('avatar_ai_title'),
                 desc: ref.tr('avatar_ai_desc'),
-                onTap: () => context.push('/avatar-ai'),
+                onTap: () => context.push('/avatar-ai?return=${Uri.encodeComponent(returnLocation)}'),
               ),
               const SizedBox(height: 24),
               NeonButton(
                 label: ref.tr('avatar_skip_mock'),
                 icon: Icons.arrow_forward,
-                onPressed: () => context.go('/tag-select'),
+                onPressed: () {
+                  ref.read(avatarDraftProvider.notifier).setStyle(AvatarVisualStyle.cute);
+                  context.go(returnLocation);
+                },
                 gradient: AppColors.cyanPurple,
               ),
             ],

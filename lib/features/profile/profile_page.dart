@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
-import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
@@ -78,6 +77,8 @@ class ProfilePage extends ConsumerWidget {
               child: Column(
                 children: [
                   _entry(context, Icons.edit_outlined, ref.tr('profile_edit'), '/profile/edit'),
+                  const Divider(height: 1, color: AppColors.divider),
+                  _entry(context, Icons.face_retouching_natural, ref.tr('avatar_recreate'), '/avatar-setup?return=/profile'),
                   const Divider(height: 1, color: AppColors.divider),
                   _entry(context, Icons.celebration_outlined, ref.tr('profile_activities'), '/activity'),
                   const Divider(height: 1, color: AppColors.divider),
