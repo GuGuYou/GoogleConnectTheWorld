@@ -43,16 +43,6 @@ class AvatarSetupPage extends ConsumerWidget {
               ),
               const SizedBox(height: 14),
               _OptionCard(
-                icon: Icons.grid_4x4,
-                title: ref.tr('avatar_pixel_title'),
-                desc: ref.tr('avatar_pixel_desc'),
-                onTap: () {
-                  ref.read(avatarDraftProvider.notifier).setStyle(AvatarVisualStyle.pixel);
-                  context.push('/avatar-customize?return=${Uri.encodeComponent(returnLocation)}');
-                },
-              ),
-              const SizedBox(height: 14),
-              _OptionCard(
                 icon: Icons.auto_awesome,
                 title: ref.tr('avatar_ai_title'),
                 desc: ref.tr('avatar_ai_desc'),

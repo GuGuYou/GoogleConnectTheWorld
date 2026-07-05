@@ -10,7 +10,6 @@ import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/widgets/gradient_text.dart';
 import '../../shared/widgets/neon_background.dart';
-import 'nearby_map_view.dart';
 import 'widgets/match_card.dart';
 
 class NearbyPage extends ConsumerStatefulWidget {
@@ -21,7 +20,6 @@ class NearbyPage extends ConsumerStatefulWidget {
 }
 
 class _NearbyPageState extends ConsumerState<NearbyPage> {
-  bool _mapMode = false;
   final _swiper = CardSwiperController();
 
   @override
@@ -45,67 +43,12 @@ class _NearbyPageState extends ConsumerState<NearbyPage> {
               child: Row(
                 children: [
                   GradientText(ref.tr('nearby_title'), style: AppTextStyles.h1),
-                  const Spacer(),
-                  _Toggle(
-                    mapMode: _mapMode,
-                    listLabel: ref.tr('view_list'),
-                    mapLabel: ref.tr('view_map'),
-                    onChanged: (v) => setState(() => _mapMode = v),
-                  ),
                 ],
               ),
             ),
             Expanded(
-              child: _mapMode
-                  ? const NearbyMapView()
-                  : _SwipeDeck(nearby: nearby, lang: lang, controller: _swiper),
+              child: _SwipeDeck(nearby: nearby, lang: lang, controller: _swiper),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Toggle extends StatelessWidget {
-  final bool mapMode;
-  final String listLabel;
-  final String mapLabel;
-  final ValueChanged<bool> onChanged;
-  const _Toggle({required this.mapMode, required this.listLabel, required this.mapLabel, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          _seg(Icons.view_agenda, listLabel, !mapMode, () => onChanged(false)),
-          _seg(Icons.map, mapLabel, mapMode, () => onChanged(true)),
-        ],
-      ),
-    );
-  }
-
-  Widget _seg(IconData icon, String label, bool active, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          gradient: active ? AppColors.cyanPurple : null,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 15, color: active ? Colors.white : AppColors.textMuted),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: active ? Colors.white : AppColors.textMuted)),
           ],
         ),
       ),

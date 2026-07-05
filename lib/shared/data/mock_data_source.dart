@@ -8,6 +8,7 @@ import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
 import '../models/virtual_avatar.dart';
+import '../models/whisper.dart';
 
 /// 全局 Mock 数据源（单例）。所有页面数据均来源于此。
 /// 切换真实后端时只需替换为 RemoteDataSource，业务层零改动。
@@ -35,6 +36,7 @@ class MockDataSource {
   final List<ActivityItem> activities = [];
   final List<Conversation> conversations = [];
   final Map<String, List<ChatMessage>> messages = {};
+  final List<Whisper> whispers = [];
 
   void _generate() {
     tags = const [
@@ -81,6 +83,7 @@ class MockDataSource {
     _genFeeds();
     _genActivities();
     _genConversations();
+    _genWhispers();
   }
 
   static const _names = [
@@ -118,7 +121,8 @@ class MockDataSource {
           id: 'u$i',
           nickname: _names[i % _names.length] + (i >= _names.length ? '${i ~/ _names.length}' : ''),
           avatarSeed: 'seed_$i',
-          virtualAvatar: VirtualAvatar.seeded('seed_$i', style: i.isEven ? AvatarVisualStyle.cute : AvatarVisualStyle.pixel),
+          // 视觉风格已统一为"光遇"式可爱治愈风，Mock 用户不再随机分配 pixel 风格。
+          virtualAvatar: VirtualAvatar.seeded('seed_$i'),
           bio: _bios[i % _bios.length],
           tags: userTags,
           lat: lat,
@@ -211,6 +215,52 @@ class MockDataSource {
           participants: p,
           maxParticipants: p + 2 + _rnd.nextInt(20),
           participantAvatarSeeds: List.generate(p.clamp(0, 6), (k) => 'p_${i}_$k'),
+        ),
+      );
+    }
+  }
+
+  void _genWhispers() {
+    const zh = [
+      '第一次一个人坐在这里看日落，原来一个人也可以很自在。',
+      '如果你也喜欢原神，此刻正好路过这里，祝你今天抽卡欧气满满。',
+      '深夜写完代码下楼透气，发现这附近意外地安静，留个痕迹给同样emo的你。',
+      '刚打完一场很爽的排位，分享一下这份快乐给路过的召唤师。',
+      '一个人来的漫展，但一点都不孤单，因为知道总有同好会经过这里。',
+      '今天心情不太好，但走到这儿突然觉得没那么糟了，希望你也是。',
+      '如果有人也在补这季的新番，我们大概曾在同一时间擦肩而过。',
+      '刚搬来这个城市，谁都不认识，留句话当作我在这里存在过的证据。',
+      '深夜emo发作，写下这句话希望能被某个失眠的同类看到。',
+      '路过的你，今天辛苦了，随便找个地方坐会儿吧。',
+    ];
+    const en = [
+      'First time sitting here alone watching the sunset — turns out being alone can feel fine.',
+      'If you also play Genshin and happen to pass by, wishing you great luck on your next pull.',
+      'Stepped out for air after coding all night, this corner is oddly peaceful. Leaving a trace for fellow night owls.',
+      'Just had an amazing ranked match, sharing the joy with whoever passes by.',
+      'Came to the con alone but never felt lonely, knowing someone like-minded will pass through here.',
+      'Wasn\'t feeling great today, but this spot made it a little better. Hope it does for you too.',
+      'If you\'re also catching up on this season\'s anime, we might have crossed paths in time.',
+      'Just moved to this city, don\'t know anyone yet. Leaving this as proof I existed here.',
+      'Late night overthinking again, hoping some fellow insomniac finds this.',
+      'Hey stranger passing by, you did well today. Sit here for a bit if you want.',
+    ];
+    for (var i = 0; i < 16; i++) {
+      final author = users[_rnd.nextInt(users.length)];
+      final lat = centerLat + (_rnd.nextDouble() - 0.5) * 0.06;
+      final lng = centerLng + (_rnd.nextDouble() - 0.5) * 0.06;
+      whispers.add(
+        Whisper(
+          id: 'wh$i',
+          authorId: author.id,
+          authorNickname: author.nickname,
+          authorAvatarSeed: author.avatarSeed,
+          contentZh: zh[i % zh.length],
+          contentEn: en[i % en.length],
+          lat: lat,
+          lng: lng,
+          createdAt: DateTime.now().subtract(Duration(hours: 1 + _rnd.nextInt(240))),
+          resonanceCount: _rnd.nextInt(60),
         ),
       );
     }

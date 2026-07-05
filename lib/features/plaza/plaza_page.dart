@@ -14,17 +14,142 @@ import '../../shared/widgets/avatar_placeholder.dart';
 import '../../shared/widgets/ip_tag_chip.dart';
 import '../../shared/widgets/neon_button.dart';
 
-/// 网咖广场（参考 Gather / Marvis 的 2D 虚拟空间）。
-/// 一个可拖动平移的俯视斜角场景：一排排电脑工位上坐着附近的同好，
-/// 屏幕被各自正在玩的 IP 点亮，点击任意工位即可查看资料并打招呼。
-class PlazaPage extends ConsumerStatefulWidget {
+/// 网咖广场（参考 Gather / Marvis 的 2D 虚拟空间），全屏独立页面。
+/// 内部渲染逻辑已抽成 [PlazaSceneView]，供"空间"Tab 的"场景"模式复用。
+class PlazaPage extends ConsumerWidget {
   const PlazaPage({super.key});
 
   @override
-  ConsumerState<PlazaPage> createState() => _PlazaPageState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(localeProvider).languageCode;
+    final nearby = ref.watch(nearbyUsersProvider).take(23).toList();
+    final onlineCount = nearby.where((n) => n.user.online).length + 1;
+
+    return Scaffold(
+      backgroundColor: _PlazaSceneViewState._floorTop,
+      body: Stack(
+        children: [
+          const Positioned.fill(child: PlazaSceneView()),
+
+          // ---- 顶部沉浸渐隐遮罩 ----
+          IgnorePointer(
+            child: Container(
+              height: 160,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [_PlazaSceneViewState._floorTop, _PlazaSceneViewState._floorTop.withValues(alpha: 0)],
+                ),
+              ),
+            ),
+          ),
+
+          // ---- 顶部 HUD ----
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 16, 0),
+              child: Row(
+                children: [
+                  _GlassIconButton(
+                    icon: Icons.arrow_back_ios_new,
+                    onTap: () => context.pop(),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ShaderMask(
+                        blendMode: BlendMode.srcIn,
+                        shaderCallback: (b) => const LinearGradient(
+                          colors: [_PlazaSceneViewState._gridColor, AppColors.neonPink],
+                        ).createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
+                        child: Text(
+                          ref.tr('plaza_title'),
+                          style: AppTextStyles.h2.copyWith(
+                            color: Colors.white,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'GUGU NET CAFÉ',
+                        style: AppTextStyles.caption.copyWith(
+                          color: _PlazaSceneViewState._gridColor.withValues(alpha: 0.6),
+                          letterSpacing: 3,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  _OnlinePill(count: onlineCount, label: ref.tr('plaza_online')),
+                ],
+              ),
+            ),
+          ),
+
+          // ---- 底部操作提示 ----
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(0, 40, 0, 26),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [_PlazaSceneViewState._floorTop.withValues(alpha: 0.92), _PlazaSceneViewState._floorTop.withValues(alpha: 0)],
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _PlazaSceneViewState._gridColor.withValues(alpha: 0.25)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.touch_app,
+                          size: 15, color: _PlazaSceneViewState._gridColor),
+                      const SizedBox(width: 7),
+                      Text(
+                        ref.tr('plaza_hint'),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _PlazaPageState extends ConsumerState<PlazaPage>
+/// 网咖场景本体：可平移缩放的俯视斜角空间，一排排电脑工位坐着附近的同好，
+/// 屏幕被各自正在玩的 IP 点亮，点击任意工位即可查看资料并打招呼。
+/// 不含外层 Scaffold / HUD，可自由嵌入 [PlazaPage] 或"空间"Tab。
+class PlazaSceneView extends ConsumerStatefulWidget {
+  const PlazaSceneView({super.key});
+
+  @override
+  ConsumerState<PlazaSceneView> createState() => _PlazaSceneViewState();
+}
+
+class _PlazaSceneViewState extends ConsumerState<PlazaSceneView>
     with SingleTickerProviderStateMixin {
   // ---- 场景内深色霓虹色板（局部，不污染全局亮色主题） ----
   static const _floorTop = Color(0xFF0A0D1C);
@@ -66,144 +191,30 @@ class _PlazaPageState extends ConsumerState<PlazaPage>
     final lang = ref.watch(localeProvider).languageCode;
     final me = ref.watch(currentUserProvider);
     final nearby = ref.watch(nearbyUsersProvider).take(23).toList();
-    final onlineCount = nearby.where((n) => n.user.online).length + 1;
 
-    return Scaffold(
-      backgroundColor: _floorTop,
-      body: Stack(
-        children: [
-          // ---- 可平移缩放的网咖场景 ----
-          Positioned.fill(
-            child: LayoutBuilder(
-              builder: (context, c) {
-                if (!_fitted) {
-                  // 首帧按宽度自适应缩放，让整间网咖刚好入画。
-                  final scale = (c.maxWidth / _sceneW).clamp(0.4, 1.0);
-                  _tc.value = Matrix4.identity()..scale(scale);
-                  _fitted = true;
-                }
-                return InteractiveViewer(
-                  transformationController: _tc,
-                  constrained: false,
-                  minScale: 0.35,
-                  maxScale: 2.4,
-                  boundaryMargin: const EdgeInsets.all(260),
-                  child: _Scene(
-                    nearby: nearby,
-                    me: me,
-                    lang: lang,
-                    glow: _glow,
-                    onTapUser: (n) => _showUserSheet(context, ref, n, lang),
-                  ),
-                );
-              },
-            ),
+    return LayoutBuilder(
+      builder: (context, c) {
+        if (!_fitted) {
+          // 首帧按宽度自适应缩放，让整间网咖刚好入画。
+          final scale = (c.maxWidth / _sceneW).clamp(0.4, 1.0);
+          _tc.value = Matrix4.identity()..scale(scale);
+          _fitted = true;
+        }
+        return InteractiveViewer(
+          transformationController: _tc,
+          constrained: false,
+          minScale: 0.35,
+          maxScale: 2.4,
+          boundaryMargin: const EdgeInsets.all(260),
+          child: _Scene(
+            nearby: nearby,
+            me: me,
+            lang: lang,
+            glow: _glow,
+            onTapUser: (n) => _showUserSheet(context, ref, n, lang),
           ),
-
-          // ---- 顶部沉浸渐隐遮罩 ----
-          IgnorePointer(
-            child: Container(
-              height: 160,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [_floorTop, _floorTop.withValues(alpha: 0)],
-                ),
-              ),
-            ),
-          ),
-
-          // ---- 顶部 HUD ----
-          SafeArea(
-            bottom: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 16, 0),
-              child: Row(
-                children: [
-                  _GlassIconButton(
-                    icon: Icons.arrow_back_ios_new,
-                    onTap: () => context.pop(),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ShaderMask(
-                        blendMode: BlendMode.srcIn,
-                        shaderCallback: (b) => const LinearGradient(
-                          colors: [_gridColor, AppColors.neonPink],
-                        ).createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
-                        child: Text(
-                          ref.tr('plaza_title'),
-                          style: AppTextStyles.h2.copyWith(
-                            color: Colors.white,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        'GUGU NET CAFÉ',
-                        style: AppTextStyles.caption.copyWith(
-                          color: _gridColor.withValues(alpha: 0.6),
-                          letterSpacing: 3,
-                          fontSize: 9,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  _OnlinePill(count: onlineCount, label: ref.tr('plaza_online')),
-                ],
-              ),
-            ),
-          ),
-
-          // ---- 底部操作提示 ----
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: IgnorePointer(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(0, 40, 0, 26),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [_floorTop.withValues(alpha: 0.92), _floorTop.withValues(alpha: 0)],
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _gridColor.withValues(alpha: 0.25)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.touch_app,
-                          size: 15, color: _gridColor),
-                      const SizedBox(width: 7),
-                      Text(
-                        ref.tr('plaza_hint'),
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -374,7 +385,7 @@ class _Scene extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: _PlazaPageState._sceneW,
+      width: _PlazaSceneViewState._sceneW,
       child: Stack(
         children: [
           // 地板与环境
@@ -385,9 +396,9 @@ class _Scene extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    _PlazaPageState._floorTop,
-                    _PlazaPageState._floorMid,
-                    _PlazaPageState._floorBottom,
+                    _PlazaSceneViewState._floorTop,
+                    _PlazaSceneViewState._floorMid,
+                    _PlazaSceneViewState._floorBottom,
                   ],
                   stops: [0.0, 0.45, 1.0],
                 ),
@@ -398,21 +409,21 @@ class _Scene extends StatelessWidget {
           // 内容：招牌 + 工位
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                _PlazaPageState._hPad, 96, _PlazaPageState._hPad, 80),
+                _PlazaSceneViewState._hPad, 96, _PlazaSceneViewState._hPad, 80),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const _NeonSign(),
                 const SizedBox(height: 22),
                 Wrap(
-                  spacing: _PlazaPageState._gap,
-                  runSpacing: _PlazaPageState._gap,
+                  spacing: _PlazaSceneViewState._gap,
+                  runSpacing: _PlazaSceneViewState._gap,
                   alignment: WrapAlignment.center,
                   children: [
                     // 我的工位排在最前
                     SizedBox(
-                      width: _PlazaPageState._itemW,
-                      height: _PlazaPageState._itemH,
+                      width: _PlazaSceneViewState._itemW,
+                      height: _PlazaSceneViewState._itemH,
                       child: _Workstation(
                         user: me,
                         lang: lang,
@@ -423,8 +434,8 @@ class _Scene extends StatelessWidget {
                     ),
                     for (final n in nearby)
                       SizedBox(
-                        width: _PlazaPageState._itemW,
-                        height: _PlazaPageState._itemH,
+                        width: _PlazaSceneViewState._itemW,
+                        height: _PlazaSceneViewState._itemH,
                         child: _Workstation(
                           user: n.user,
                           lang: lang,
@@ -463,7 +474,7 @@ class _Workstation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tag = user.tags.isNotEmpty ? user.tags.first : null;
-    final screen = tag?.color ?? _PlazaPageState._gridColor;
+    final screen = tag?.color ?? _PlazaSceneViewState._gridColor;
     final lit = user.online; // 在线 = 屏幕点亮 = 正在玩
 
     return GestureDetector(
@@ -794,16 +805,16 @@ class _NeonSign extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _PlazaPageState._gridColor.withValues(alpha: 0.6)),
+        border: Border.all(color: _PlazaSceneViewState._gridColor.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
-              color: _PlazaPageState._gridColor.withValues(alpha: 0.35),
+              color: _PlazaSceneViewState._gridColor.withValues(alpha: 0.35),
               blurRadius: 24),
           BoxShadow(color: AppColors.neonPink.withValues(alpha: 0.2), blurRadius: 30),
         ],
         gradient: LinearGradient(
           colors: [
-            _PlazaPageState._gridColor.withValues(alpha: 0.10),
+            _PlazaSceneViewState._gridColor.withValues(alpha: 0.10),
             AppColors.neonPink.withValues(alpha: 0.10),
           ],
         ),
@@ -812,12 +823,12 @@ class _NeonSign extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.sports_esports,
-              color: _PlazaPageState._gridColor, size: 20),
+              color: _PlazaSceneViewState._gridColor, size: 20),
           const SizedBox(width: 10),
           ShaderMask(
             blendMode: BlendMode.srcIn,
             shaderCallback: (b) => const LinearGradient(
-              colors: [_PlazaPageState._gridColor, AppColors.neonPink],
+              colors: [_PlazaSceneViewState._gridColor, AppColors.neonPink],
             ).createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
             child: Text(
               'GUGU · NET CAFÉ',
@@ -839,7 +850,7 @@ class _FloorPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = _PlazaPageState._gridColor.withValues(alpha: 0.12)
+      ..color = _PlazaSceneViewState._gridColor.withValues(alpha: 0.12)
       ..strokeWidth = 1;
     final w = size.width;
     final h = size.height;
@@ -855,7 +866,7 @@ class _FloorPainter extends CustomPainter {
 
     // 横向线：间距随高度指数变化，越往下越疏
     final hPaint = Paint()
-      ..color = _PlazaPageState._gridColor.withValues(alpha: 0.08)
+      ..color = _PlazaSceneViewState._gridColor.withValues(alpha: 0.08)
       ..strokeWidth = 1;
     for (int i = 1; i <= 20; i++) {
       final f = i / 20;

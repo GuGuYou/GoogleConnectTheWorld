@@ -15,6 +15,7 @@ class MainShell extends ConsumerWidget {
     final items = [
       (_NavItem(Icons.explore_outlined, Icons.explore, ref.tr('tab_discover'))),
       (_NavItem(Icons.near_me_outlined, Icons.near_me, ref.tr('tab_nearby'))),
+      (_NavItem(Icons.workspaces_outlined, Icons.workspaces, ref.tr('tab_space'))),
       (_NavItem(Icons.celebration_outlined, Icons.celebration, ref.tr('tab_activity'))),
       (_NavItem(Icons.person_outline, Icons.person, ref.tr('tab_profile'))),
     ];

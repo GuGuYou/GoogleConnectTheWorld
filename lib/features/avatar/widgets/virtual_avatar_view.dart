@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -26,9 +28,26 @@ class VirtualAvatarView extends StatelessWidget {
     [Color(0xFFFFF176), Color(0xFF42A5F5)],
   ];
 
+  /// 若 AI 已生成真实头像图片（data URI 或网络 URL），解析成 ImageProvider；否则返回 null 走程序化绘制兜底。
+  static ImageProvider? _resolveGeneratedImage(VirtualAvatar avatar) {
+    final url = avatar.generatedImageUrl;
+    if (avatar.source != AvatarSource.gemini || url == null || url.isEmpty) return null;
+    if (url.startsWith('data:')) {
+      final commaIdx = url.indexOf(',');
+      if (commaIdx == -1) return null;
+      try {
+        return MemoryImage(base64Decode(url.substring(commaIdx + 1)));
+      } catch (_) {
+        return null;
+      }
+    }
+    return NetworkImage(url);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = _palettes[avatar.colorIndex % _palettes.length];
+    final generatedImage = _resolveGeneratedImage(avatar);
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -43,11 +62,23 @@ class VirtualAvatarView extends StatelessWidget {
             border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 2),
           ),
           clipBehavior: Clip.antiAlias,
-          child: CustomPaint(
-            painter: avatar.style == AvatarVisualStyle.pixel
-                ? _PixelAvatarPainter(avatar, colors)
-                : _CuteAvatarPainter(avatar, colors),
-          ),
+          child: generatedImage != null
+              ? Image(
+                  image: generatedImage,
+                  fit: BoxFit.cover,
+                  width: size,
+                  height: size,
+                  errorBuilder: (context, error, stackTrace) => CustomPaint(
+                    painter: avatar.style == AvatarVisualStyle.pixel
+                        ? _PixelAvatarPainter(avatar, colors)
+                        : _CuteAvatarPainter(avatar, colors),
+                  ),
+                )
+              : CustomPaint(
+                  painter: avatar.style == AvatarVisualStyle.pixel
+                      ? _PixelAvatarPainter(avatar, colors)
+                      : _CuteAvatarPainter(avatar, colors),
+                ),
         ),
         if (online)
           Positioned(

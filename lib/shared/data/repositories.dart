@@ -1,5 +1,9 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/api_config.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/utils/distance.dart';
 import '../models/activity.dart';
 import '../models/feed_post.dart';
@@ -7,14 +11,33 @@ import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
 import '../models/virtual_avatar.dart';
+import '../models/whisper.dart';
 import 'avatar_generator_repository.dart';
 import 'mock_data_source.dart';
 
 final mockProvider = Provider<MockDataSource>((ref) => MockDataSource.instance);
 
-final avatarGeneratorProvider = Provider<AvatarGeneratorRepository>(
-  (ref) => MockAvatarGeneratorRepository(),
-);
+/// 设备/用户唯一标识，用于后端统计每日生成配额（首次生成随机生成并持久化）
+final deviceTokenProvider = Provider<String>((ref) {
+  final prefs = ref.watch(sharedPrefsProvider);
+  const key = 'ai_avatar_device_token';
+  var token = prefs.getString(key);
+  if (token == null || token.isEmpty) {
+    final rand = Random();
+    token = List.generate(16, (_) => rand.nextInt(16).toRadixString(16)).join();
+    prefs.setString(key, token);
+  }
+  return token;
+});
+
+/// AI 头像生成仓库：真实实现调用自建后端代理 Gemini 图生图。
+/// 若需要离线/演示模式，可手动切换回 MockAvatarGeneratorRepository()。
+final avatarGeneratorProvider = Provider<AvatarGeneratorRepository>((ref) {
+  return GeminiAvatarGeneratorRepository(
+    endpoint: Uri.parse(ApiConfig.generateAvatarUrl),
+    userToken: ref.watch(deviceTokenProvider),
+  );
+});
 
 final avatarByUserIdProvider = Provider.family<VirtualAvatar?, String>((ref, userId) {
   if (userId == 'me') return ref.watch(currentUserProvider).virtualAvatar;
@@ -125,6 +148,47 @@ class ActivitiesNotifier extends Notifier<List<ActivityItem>> {
 
 /// 会话列表
 final conversationsProvider = Provider((ref) => ref.watch(mockProvider).conversations);
+
+/// 异步留言（Whisper）：地图/空间上按地理位置展示的留言，
+/// 支持发布新留言 + 对已有留言"共鸣"（区别于点对点实时聊天）。
+final whispersProvider =
+    NotifierProvider<WhispersNotifier, List<Whisper>>(WhispersNotifier.new);
+
+class WhispersNotifier extends Notifier<List<Whisper>> {
+  @override
+  List<Whisper> build() => [...ref.read(mockProvider).whispers]
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+  /// 对某条留言表示共鸣（+1，同一次会话内每条最多共鸣一次由 UI 层控制）。
+  void resonate(String id) {
+    state = [
+      for (final w in state)
+        if (w.id == id) w.copyWith(resonanceCount: w.resonanceCount + 1) else w,
+    ];
+    final mock = ref.read(mockProvider).whispers;
+    for (var i = 0; i < mock.length; i++) {
+      if (mock[i].id == id) mock[i] = mock[i].copyWith(resonanceCount: mock[i].resonanceCount + 1);
+    }
+  }
+
+  /// 在当前用户所在坐标发布一条新留言。
+  void post(String content, {required double lat, required double lng}) {
+    final me = ref.read(currentUserProvider);
+    final whisper = Whisper(
+      id: 'wh_${DateTime.now().millisecondsSinceEpoch}',
+      authorId: me.id,
+      authorNickname: me.nickname,
+      authorAvatarSeed: me.avatarSeed,
+      contentZh: content,
+      contentEn: content,
+      lat: lat,
+      lng: lng,
+      createdAt: DateTime.now(),
+    );
+    state = [whisper, ...state];
+    ref.read(mockProvider).whispers.insert(0, whisper);
+  }
+}
 
 /// 单个会话消息流（支持发送 + 自动回复）
 final chatProvider =

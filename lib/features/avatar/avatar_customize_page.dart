@@ -7,7 +7,6 @@ import '../../core/providers/avatar_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
-import '../../shared/models/virtual_avatar.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/neon_background.dart';
 import '../../shared/widgets/neon_button.dart';
@@ -30,26 +29,6 @@ class AvatarCustomizePage extends ConsumerWidget {
             children: [
               Center(child: VirtualAvatarView(avatar: avatar, size: 150, glow: true)),
               const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: _StyleSegment(
-                      label: ref.tr('avatar_style_cute'),
-                      active: avatar.style == AvatarVisualStyle.cute,
-                      onTap: () => notifier.setStyle(AvatarVisualStyle.cute),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _StyleSegment(
-                      label: ref.tr('avatar_style_pixel'),
-                      active: avatar.style == AvatarVisualStyle.pixel,
-                      onTap: () => notifier.setStyle(AvatarVisualStyle.pixel),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
               _Selector(title: ref.tr('avatar_color'), count: 6, value: avatar.colorIndex, onTap: notifier.setColor),
               _Selector(title: ref.tr('avatar_face'), count: 3, value: avatar.faceIndex, onTap: notifier.setFace),
               _Selector(title: ref.tr('avatar_eyes'), count: 4, value: avatar.eyeIndex, onTap: notifier.setEyes),
@@ -67,33 +46,6 @@ class AvatarCustomizePage extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _StyleSegment extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _StyleSegment({required this.label, required this.active, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          gradient: active ? AppColors.cyanPurple : null,
-          color: active ? null : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: active ? Colors.transparent : AppColors.glassBorder),
-        ),
-        child: Text(label, style: active ? AppTextStyles.button : AppTextStyles.body),
       ),
     );
   }

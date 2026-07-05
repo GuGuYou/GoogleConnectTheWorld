@@ -42,6 +42,9 @@ dependencies:
   # 图片选择
   image_picker: ^1.1.2
 
+  # 网络请求（调用自建 AI 生成后端）
+  http: ^1.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

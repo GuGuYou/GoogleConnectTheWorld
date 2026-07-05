@@ -26,7 +26,8 @@ class AvatarAiGeneratePage extends ConsumerStatefulWidget {
 }
 
 class _AvatarAiGeneratePageState extends ConsumerState<AvatarAiGeneratePage> {
-  AvatarVisualStyle _style = AvatarVisualStyle.cute;
+  // 视觉风格已统一为"光遇"式可爱治愈风，不再提供风格二选一。
+  static const _style = AvatarVisualStyle.cute;
   XFile? _image;
   bool _loading = false;
   String? _prompt;
@@ -93,16 +94,6 @@ class _AvatarAiGeneratePageState extends ConsumerState<AvatarAiGeneratePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(ref.tr('avatar_ai_style'), style: AppTextStyles.title),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: _StyleButton(label: ref.tr('avatar_style_cute'), active: _style == AvatarVisualStyle.cute, onTap: () => setState(() => _style = AvatarVisualStyle.cute))),
-                        const SizedBox(width: 10),
-                        Expanded(child: _StyleButton(label: ref.tr('avatar_style_pixel'), active: _style == AvatarVisualStyle.pixel, onTap: () => setState(() => _style = AvatarVisualStyle.pixel))),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
                     Text(ref.tr('avatar_ai_upload_title'), style: AppTextStyles.title),
                     const SizedBox(height: 8),
                     Text(ref.tr('avatar_ai_hint'), style: AppTextStyles.caption.copyWith(height: 1.5)),
@@ -161,32 +152,6 @@ class _AvatarAiGeneratePageState extends ConsumerState<AvatarAiGeneratePage> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _StyleButton extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _StyleButton({required this.label, required this.active, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          gradient: active ? AppColors.pinkPurple : null,
-          color: active ? null : Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: active ? Colors.transparent : AppColors.glassBorder),
-        ),
-        child: Text(label, style: active ? AppTextStyles.button : AppTextStyles.caption),
       ),
     );
   }

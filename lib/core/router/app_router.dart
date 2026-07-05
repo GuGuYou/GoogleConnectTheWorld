@@ -20,6 +20,7 @@ import '../../features/profile/edit_profile_page.dart';
 import '../../features/profile/profile_page.dart';
 import '../../features/profile/settings_page.dart';
 import '../../features/profile/user_detail_page.dart';
+import '../../features/space/space_page.dart';
 import '../../features/splash/splash_page.dart';
 import '../../shared/widgets/main_shell.dart';
 
@@ -47,6 +48,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/nearby', builder: (c, s) => const NearbyPage()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/space', builder: (c, s) => const SpacePage()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/activity', builder: (c, s) => const ActivityListPage()),
