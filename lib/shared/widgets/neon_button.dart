@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
-/// 霓虹渐变按钮：渐变填充 + 外发光 + 点击缩放
 class NeonButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -39,24 +38,19 @@ class _NeonButtonState extends State<NeonButton> {
       onTap: widget.onPressed,
       child: AnimatedScale(
         scale: _down ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 120),
+        duration: const Duration(milliseconds: 80),
         child: Container(
           width: widget.expand ? double.infinity : null,
           padding: widget.padding,
           decoration: BoxDecoration(
-            gradient: enabled
-                ? widget.gradient
-                : const LinearGradient(colors: [AppColors.bg2, AppColors.bg2]),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: enabled
-                ? [
-                    BoxShadow(
-                      color: AppColors.neonPink.withValues(alpha: 0.45),
-                      blurRadius: 18,
-                      offset: const Offset(0, 6),
-                    ),
-                  ]
-                : null,
+            gradient: enabled ? widget.gradient : const LinearGradient(colors: [AppColors.bg2, AppColors.bg2]),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: enabled ? const Color(0xFF2F6BD8) : const Color(0xFFD6D6D6),
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

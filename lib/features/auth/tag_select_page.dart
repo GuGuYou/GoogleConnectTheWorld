@@ -103,6 +103,11 @@ class _TagSelectPageState extends ConsumerState<TagSelectPage> {
                       onPressed: enough
                           ? () {
                               final tags = allTags.where((t) => _selected.contains(t.id)).toList();
+                              final avatar = ref.read(currentUserProvider).virtualAvatar;
+                              if (avatar == null) {
+                                context.go('/avatar-setup');
+                                return;
+                              }
                               ref.read(currentUserProvider.notifier).updateTags(tags);
                               ref.read(authProvider.notifier).login();
                               context.go('/discover');

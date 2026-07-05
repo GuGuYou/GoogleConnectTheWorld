@@ -17,8 +17,8 @@ class NicheTribeApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'GuGu',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.light,
+      themeMode: ThemeMode.light,
       routerConfig: router,
       locale: locale,
       supportedLocales: const [Locale('zh'), Locale('en')],

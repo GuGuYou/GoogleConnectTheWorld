@@ -1,59 +1,55 @@
 import 'package:flutter/material.dart';
 
-/// Cyber Neon 赛博霓虹色板
+/// Google/Duolingo-inspired light palette from latest web preview.
+/// Keeps legacy token names to minimize app-wide changes.
 class AppColors {
   AppColors._();
 
-  // 背景：深紫黑渐变
-  static const Color bg0 = Color(0xFF0A0613); // 最深背景
-  static const Color bg1 = Color(0xFF120A24); // 卡片底
-  static const Color bg2 = Color(0xFF1B1038); // 抬升表面
-  static const Color surface = Color(0xFF1F1442);
+  static const Color bg0 = Color(0xFFE8F0FE);
+  static const Color bg1 = Color(0xFFFFFFFF);
+  static const Color bg2 = Color(0xFFF7F7F7);
+  static const Color surface = Color(0xFFFFFFFF);
 
-  // 霓虹主色
-  static const Color neonPink = Color(0xFFFF2E97);
-  static const Color neonPurple = Color(0xFF9D4EFF);
-  static const Color neonCyan = Color(0xFF21E6FF);
-  static const Color neonYellow = Color(0xFFFFD53E);
-  static const Color neonGreen = Color(0xFF3DFFB0);
+  static const Color neonPink = Color(0xFF4285F4);
+  static const Color neonPurple = Color(0xFF1A73E8);
+  static const Color neonCyan = Color(0xFF4285F4);
+  static const Color neonYellow = Color(0xFFFBBC05);
+  static const Color neonGreen = Color(0xFF34A853);
 
-  // 文字
-  static const Color textPrimary = Color(0xFFF2EEFF);
-  static const Color textSecondary = Color(0xFFAFA4D6);
-  static const Color textMuted = Color(0xFF6E6491);
+  static const Color textPrimary = Color(0xFF4B4B4B);
+  static const Color textSecondary = Color(0xFF777777);
+  static const Color textMuted = Color(0xFFAFAFAF);
 
-  static const Color divider = Color(0x22FFFFFF);
-  static const Color glassBorder = Color(0x33FFFFFF);
+  static const Color divider = Color(0xFFE5E5E5);
+  static const Color glassBorder = Color(0xFFE5E5E5);
 
-  // 主渐变（粉 → 紫 → 青）
   static const LinearGradient neonGradient = LinearGradient(
-    colors: [neonPink, neonPurple, neonCyan],
+    colors: [Color(0xFF4285F4), Color(0xFF1A73E8)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient pinkPurple = LinearGradient(
-    colors: [neonPink, neonPurple],
+    colors: [Color(0xFF4285F4), Color(0xFF1A73E8)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
   static const LinearGradient cyanPurple = LinearGradient(
-    colors: [neonCyan, neonPurple],
+    colors: [Color(0xFF4285F4), Color(0xFF1A73E8)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const RadialGradient bgGlow = RadialGradient(
-    colors: [Color(0xFF2A1659), bg0],
+    colors: [Color(0xFFFFFFFF), Color(0xFFE8F0FE)],
     center: Alignment.topCenter,
-    radius: 1.2,
+    radius: 1.35,
   );
 
-  /// 兴趣分类颜色映射
   static const Map<String, Color> categoryColors = {
     'game': neonCyan,
-    'anime': neonPink,
+    'anime': Color(0xFFEA4335),
     'drama': neonPurple,
     'comic': neonYellow,
     'music': neonGreen,

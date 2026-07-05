@@ -1,10 +1,7 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// 玻璃拟态卡片：半透明 + 毛玻璃模糊 + 霓虹描边
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -26,31 +23,27 @@ class GlassCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final border = borderColor ?? AppColors.glassBorder;
-    return ClipRRect(
+    return Material(
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(radius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Material(
-          color: Colors.white.withValues(alpha: 0.05),
-          child: InkWell(
-            onTap: onTap,
-            child: Container(
-              padding: padding,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(radius),
-                border: Border.all(color: border, width: 1),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.08),
-                    Colors.white.withValues(alpha: 0.02),
-                  ],
-                ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(color: border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
-              child: child,
-            ),
+            ],
           ),
+          child: child,
         ),
       ),
     );

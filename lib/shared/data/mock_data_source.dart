@@ -7,6 +7,7 @@ import '../models/feed_post.dart';
 import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
+import '../models/virtual_avatar.dart';
 
 /// 全局 Mock 数据源（单例）。所有页面数据均来源于此。
 /// 切换真实后端时只需替换为 RemoteDataSource，业务层零改动。
@@ -65,6 +66,7 @@ class MockDataSource {
       id: 'me',
       nickname: 'NeonDrifter',
       avatarSeed: 'me_seed_42',
+      virtualAvatar: VirtualAvatar.seeded('me_seed_42'),
       bio: '夜猫子 / 主机党 / 二次元浓度过高，找搭子开黑看番！',
       tags: [tags[0], tags[3], tags[5], tags[9]],
       lat: centerLat,
@@ -116,6 +118,7 @@ class MockDataSource {
           id: 'u$i',
           nickname: _names[i % _names.length] + (i >= _names.length ? '${i ~/ _names.length}' : ''),
           avatarSeed: 'seed_$i',
+          virtualAvatar: VirtualAvatar.seeded('seed_$i', style: i.isEven ? AvatarVisualStyle.cute : AvatarVisualStyle.pixel),
           bio: _bios[i % _bios.length],
           tags: userTags,
           lat: lat,
