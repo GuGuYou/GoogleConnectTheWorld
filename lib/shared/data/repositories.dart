@@ -1,12 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config/map_config.dart';
+import '../../core/providers/location_provider.dart';
 import '../../core/utils/distance.dart';
+import '../../core/utils/wall_cluster.dart';
 import '../models/activity.dart';
 import '../models/feed_post.dart';
 import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
 import '../models/virtual_avatar.dart';
+import '../models/wall_message.dart';
+import '../models/wall_spot.dart';
 import 'avatar_generator_repository.dart';
 import 'mock_data_source.dart';
 
@@ -154,3 +159,74 @@ class ChatNotifier extends FamilyNotifier<List<ChatMessage>, String> {
     });
   }
 }
+
+/// 异步留言墙消息列表
+final wallMessagesProvider =
+    NotifierProvider<WallMessagesNotifier, List<WallMessage>>(WallMessagesNotifier.new);
+
+class WallMessagesNotifier extends Notifier<List<WallMessage>> {
+  @override
+  List<WallMessage> build() => [...ref.read(mockProvider).wallMessages];
+
+  void postWallMessage({
+    required String content,
+    required double lat,
+    required double lng,
+    required UserProfile author,
+  }) {
+    final spotId = spotIdForCoordinate(state, lat, lng);
+    final msg = WallMessage(
+      id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
+      spotId: spotId,
+      lat: lat,
+      lng: lng,
+      authorId: author.id,
+      avatarSeed: author.avatarSeed,
+      tags: author.tags,
+      content: content.trim(),
+      createdAt: DateTime.now(),
+    );
+    state = [...state, msg];
+    ref.read(mockProvider).wallMessages.add(msg);
+  }
+}
+
+/// 全量留言板聚合点
+final wallSpotsProvider = Provider<List<WallSpot>>((ref) {
+  final messages = ref.watch(wallMessagesProvider);
+  return buildWallSpots(messages);
+});
+
+/// 留言板标签筛选（null = 全部）
+final wallTagFilterProvider = StateProvider<IpTag?>((ref) => null);
+
+/// 2km 内 + 标签过滤后的可见留言板
+final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
+  final spots = ref.watch(wallSpotsProvider);
+  final fallback = ref.watch(mapCenterProvider);
+  final loc = ref.watch(currentLocationProvider).valueOrNull;
+  final lat = loc?.latitude ?? fallback.latitude;
+  final lng = loc?.longitude ?? fallback.longitude;
+  final filter = ref.watch(wallTagFilterProvider);
+  return spots.where((spot) {
+    final km = haversineKm(lat, lng, spot.lat, spot.lng);
+    if (km > MapConfig.wallVisibleRadiusKm) return false;
+    if (filter != null && !spot.tags.contains(filter)) return false;
+    return true;
+  }).toList();
+});
+
+/// 某留言板的历史留言（按时间倒序）
+final wallMessagesForSpotProvider = Provider.family<List<WallMessage>, String>((ref, spotId) {
+  final messages = ref.watch(wallMessagesProvider);
+  final spots = ref.watch(wallSpotsProvider);
+  WallSpot? spot;
+  for (final s in spots) {
+    if (s.id == spotId) {
+      spot = s;
+      break;
+    }
+  }
+  if (spot == null) return [];
+  return messagesForSpot(messages, spot);
+});

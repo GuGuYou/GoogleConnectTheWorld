@@ -102,6 +102,11 @@ class AppText {
       'map_key_invalid': 'Google Maps API Key 无效。请在 Google Cloud Console 启用 Maps JavaScript API，并检查 Key 限制（Web 需允许 localhost）',
       'map_load_error': '地图加载失败，请检查网络或 API Key 配置',
       'location_fallback_hint': '定位不可用，已使用演示位置',
+      // 异步留言板
+      'wall_spot_title': '这里的留言',
+      'wall_spot_summary': '曾有 {count} 条留言留在此地',
+      'wall_input_hint': '留下你的话…',
+      'wall_empty_hint': '还没有人留言，成为第一个留下陪伴的人吧',
       // 聊天
       'chat_title': '消息',
       'chat_input_hint': '说点什么…',
@@ -231,6 +236,11 @@ class AppText {
       'map_key_invalid': 'Invalid Google Maps API key. Enable Maps JavaScript API in Google Cloud Console and allow localhost for Web.',
       'map_load_error': 'Failed to load map. Check network or API key configuration.',
       'location_fallback_hint': 'Location unavailable — using demo coordinates',
+      // Async message board
+      'wall_spot_title': 'Messages Here',
+      'wall_spot_summary': '{count} messages left at this spot',
+      'wall_input_hint': 'Leave your words…',
+      'wall_empty_hint': 'No messages yet — be the first to leave a note of companionship',
       'chat_title': 'Messages',
       'chat_input_hint': 'Say something…',
       'matched_tip': 'You matched! Say hi now.',

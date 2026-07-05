@@ -12,6 +12,9 @@ class MapConfig {
   /// 留言点聚合半径（米）
   static const double wallClusterRadiusMeters = 100;
 
+  /// 留言板地图可见半径（公里）
+  static const double wallVisibleRadiusKm = 2.0;
+
   /// 从 gitignored 的 secrets JSON 加载 API Key。
   static Future<String?> loadApiKey() async {
     if (_loaded) return _apiKey;
