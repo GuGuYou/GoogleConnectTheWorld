@@ -56,6 +56,33 @@ flutter build ios --debug        # iOS（需 macOS）
 
 ---
 
+## 🗺️ Google Maps API Key 配置
+
+附近页地图使用 **Google Maps**（大赛要求）。**未配置 Key 时应用不会白屏**，会自动降级为"同好雷达"占位视图，其余功能（含留言墙）不受影响。配置真实 Key 后即渲染真实地图。
+
+### 1. 申请 Key
+在 [Google Cloud Console](https://console.cloud.google.com/) 创建项目 → 启用 **Maps SDK for Android / iOS / Maps JavaScript API** → 创建 API Key，并按平台/来源做限制。
+
+### 2. 各平台写入 Key（把 `YOUR_GOOGLE_MAPS_API_KEY` 换成真实 Key）
+| 平台 | 文件 | 位置 |
+| --- | --- | --- |
+| Android | `android/app/src/main/AndroidManifest.xml` | `<meta-data android:name="com.google.android.geo.API_KEY" .../>` |
+| iOS | `ios/Runner/AppDelegate.swift` | `GMSServices.provideAPIKey("...")` |
+| Web | `web/index.html` | Google Maps JS SDK `<script src="...key=...">` |
+
+### 3. 运行时开启真实地图（Dart 侧开关）
+```bash
+flutter run --dart-define=GOOGLE_MAPS_API_KEY=你的Key
+```
+> Dart 侧 Key 仅用于判断是否渲染真实地图（见 `lib/core/config/map_config.dart`），与各平台原生 Key 相互独立，两处都需配置。
+
+### ⚠️ 安全提示
+- **切勿把真实 Key 提交到仓库**；仓库中保留占位符 `YOUR_GOOGLE_MAPS_API_KEY`。
+- iOS 首次接入需执行 `cd ios && pod install`（拉取 GoogleMaps Pod）。
+- Android 需允许定位权限；iOS 需 `Info.plist` 的 `NSLocationWhenInUseUsageDescription`（已配置）。
+
+---
+
 ## 📁 目录结构
 
 ```
