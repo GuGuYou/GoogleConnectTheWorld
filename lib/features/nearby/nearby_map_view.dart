@@ -4,14 +4,18 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../core/config/map_config.dart';
+import '../../core/config/map_marker_icons.dart';
 import '../../core/l10n/app_text.dart';
 import '../../core/providers/location_provider.dart';
 import '../../core/utils/google_maps_ready.dart';
+import '../../core/utils/map_icon_bitmap.dart';
+import '../../core/utils/radar_center_marker.dart';
 import '../../core/utils/wall_bubble_marker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/models/ip_tag.dart';
+import '../../shared/models/activity.dart';
 import '../../shared/models/wall_spot.dart';
 import '../wall/create_wall_spot_sheet.dart';
 import '../wall/wall_spot_sheet.dart';
@@ -41,35 +45,7 @@ class NearbyMapView extends ConsumerWidget {
     final tagFilter = ref.watch(wallTagFilterProvider);
 
     final circles = <Circle>{
-      Circle(
-        circleId: const CircleId('me'),
-        center: center,
-        radius: 80,
-        fillColor: AppColors.neonCyan.withValues(alpha: 0.35),
-        strokeColor: AppColors.neonCyan,
-        strokeWidth: 2,
-      ),
-      for (final n in nearby.take(30))
-        Circle(
-          circleId: CircleId('user_${n.user.id}'),
-          center: LatLng(n.user.lat, n.user.lng),
-          radius: 60,
-          fillColor: n.user.tags.first.color.withValues(alpha: 0.45),
-          strokeColor: n.user.tags.first.color,
-          strokeWidth: 2,
-          consumeTapEvents: true,
-          onTap: () => _showUserSheet(context, ref, n),
-        ),
-    };
-
-    final activityMarkers = <Marker>{
-      for (final a in activities.take(12))
-        Marker(
-          markerId: MarkerId('activity_${a.id}'),
-          position: LatLng(a.lat, a.lng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose),
-          onTap: () => context.push('/activity/${a.id}'),
-        ),
+      ...RadarCenterMarker.rings(center),
     };
 
     return Padding(
@@ -92,11 +68,18 @@ class NearbyMapView extends ConsumerWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: _DeferredGoogleMap(
+                    key: ValueKey(Object.hash(
+                      MapMarkerIcons.activity.codePoint,
+                      MapMarkerIcons.wallMessage.codePoint,
+                      MapMarkerIcons.nearbyUser.codePoint,
+                    )),
                     center: center,
                     circles: circles,
-                    activityMarkers: activityMarkers,
+                    nearbyUsers: nearby.take(30).toList(),
+                    activities: activities.take(12).toList(),
                     wallSpots: wallSpots,
                     userTags: me.tags,
+                    onUserTap: (n) => _showUserSheet(context, ref, n),
                     onWallSpotTap: (spot) => showWallSpotSheet(context, ref, spot),
                   ),
                 ),
@@ -233,17 +216,22 @@ class _CreateWallSpotButton extends ConsumerWidget {
 class _DeferredGoogleMap extends StatefulWidget {
   final LatLng center;
   final Set<Circle> circles;
-  final Set<Marker> activityMarkers;
+  final List<UserWithDistance> nearbyUsers;
+  final List<ActivityItem> activities;
   final List<WallSpot> wallSpots;
   final List<IpTag> userTags;
+  final void Function(UserWithDistance user) onUserTap;
   final void Function(WallSpot spot) onWallSpotTap;
 
   const _DeferredGoogleMap({
+    super.key,
     required this.center,
     required this.circles,
-    required this.activityMarkers,
+    required this.nearbyUsers,
+    required this.activities,
     required this.wallSpots,
     required this.userTags,
+    required this.onUserTap,
     required this.onWallSpotTap,
   });
 
@@ -253,24 +241,82 @@ class _DeferredGoogleMap extends StatefulWidget {
 
 class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
   late final Future<bool> _ready = waitForGoogleMapsReady();
-  Set<Marker> _wallMarkers = {};
+  Set<Marker> _markers = {};
 
   @override
   void initState() {
     super.initState();
-    _loadWallMarkers();
+    _loadMarkers();
   }
 
   @override
   void didUpdateWidget(covariant _DeferredGoogleMap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.wallSpots != widget.wallSpots || oldWidget.userTags != widget.userTags) {
-      _loadWallMarkers();
+    if (oldWidget.wallSpots != widget.wallSpots ||
+        oldWidget.userTags != widget.userTags ||
+        oldWidget.activities != widget.activities ||
+        oldWidget.nearbyUsers != widget.nearbyUsers ||
+        oldWidget.center != widget.center) {
+      _loadMarkers();
     }
   }
 
-  Future<void> _loadWallMarkers() async {
+  Future<void> _loadMarkers() async {
+    // 改 map_marker_icons.dart 后清缓存，避免热重载仍显示旧图标
+    MapIconBitmap.clearCache();
+    WallBubbleMarker.clearCache();
+
     final markers = <Marker>{};
+
+    final radarIcon = await RadarCenterMarker.icon();
+    markers.add(
+      Marker(
+        markerId: const MarkerId('me_radar'),
+        position: widget.center,
+        icon: radarIcon,
+        anchor: const Offset(0.5, 0.5),
+        zIndexInt: 10,
+      ),
+    );
+
+    final activityIcon = await MapIconBitmap.pin(
+      icon: MapMarkerIcons.activity,
+      color: MapMarkerIcons.activityColor,
+    );
+    for (final a in widget.activities) {
+      markers.add(
+        Marker(
+          markerId: MarkerId('activity_${a.id}'),
+          position: LatLng(a.lat, a.lng),
+          icon: activityIcon,
+          anchor: const Offset(0.5, 0.5),
+          onTap: () {
+            if (!mounted) return;
+            context.push('/activity/${a.id}');
+          },
+        ),
+      );
+    }
+
+    for (final n in widget.nearbyUsers) {
+      final color = n.user.tags.isNotEmpty ? n.user.tags.first.color : AppColors.neonCyan;
+      final userIcon = await MapIconBitmap.pin(
+        icon: MapMarkerIcons.nearbyUser,
+        color: color,
+        size: 44,
+        iconSize: 22,
+      );
+      markers.add(
+        Marker(
+          markerId: MarkerId('user_${n.user.id}'),
+          position: LatLng(n.user.lat, n.user.lng),
+          icon: userIcon,
+          anchor: const Offset(0.5, 0.5),
+          onTap: () => widget.onUserTap(n),
+        ),
+      );
+    }
+
     for (final spot in widget.wallSpots) {
       final color = spot.displayTag(widget.userTags).color;
       final icon = await WallBubbleMarker.iconFor(color);
@@ -279,13 +325,14 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
           markerId: MarkerId('wall_${spot.id}'),
           position: LatLng(spot.lat, spot.lng),
           icon: icon,
-          anchor: const Offset(0.5, 0.92),
+          anchor: const Offset(0.5, 0.5),
           onTap: () => widget.onWallSpotTap(spot),
         ),
       );
     }
+
     if (!mounted) return;
-    setState(() => _wallMarkers = markers);
+    setState(() => _markers = markers);
   }
 
   @override
@@ -307,7 +354,7 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
           zoomControlsEnabled: false,
           mapToolbarEnabled: false,
           circles: widget.circles,
-          markers: {...widget.activityMarkers, ..._wallMarkers},
+          markers: _markers,
         );
       },
     );
