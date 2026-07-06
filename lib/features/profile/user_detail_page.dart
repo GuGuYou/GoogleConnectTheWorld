@@ -20,7 +20,6 @@ class UserDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(localeProvider).languageCode;
     final me = ref.watch(currentUserProvider);
     final user = ref.read(mockProvider).userById(userId);
     final dist = haversineKm(me.lat, me.lng, user.lat, user.lng);

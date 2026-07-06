@@ -75,7 +75,6 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(localeProvider).languageCode;
     final tags = MockDataSource.instance.tags;
 
     return Scaffold(

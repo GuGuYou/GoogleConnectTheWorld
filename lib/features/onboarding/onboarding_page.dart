@@ -24,8 +24,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     final pages = [
-      _ObData(Icons.location_searching, ref.tr('ob1_title'), ref.tr('ob1_desc'), AppColors.neonCyan),
-      _ObData(Icons.tag, ref.tr('ob2_title'), ref.tr('ob2_desc'), AppColors.neonPink),
+      _ObData(Icons.tag, ref.tr('ob1_title'), ref.tr('ob1_desc'), AppColors.neonCyan),
+      _ObData(Icons.location_searching, ref.tr('ob2_title'), ref.tr('ob2_desc'), AppColors.neonPink),
       _ObData(Icons.groups, ref.tr('ob3_title'), ref.tr('ob3_desc'), AppColors.neonPurple),
     ];
 

@@ -18,7 +18,6 @@ class ChatListPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(localeProvider).languageCode;
     final convs = ref.watch(conversationsProvider);
     final mock = ref.watch(mockProvider);
 

@@ -1,5 +1,45 @@
+import 'package:flutter/material.dart';
+
 import 'ip_tag.dart';
 import 'virtual_avatar.dart';
+
+enum UserStatus {
+  gaming,
+  openToChat,
+  offline,
+  exploring,
+  busy;
+
+  String label(String lang) {
+    switch (this) {
+      case UserStatus.gaming:
+        return lang == 'en' ? 'Gaming now' : '正在玩';
+      case UserStatus.openToChat:
+        return lang == 'en' ? 'Open to chat' : '可聊天';
+      case UserStatus.offline:
+        return lang == 'en' ? 'Offline' : '离线';
+      case UserStatus.exploring:
+        return lang == 'en' ? 'Exploring' : '探索中';
+      case UserStatus.busy:
+        return lang == 'en' ? 'Busy' : '忙碌';
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case UserStatus.gaming:
+        return const Color(0xFF34A853);
+      case UserStatus.openToChat:
+        return const Color(0xFF4285F4);
+      case UserStatus.offline:
+        return const Color(0xFFAFAFAF);
+      case UserStatus.exploring:
+        return const Color(0xFFFBBC05);
+      case UserStatus.busy:
+        return const Color(0xFFEA4335);
+    }
+  }
+}
 
 /// 用户资料模型
 class UserProfile {
@@ -15,6 +55,10 @@ class UserProfile {
   final bool online;
   final int age;
   final String gender; // m / f
+  final bool verified;
+  final UserStatus status;
+  final int level;
+  final String personality;
 
   const UserProfile({
     required this.id,
@@ -29,6 +73,10 @@ class UserProfile {
     this.online = false,
     this.age = 22,
     this.gender = 'f',
+    this.verified = false,
+    this.status = UserStatus.gaming,
+    this.level = 1,
+    this.personality = '',
   });
 
   UserProfile copyWith({
@@ -36,6 +84,10 @@ class UserProfile {
     String? bio,
     List<IpTag>? tags,
     VirtualAvatar? virtualAvatar,
+    bool? verified,
+    UserStatus? status,
+    int? level,
+    String? personality,
   }) {
     return UserProfile(
       id: id,
@@ -50,6 +102,10 @@ class UserProfile {
       online: online,
       age: age,
       gender: gender,
+      verified: verified ?? this.verified,
+      status: status ?? this.status,
+      level: level ?? this.level,
+      personality: personality ?? this.personality,
     );
   }
 

@@ -47,7 +47,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(localeProvider).languageCode;
     final mock = ref.watch(mockProvider);
     final peerId = widget.conversationId.replaceFirst('conv_', '');
     final peer = mock.userById(peerId);

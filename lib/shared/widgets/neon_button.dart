@@ -9,6 +9,7 @@ class NeonButton extends StatefulWidget {
   final IconData? icon;
   final Gradient gradient;
   final bool expand;
+  final bool secondary;
   final EdgeInsetsGeometry padding;
 
   const NeonButton({
@@ -18,6 +19,7 @@ class NeonButton extends StatefulWidget {
     this.icon,
     this.gradient = AppColors.pinkPurple,
     this.expand = true,
+    this.secondary = false,
     this.padding = const EdgeInsets.symmetric(vertical: 15, horizontal: 24),
   });
 
@@ -43,7 +45,9 @@ class _NeonButtonState extends State<NeonButton> {
           width: widget.expand ? double.infinity : null,
           padding: widget.padding,
           decoration: BoxDecoration(
-            gradient: enabled ? widget.gradient : const LinearGradient(colors: [AppColors.bg2, AppColors.bg2]),
+            gradient: enabled && !widget.secondary ? widget.gradient : null,
+            color: widget.secondary ? Colors.white.withValues(alpha: 0.10) : (enabled ? null : AppColors.bg2),
+            border: widget.secondary ? Border.all(color: Colors.white.withValues(alpha: 0.24)) : null,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(

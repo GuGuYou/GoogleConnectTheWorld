@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-import '../../core/config/api_config.dart';
 import '../models/virtual_avatar.dart';
 
 class AvatarGenerationException implements Exception {
