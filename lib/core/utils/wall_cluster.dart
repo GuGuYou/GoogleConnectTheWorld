@@ -59,7 +59,19 @@ String spotIdForCoordinate(List<WallMessage> existing, double lat, double lng) {
 
 List<WallMessage> messagesForSpot(List<WallMessage> messages, WallSpot spot) {
   return messages
-      .where((m) => haversineKm(m.lat, m.lng, spot.lat, spot.lng) * 1000 <= MapConfig.wallClusterRadiusMeters)
+      .where((m) =>
+          !m.isAnchor &&
+          haversineKm(m.lat, m.lng, spot.lat, spot.lng) * 1000 <= MapConfig.wallClusterRadiusMeters)
       .toList()
     ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+}
+
+/// 查找坐标附近是否已有留言板（100m 内）
+WallSpot? findSpotNear(List<WallMessage> messages, double lat, double lng) {
+  for (final spot in buildWallSpots(messages)) {
+    if (haversineKm(lat, lng, spot.lat, spot.lng) * 1000 <= MapConfig.wallClusterRadiusMeters) {
+      return spot;
+    }
+  }
+  return null;
 }

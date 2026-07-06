@@ -211,6 +211,31 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
     state = [...state, msg];
     ref.read(mockProvider).wallMessages.add(msg);
   }
+
+  /// 在当前位置创建留言板并发布首条留言；100m 内已有留言板时在该板追加留言
+  WallSpot createWallSpot({
+    required double lat,
+    required double lng,
+    required UserProfile author,
+    required List<IpTag> tags,
+    required String content,
+  }) {
+    final spotId = spotIdForCoordinate(state, lat, lng);
+    final msg = WallMessage(
+      id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
+      spotId: spotId,
+      lat: lat,
+      lng: lng,
+      authorId: author.id,
+      avatarSeed: author.avatarSeed,
+      tags: tags,
+      content: content.trim(),
+      createdAt: DateTime.now(),
+    );
+    state = [...state, msg];
+    ref.read(mockProvider).wallMessages.add(msg);
+    return findSpotNear(state, lat, lng)!;
+  }
 }
 
 /// 全量留言板聚合点

@@ -13,6 +13,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/models/ip_tag.dart';
 import '../../shared/models/wall_spot.dart';
+import '../wall/create_wall_spot_sheet.dart';
 import '../wall/wall_spot_sheet.dart';
 import '../avatar/widgets/virtual_avatar_view.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
@@ -85,16 +86,29 @@ class NearbyMapView extends ConsumerWidget {
               ),
             ),
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: _DeferredGoogleMap(
-                center: center,
-                circles: circles,
-                activityMarkers: activityMarkers,
-                wallSpots: wallSpots,
-                userTags: me.tags,
-                onWallSpotTap: (spot) => showWallSpotSheet(context, ref, spot),
-              ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: _DeferredGoogleMap(
+                    center: center,
+                    circles: circles,
+                    activityMarkers: activityMarkers,
+                    wallSpots: wallSpots,
+                    userTags: me.tags,
+                    onWallSpotTap: (spot) => showWallSpotSheet(context, ref, spot),
+                  ),
+                ),
+                if (me.tags.isNotEmpty)
+                  Positioned(
+                    right: 12,
+                    bottom: 12,
+                    child: _CreateWallSpotButton(
+                      onPressed: () => showCreateWallSpotSheet(context, ref),
+                    ),
+                  ),
+              ],
             ),
           ),
           if (me.tags.isNotEmpty) ...[
@@ -165,6 +179,47 @@ class NearbyMapView extends ConsumerWidget {
                   Navigator.pop(context);
                   context.push('/chat/conv_${n.user.id}');
                 },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CreateWallSpotButton extends ConsumerWidget {
+  final VoidCallback onPressed;
+  const _CreateWallSpotButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: AppColors.cyanPurple,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.neonCyan.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.add_location_alt, size: 18, color: Colors.white),
+              const SizedBox(width: 6),
+              Text(
+                ref.tr('wall_create_btn'),
+                style: AppTextStyles.button.copyWith(fontSize: 13),
               ),
             ],
           ),
