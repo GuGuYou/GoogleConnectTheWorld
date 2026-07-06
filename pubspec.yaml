@@ -23,8 +23,8 @@ dependencies:
   intl: ^0.20.2
 
   # 地图
-  flutter_map: ^7.0.2
-  latlong2: ^0.9.1
+  google_maps_flutter: ^2.12.1
+  geolocator: ^13.0.2
 
   # 动效
   flutter_animate: ^4.5.0
@@ -57,3 +57,4 @@ flutter:
     - assets/images/
     - assets/data/
     - assets/avatars/
+    - secrets/google_maps_api_key.json

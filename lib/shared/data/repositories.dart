@@ -3,15 +3,18 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/api_config.dart';
-import '../../core/providers/locale_provider.dart';
+import '../../core/config/map_config.dart';
+import '../../core/providers/location_provider.dart';
 import '../../core/utils/distance.dart';
+import '../../core/utils/wall_cluster.dart';
 import '../models/activity.dart';
 import '../models/feed_post.dart';
 import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
 import '../models/virtual_avatar.dart';
-import '../models/whisper.dart';
+import '../models/wall_message.dart';
+import '../models/wall_spot.dart';
 import 'avatar_generator_repository.dart';
 import 'mock_data_source.dart';
 
@@ -149,47 +152,6 @@ class ActivitiesNotifier extends Notifier<List<ActivityItem>> {
 /// 会话列表
 final conversationsProvider = Provider((ref) => ref.watch(mockProvider).conversations);
 
-/// 异步留言（Whisper）：地图/空间上按地理位置展示的留言，
-/// 支持发布新留言 + 对已有留言"共鸣"（区别于点对点实时聊天）。
-final whispersProvider =
-    NotifierProvider<WhispersNotifier, List<Whisper>>(WhispersNotifier.new);
-
-class WhispersNotifier extends Notifier<List<Whisper>> {
-  @override
-  List<Whisper> build() => [...ref.read(mockProvider).whispers]
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-  /// 对某条留言表示共鸣（+1，同一次会话内每条最多共鸣一次由 UI 层控制）。
-  void resonate(String id) {
-    state = [
-      for (final w in state)
-        if (w.id == id) w.copyWith(resonanceCount: w.resonanceCount + 1) else w,
-    ];
-    final mock = ref.read(mockProvider).whispers;
-    for (var i = 0; i < mock.length; i++) {
-      if (mock[i].id == id) mock[i] = mock[i].copyWith(resonanceCount: mock[i].resonanceCount + 1);
-    }
-  }
-
-  /// 在当前用户所在坐标发布一条新留言。
-  void post(String content, {required double lat, required double lng}) {
-    final me = ref.read(currentUserProvider);
-    final whisper = Whisper(
-      id: 'wh_${DateTime.now().millisecondsSinceEpoch}',
-      authorId: me.id,
-      authorNickname: me.nickname,
-      authorAvatarSeed: me.avatarSeed,
-      contentZh: content,
-      contentEn: content,
-      lat: lat,
-      lng: lng,
-      createdAt: DateTime.now(),
-    );
-    state = [whisper, ...state];
-    ref.read(mockProvider).whispers.insert(0, whisper);
-  }
-}
-
 /// 单个会话消息流（支持发送 + 自动回复）
 final chatProvider =
     NotifierProvider.family<ChatNotifier, List<ChatMessage>, String>(
@@ -218,3 +180,74 @@ class ChatNotifier extends FamilyNotifier<List<ChatMessage>, String> {
     });
   }
 }
+
+/// 异步留言墙消息列表
+final wallMessagesProvider =
+    NotifierProvider<WallMessagesNotifier, List<WallMessage>>(WallMessagesNotifier.new);
+
+class WallMessagesNotifier extends Notifier<List<WallMessage>> {
+  @override
+  List<WallMessage> build() => [...ref.read(mockProvider).wallMessages];
+
+  void postWallMessage({
+    required String content,
+    required double lat,
+    required double lng,
+    required UserProfile author,
+  }) {
+    final spotId = spotIdForCoordinate(state, lat, lng);
+    final msg = WallMessage(
+      id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
+      spotId: spotId,
+      lat: lat,
+      lng: lng,
+      authorId: author.id,
+      avatarSeed: author.avatarSeed,
+      tags: author.tags,
+      content: content.trim(),
+      createdAt: DateTime.now(),
+    );
+    state = [...state, msg];
+    ref.read(mockProvider).wallMessages.add(msg);
+  }
+}
+
+/// 全量留言板聚合点
+final wallSpotsProvider = Provider<List<WallSpot>>((ref) {
+  final messages = ref.watch(wallMessagesProvider);
+  return buildWallSpots(messages);
+});
+
+/// 留言板标签筛选（null = 全部）
+final wallTagFilterProvider = StateProvider<IpTag?>((ref) => null);
+
+/// 2km 内 + 标签过滤后的可见留言板
+final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
+  final spots = ref.watch(wallSpotsProvider);
+  final fallback = ref.watch(mapCenterProvider);
+  final loc = ref.watch(currentLocationProvider).valueOrNull;
+  final lat = loc?.latitude ?? fallback.latitude;
+  final lng = loc?.longitude ?? fallback.longitude;
+  final filter = ref.watch(wallTagFilterProvider);
+  return spots.where((spot) {
+    final km = haversineKm(lat, lng, spot.lat, spot.lng);
+    if (km > MapConfig.wallVisibleRadiusKm) return false;
+    if (filter != null && !spot.tags.contains(filter)) return false;
+    return true;
+  }).toList();
+});
+
+/// 某留言板的历史留言（按时间倒序）
+final wallMessagesForSpotProvider = Provider.family<List<WallMessage>, String>((ref, spotId) {
+  final messages = ref.watch(wallMessagesProvider);
+  final spots = ref.watch(wallSpotsProvider);
+  WallSpot? spot;
+  for (final s in spots) {
+    if (s.id == spotId) {
+      spot = s;
+      break;
+    }
+  }
+  if (spot == null) return [];
+  return messagesForSpot(messages, spot);
+});

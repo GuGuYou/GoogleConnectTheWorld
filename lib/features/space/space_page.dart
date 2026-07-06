@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_text.dart';
-import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../shared/widgets/whisper_sheets.dart';
 import '../nearby/nearby_map_view.dart';
 import '../plaza/plaza_page.dart';
 
@@ -29,7 +27,6 @@ class _SpacePageState extends ConsumerState<SpacePage> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(localeProvider).languageCode;
     return Container(
       color: _floorTop,
       child: SafeArea(
@@ -76,20 +73,6 @@ class _SpacePageState extends ConsumerState<SpacePage> {
                       style: AppTextStyles.caption.copyWith(color: Colors.white54),
                     ),
                   ),
-                  if (_sceneMode)
-                    GestureDetector(
-                      onTap: () => showWhisperFeedSheet(context, ref, lang),
-                      child: Row(
-                        children: [
-                          Icon(Icons.local_florist, size: 14, color: AppColors.neonPink.withValues(alpha: 0.8)),
-                          const SizedBox(width: 4),
-                          Text(
-                            ref.tr('whisper_title'),
-                            style: AppTextStyles.caption.copyWith(color: AppColors.neonPink),
-                          ),
-                        ],
-                      ),
-                    ),
                 ],
               ),
             ),

@@ -1,144 +1,132 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../core/config/map_config.dart';
 import '../../core/l10n/app_text.dart';
-import '../../core/providers/locale_provider.dart';
+import '../../core/providers/location_provider.dart';
+import '../../core/utils/google_maps_ready.dart';
+import '../../core/utils/wall_bubble_marker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../shared/data/mock_data_source.dart';
 import '../../shared/data/repositories.dart';
+import '../../shared/models/ip_tag.dart';
+import '../../shared/models/wall_spot.dart';
+import '../wall/wall_spot_sheet.dart';
 import '../avatar/widgets/virtual_avatar_view.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/ip_tag_chip.dart';
 import '../../shared/widgets/neon_button.dart';
-import '../../shared/widgets/whisper_sheets.dart';
 
-/// 地图视图：附近用户发光圆点 + 活动菱形 pin + 异步留言（Whisper）光点
+/// 地图视图：Google Maps + 附近用户光点 + 活动 pin + 异步留言墙（Lobby 系统）。
 class NearbyMapView extends ConsumerWidget {
   const NearbyMapView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(localeProvider).languageCode;
+    if (!MapConfig.hasValidApiKey) {
+      return const _MapFallback(messageKey: 'map_key_missing');
+    }
+
+    final fallback = ref.watch(mapCenterProvider);
+    final LatLng center = ref.watch(currentLocationProvider).valueOrNull ?? fallback;
+    final usingReal = ref.watch(usingRealLocationProvider);
     final nearby = ref.watch(nearbyUsersProvider);
     final activities = ref.watch(activitiesProvider);
-    final whispers = ref.watch(whispersProvider);
+    final wallSpots = ref.watch(visibleWallSpotsProvider);
     final me = ref.watch(currentUserProvider);
+    final tagFilter = ref.watch(wallTagFilterProvider);
+
+    final circles = <Circle>{
+      Circle(
+        circleId: const CircleId('me'),
+        center: center,
+        radius: 80,
+        fillColor: AppColors.neonCyan.withValues(alpha: 0.35),
+        strokeColor: AppColors.neonCyan,
+        strokeWidth: 2,
+      ),
+      for (final n in nearby.take(30))
+        Circle(
+          circleId: CircleId('user_${n.user.id}'),
+          center: LatLng(n.user.lat, n.user.lng),
+          radius: 60,
+          fillColor: n.user.tags.first.color.withValues(alpha: 0.45),
+          strokeColor: n.user.tags.first.color,
+          strokeWidth: 2,
+          consumeTapEvents: true,
+          onTap: () => _showUserSheet(context, ref, n),
+        ),
+    };
+
+    final activityMarkers = <Marker>{
+      for (final a in activities.take(12))
+        Marker(
+          markerId: MarkerId('activity_${a.id}'),
+          position: LatLng(a.lat, a.lng),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRose),
+          onTap: () => context.push('/activity/${a.id}'),
+        ),
+    };
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
-      child: Stack(
+      child: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: FlutterMap(
-              options: const MapOptions(
-                initialCenter: LatLng(MockDataSource.centerLat, MockDataSource.centerLng),
-                initialZoom: 13,
-                minZoom: 10,
-                maxZoom: 17,
+          if (!usingReal)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                ref.tr('location_fallback_hint'),
+                style: AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+                textAlign: TextAlign.center,
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.nichetribe.demo',
-                  tileBuilder: (context, widget, tile) => ColorFiltered(
-                    colorFilter: const ColorFilter.matrix(<double>[
-                      // 反色 + 偏紫，营造暗色赛博地图
-                      -0.8, 0, 0, 0, 255,
-                      0, -0.8, 0, 0, 255,
-                      0, 0, -0.7, 0, 255,
-                      0, 0, 0, 1, 0,
-                    ]),
-                    child: widget,
-                  ),
-                ),
-                // 当前用户
-                const MarkerLayer(markers: [
-                  Marker(
-                    point: LatLng(MockDataSource.centerLat, MockDataSource.centerLng),
-                    width: 28,
-                    height: 28,
-                    child: _MeDot(),
-                  ),
-                ]),
-                // 附近用户
-                MarkerLayer(
-                  markers: [
-                    for (final n in nearby.take(30))
-                      Marker(
-                        point: LatLng(n.user.lat, n.user.lng),
-                        width: 34,
-                        height: 34,
-                        child: GestureDetector(
-                          onTap: () => _showUserSheet(context, ref, n, lang),
-                          child: _UserDot(color: n.user.tags.first.color),
-                        ),
-                      ),
-                  ],
-                ),
-                // 活动 pin
-                MarkerLayer(
-                  markers: [
-                    for (final a in activities.take(12))
-                      Marker(
-                        point: LatLng(a.lat, a.lng),
-                        width: 30,
-                        height: 30,
-                        child: GestureDetector(
-                          onTap: () => context.push('/activity/${a.id}'),
-                          child: _ActivityPin(color: a.tag.color),
-                        ),
-                      ),
-                  ],
-                ),
-                // 异步留言（Whisper）光点
-                MarkerLayer(
-                  markers: [
-                    for (final w in whispers.take(40))
-                      Marker(
-                        point: LatLng(w.lat, w.lng),
-                        width: 26,
-                        height: 26,
-                        child: GestureDetector(
-                          onTap: () => showWhisperDetailSheet(context, ref, w, lang),
-                          child: const _WhisperDot(),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
+            ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: _DeferredGoogleMap(
+                center: center,
+                circles: circles,
+                activityMarkers: activityMarkers,
+                wallSpots: wallSpots,
+                userTags: me.tags,
+                onWallSpotTap: (spot) => showWallSpotSheet(context, ref, spot),
+              ),
             ),
           ),
-          // 留言列表 + 发布入口
-          Positioned(
-            right: 12,
-            bottom: 12,
-            child: Column(
-              children: [
-                _MapRoundButton(
-                  icon: Icons.local_florist,
-                  onTap: () => showWhisperFeedSheet(context, ref, lang),
-                ),
-                const SizedBox(height: 10),
-                _MapRoundButton(
-                  icon: Icons.edit_note_rounded,
-                  primary: true,
-                  onTap: () => showComposeWhisperSheet(context, ref, me.lat, me.lng),
-                ),
-              ],
+          if (me.tags.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final tag in me.tags)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: IpTagChip(
+                        tag: tag,
+                        small: true,
+                        selected: tagFilter == tag,
+                        onTap: () {
+                          ref.read(wallTagFilterProvider.notifier).update(
+                                (current) => current == tag ? null : tag,
+                              );
+                        },
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  void _showUserSheet(BuildContext context, WidgetRef ref, UserWithDistance n, String lang) {
+  void _showUserSheet(BuildContext context, WidgetRef ref, UserWithDistance n) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -186,99 +174,123 @@ class NearbyMapView extends ConsumerWidget {
   }
 }
 
-class _MeDot extends StatelessWidget {
-  const _MeDot();
+/// Web 上等待 Google Maps JS SDK 就绪后再渲染，避免 ROADMAP undefined 崩溃。
+class _DeferredGoogleMap extends StatefulWidget {
+  final LatLng center;
+  final Set<Circle> circles;
+  final Set<Marker> activityMarkers;
+  final List<WallSpot> wallSpots;
+  final List<IpTag> userTags;
+  final void Function(WallSpot spot) onWallSpotTap;
+
+  const _DeferredGoogleMap({
+    required this.center,
+    required this.circles,
+    required this.activityMarkers,
+    required this.wallSpots,
+    required this.userTags,
+    required this.onWallSpotTap,
+  });
+
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppColors.neonCyan,
-        border: Border.all(color: Colors.white, width: 3),
-        boxShadow: [BoxShadow(color: AppColors.neonCyan.withValues(alpha: 0.8), blurRadius: 18)],
-      ),
-    );
-  }
+  State<_DeferredGoogleMap> createState() => _DeferredGoogleMapState();
 }
 
-class _UserDot extends StatelessWidget {
-  final Color color;
-  const _UserDot({required this.color});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.9),
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.7), blurRadius: 12)],
-      ),
-      child: const Icon(Icons.person, size: 16, color: Colors.white),
-    );
-  }
-}
+class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
+  late final Future<bool> _ready = waitForGoogleMapsReady();
+  Set<Marker> _wallMarkers = {};
 
-class _ActivityPin extends StatelessWidget {
-  final Color color;
-  const _ActivityPin({required this.color});
   @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: 0.785398, // 45°
-      child: Container(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(4),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.7), blurRadius: 12)],
+  void initState() {
+    super.initState();
+    _loadWallMarkers();
+  }
+
+  @override
+  void didUpdateWidget(covariant _DeferredGoogleMap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.wallSpots != widget.wallSpots || oldWidget.userTags != widget.userTags) {
+      _loadWallMarkers();
+    }
+  }
+
+  Future<void> _loadWallMarkers() async {
+    final markers = <Marker>{};
+    for (final spot in widget.wallSpots) {
+      final color = spot.displayTag(widget.userTags).color;
+      final icon = await WallBubbleMarker.iconFor(color);
+      markers.add(
+        Marker(
+          markerId: MarkerId('wall_${spot.id}'),
+          position: LatLng(spot.lat, spot.lng),
+          icon: icon,
+          anchor: const Offset(0.5, 0.92),
+          onTap: () => widget.onWallSpotTap(spot),
         ),
-        child: Transform.rotate(
-          angle: -0.785398,
-          child: const Icon(Icons.celebration, size: 16, color: Colors.white),
+      );
+    }
+    if (!mounted) return;
+    setState(() => _wallMarkers = markers);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _ready,
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator(color: AppColors.neonCyan));
+        }
+        if (snap.data != true) {
+          return const _MapFallback(messageKey: 'map_load_error');
+        }
+        return GoogleMap(
+          style: MapConfig.neonDarkMapStyle,
+          initialCameraPosition: CameraPosition(target: widget.center, zoom: 13),
+          myLocationEnabled: false,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          mapToolbarEnabled: false,
+          circles: widget.circles,
+          markers: {...widget.activityMarkers, ..._wallMarkers},
+        );
+      },
+    );
+  }
+}
+
+class _MapFallback extends ConsumerWidget {
+  final String messageKey;
+  const _MapFallback({required this.messageKey});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          color: AppColors.bg2,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.radar, size: 64, color: AppColors.neonCyan.withValues(alpha: 0.6)),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  ref.tr(messageKey),
+                  style: AppTextStyles.body.copyWith(color: AppColors.textMuted),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// 异步留言光点：柔光治愈风的小光晕，区别于用户圆点 / 活动菱形 pin。
-class _WhisperDot extends StatelessWidget {
-  const _WhisperDot();
-  @override
-  Widget build(BuildContext context) {
-    const color = Color(0xFFFFD9EC); // 光遇风柔粉光晕
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0.15)]),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.85), blurRadius: 14, spreadRadius: 1)],
-      ),
-      child: const Icon(Icons.auto_awesome, size: 13, color: Color(0xFF6B3B5C)),
-    );
-  }
-}
 
-/// 地图右下角圆形悬浮按钮（留言列表 / 发布留言 入口）。
-class _MapRoundButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final bool primary;
-  const _MapRoundButton({required this.icon, required this.onTap, this.primary = false});
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: primary ? 52 : 42,
-        height: primary ? 52 : 42,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: primary ? AppColors.pinkPurple : null,
-          color: primary ? null : Colors.white.withValues(alpha: 0.12),
-          boxShadow: primary ? [BoxShadow(color: AppColors.neonPink.withValues(alpha: 0.55), blurRadius: 16)] : null,
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.2),
-        ),
-        child: Icon(icon, color: Colors.white, size: primary ? 24 : 19),
-      ),
-    );
-  }
-}

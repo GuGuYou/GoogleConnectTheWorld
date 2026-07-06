@@ -8,7 +8,7 @@ import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
 import '../models/virtual_avatar.dart';
-import '../models/whisper.dart';
+import '../models/wall_message.dart';
 
 /// 全局 Mock 数据源（单例）。所有页面数据均来源于此。
 /// 切换真实后端时只需替换为 RemoteDataSource，业务层零改动。
@@ -36,7 +36,7 @@ class MockDataSource {
   final List<ActivityItem> activities = [];
   final List<Conversation> conversations = [];
   final Map<String, List<ChatMessage>> messages = {};
-  final List<Whisper> whispers = [];
+  final List<WallMessage> wallMessages = [];
 
   void _generate() {
     tags = const [
@@ -83,7 +83,7 @@ class MockDataSource {
     _genFeeds();
     _genActivities();
     _genConversations();
-    _genWhispers();
+    _genWallMessages();
   }
 
   static const _names = [
@@ -220,52 +220,6 @@ class MockDataSource {
     }
   }
 
-  void _genWhispers() {
-    const zh = [
-      '第一次一个人坐在这里看日落，原来一个人也可以很自在。',
-      '如果你也喜欢原神，此刻正好路过这里，祝你今天抽卡欧气满满。',
-      '深夜写完代码下楼透气，发现这附近意外地安静，留个痕迹给同样emo的你。',
-      '刚打完一场很爽的排位，分享一下这份快乐给路过的召唤师。',
-      '一个人来的漫展，但一点都不孤单，因为知道总有同好会经过这里。',
-      '今天心情不太好，但走到这儿突然觉得没那么糟了，希望你也是。',
-      '如果有人也在补这季的新番，我们大概曾在同一时间擦肩而过。',
-      '刚搬来这个城市，谁都不认识，留句话当作我在这里存在过的证据。',
-      '深夜emo发作，写下这句话希望能被某个失眠的同类看到。',
-      '路过的你，今天辛苦了，随便找个地方坐会儿吧。',
-    ];
-    const en = [
-      'First time sitting here alone watching the sunset — turns out being alone can feel fine.',
-      'If you also play Genshin and happen to pass by, wishing you great luck on your next pull.',
-      'Stepped out for air after coding all night, this corner is oddly peaceful. Leaving a trace for fellow night owls.',
-      'Just had an amazing ranked match, sharing the joy with whoever passes by.',
-      'Came to the con alone but never felt lonely, knowing someone like-minded will pass through here.',
-      'Wasn\'t feeling great today, but this spot made it a little better. Hope it does for you too.',
-      'If you\'re also catching up on this season\'s anime, we might have crossed paths in time.',
-      'Just moved to this city, don\'t know anyone yet. Leaving this as proof I existed here.',
-      'Late night overthinking again, hoping some fellow insomniac finds this.',
-      'Hey stranger passing by, you did well today. Sit here for a bit if you want.',
-    ];
-    for (var i = 0; i < 16; i++) {
-      final author = users[_rnd.nextInt(users.length)];
-      final lat = centerLat + (_rnd.nextDouble() - 0.5) * 0.06;
-      final lng = centerLng + (_rnd.nextDouble() - 0.5) * 0.06;
-      whispers.add(
-        Whisper(
-          id: 'wh$i',
-          authorId: author.id,
-          authorNickname: author.nickname,
-          authorAvatarSeed: author.avatarSeed,
-          contentZh: zh[i % zh.length],
-          contentEn: en[i % en.length],
-          lat: lat,
-          lng: lng,
-          createdAt: DateTime.now().subtract(Duration(hours: 1 + _rnd.nextInt(240))),
-          resonanceCount: _rnd.nextInt(60),
-        ),
-      );
-    }
-  }
-
   void _genConversations() {
     final peers = users.take(6).toList();
     const lastZh = [
@@ -289,6 +243,75 @@ class MockDataSource {
         ),
       );
       messages[convId] = _seedMessages(convId, i);
+    }
+  }
+
+  void _genWallMessages() {
+    // 10 个留言板坐标，距中心约 0.5–1.8km
+    final spotCoords = <(double, double)>[
+      (centerLat + 0.0045, centerLng + 0.0030),
+      (centerLat - 0.0055, centerLng + 0.0045),
+      (centerLat + 0.0030, centerLng - 0.0060),
+      (centerLat - 0.0070, centerLng - 0.0025),
+      (centerLat + 0.0080, centerLng + 0.0055),
+      (centerLat + 0.0020, centerLng + 0.0090),
+      (centerLat - 0.0035, centerLng - 0.0075),
+      (centerLat + 0.0065, centerLng - 0.0040),
+      (centerLat - 0.0015, centerLng + 0.0070),
+      (centerLat + 0.0095, centerLng - 0.0010),
+      (centerLat + 0.0120, centerLng + 0.0080), // ~1.8km，仍在 2km 内
+    ];
+    const contents = [
+      '路过这里，发现有不少同好留过言，好温暖',
+      '第一次来南山，求原神搭子一起刷深渊',
+      '咒术回战太好看了，有人一起二刷吗',
+      '塞尔达玩家打卡！这片草地让我想起海拉鲁',
+      '周五电音局就在这附近，留言留个位',
+      '怪奇物语剧迷在此集结，欢迎讨论剧情',
+      '蜘蛛侠粉报到，附近有没有漫画同好',
+      '动森岛主求互访，留言告诉我你的岛码',
+      '今天天气真好，适合线下面基',
+      '英雄联盟五黑缺一个辅助，看到留言喊我',
+      '海贼王同好在此，附近有没有漫展搭子',
+      '艾尔登法环受苦中，求大佬带飞',
+      '间谍过家家太治愈了，推荐给每一位同好',
+      '说唱爱好者打卡，周末有局记得叫我',
+      '鬼灭之刃粉丝集合，附近有没有 cos 搭子',
+      '电子音乐爱好者在此留下足迹',
+      '权力的游戏老粉，重温经典中',
+      '蝙蝠侠漫画党，南山附近有同好吗',
+      '最后生还者通关留念，剧情太戳了',
+      '原神玩家日常打卡，深渊又满了',
+      '路过留言，祝每一位同好都能找到搭子',
+      '这里氛围真好，像死亡搁浅的异步陪伴',
+      '周末漫展就在这附近，求同行',
+      '主机党在此，欢迎联机塞尔达',
+      '深夜路过，留一句晚安给未来的同好',
+      '像素风爱好者打卡，8-bit 万岁',
+    ];
+    var msgIdx = 0;
+    for (var s = 0; s < spotCoords.length; s++) {
+      final (lat, lng) = spotCoords[s];
+      final count = 2 + _rnd.nextInt(3);
+      for (var j = 0; j < count; j++) {
+        final author = users[_rnd.nextInt(users.length)];
+        final jitterLat = lat + (_rnd.nextDouble() - 0.5) * 0.0008;
+        final jitterLng = lng + (_rnd.nextDouble() - 0.5) * 0.0008;
+        wallMessages.add(
+          WallMessage(
+            id: 'wm_$msgIdx',
+            spotId: 'spot_$s',
+            lat: jitterLat,
+            lng: jitterLng,
+            authorId: author.id,
+            avatarSeed: author.avatarSeed,
+            tags: author.tags.take(2).toList(),
+            content: contents[msgIdx % contents.length],
+            createdAt: DateTime.now().subtract(Duration(hours: 2 + msgIdx * 5, minutes: _rnd.nextInt(60))),
+          ),
+        );
+        msgIdx++;
+      }
     }
   }
 

@@ -4,6 +4,20 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import groovy.json.JsonSlurper
+
+fun readGoogleMapsApiKey(): String {
+    val secretsFile = rootProject.file("../secrets/google_maps_api_key.json")
+    if (!secretsFile.exists()) return ""
+    return try {
+        @Suppress("UNCHECKED_CAST")
+        val json = JsonSlurper().parseText(secretsFile.readText()) as Map<String, Any?>
+        (json["apiKey"] as? String)?.trim().orEmpty()
+    } catch (_: Exception) {
+        ""
+    }
+}
+
 android {
     namespace = "com.example.g_interest_social"
     compileSdk = flutter.compileSdkVersion
@@ -23,6 +37,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["googleMapsApiKey"] = readGoogleMapsApiKey()
     }
 
     buildTypes {
