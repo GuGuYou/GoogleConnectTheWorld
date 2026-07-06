@@ -13,6 +13,7 @@ class UserProfile {
   final double lng;
   final String city;
   final bool online;
+  final bool verified;
   final int age;
   final String gender; // m / f
 
@@ -27,6 +28,7 @@ class UserProfile {
     required this.lng,
     this.city = '深圳',
     this.online = false,
+    this.verified = false,
     this.age = 22,
     this.gender = 'f',
   });
@@ -48,6 +50,7 @@ class UserProfile {
       lng: lng,
       city: city,
       online: online,
+      verified: verified,
       age: age,
       gender: gender,
     );

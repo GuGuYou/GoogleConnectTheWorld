@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/api_config.dart';
 import '../../core/config/map_config.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/providers/location_provider.dart';
 import '../../core/utils/distance.dart';
 import '../../core/utils/wall_cluster.dart';

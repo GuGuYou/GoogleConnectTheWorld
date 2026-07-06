@@ -292,7 +292,9 @@ class _PlazaSceneViewState extends ConsumerState<PlazaSceneView>
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              u.status.label(lang),
+                              u.online
+                                  ? ref.tr('online')
+                                  : (lang == 'zh' ? '离线' : 'Offline'),
                               style: AppTextStyles.caption
                                   .copyWith(color: Colors.white60),
                             ),
@@ -348,7 +350,6 @@ class _PlazaSceneViewState extends ConsumerState<PlazaSceneView>
                     child: NeonButton(
                       label: ref.tr('plaza_visit_profile'),
                       icon: Icons.person,
-                      secondary: true,
                       gradient: AppColors.cyanPurple,
                       onPressed: () {
                         Navigator.pop(context);

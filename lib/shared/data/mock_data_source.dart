@@ -75,6 +75,7 @@ class MockDataSource {
       lng: centerLng,
       city: '深圳',
       online: true,
+      verified: true,
       age: 23,
       gender: 'f',
     );
@@ -128,6 +129,7 @@ class MockDataSource {
           lat: lat,
           lng: lng,
           online: _rnd.nextBool(),
+          verified: _rnd.nextDouble() > 0.75,
           age: 18 + _rnd.nextInt(12),
           gender: _rnd.nextBool() ? 'f' : 'm',
         ),
