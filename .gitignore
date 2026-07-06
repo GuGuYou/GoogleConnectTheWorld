@@ -23,7 +23,6 @@ Thumbs.db
 *.log
 node_modules/
 
-# Google Maps API key (keep local only)
-secrets/google_maps_api_key.json
+# Google Maps API key — generated platform configs (sync via tool/sync_maps_api_key.dart)
 ios/Flutter/Secrets.xcconfig
 web/google_maps_config.js
