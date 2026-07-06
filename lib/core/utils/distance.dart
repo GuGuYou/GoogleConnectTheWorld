@@ -16,6 +16,11 @@ double haversineKm(double lat1, double lng1, double lat2, double lng2) {
 
 double _deg2rad(double deg) => deg * (math.pi / 180.0);
 
+/// 判断两点距离是否在指定公里范围内
+bool isWithinKm(double lat1, double lng1, double lat2, double lng2, double maxKm) {
+  return haversineKm(lat1, lng1, lat2, lng2) <= maxKm;
+}
+
 /// 格式化距离展示
 String formatDistance(double km) {
   if (km < 1) return '${(km * 1000).round()}m';

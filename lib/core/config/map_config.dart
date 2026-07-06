@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 
@@ -12,8 +13,29 @@ class MapConfig {
   /// 留言点聚合半径（米）
   static const double wallClusterRadiusMeters = 100;
 
-  /// 留言板地图可见半径（公里）
-  static const double wallVisibleRadiusKm = 2.0;
+  /// 雷达最大扫描半径（公里），以用户位置为中心。
+  /// 决定地图初始视野、雷达同心圆最外圈，以及活动/用户/留言板图标的可见范围。
+  static const double radarMaxRangeKm = 3.0;
+
+  /// 雷达最大扫描半径（米）
+  static double get radarMaxRangeMeters => radarMaxRangeKm * 1000;
+
+  /// 雷达同心圆环半径（米）：内、中、外三圈，最外圈等于 [radarMaxRangeMeters]。
+  static List<double> get radarRingRadiiMeters => [
+        radarMaxRangeMeters / 3,
+        radarMaxRangeMeters * 2 / 3,
+        radarMaxRangeMeters,
+      ];
+
+  /// 根据纬度计算初始缩放级别，使视野直径约为 [radarMaxRangeKm] 的 2 倍。
+  static double initialZoomForLatitude(double latitude, {double viewportHeightPx = 480}) {
+    const earthCircumference = 40075016.686;
+    final diameterMeters = radarMaxRangeKm * 2000 * 1.1;
+    final latRad = latitude * math.pi / 180;
+    final metersPerPixel = diameterMeters / viewportHeightPx;
+    final zoom = math.log(earthCircumference * math.cos(latRad) / (256 * metersPerPixel)) / math.ln2;
+    return zoom.clamp(10.0, 18.0);
+  }
 
   /// 从 secrets/google_maps_api_key.json 加载 API Key。
   static Future<String?> loadApiKey() async {

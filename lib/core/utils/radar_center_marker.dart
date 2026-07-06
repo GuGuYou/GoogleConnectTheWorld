@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../config/map_config.dart';
 import '../theme/app_colors.dart';
 
 /// 用户本人位置的雷达中心：同心圆环 + 十字准星 + 中心光点。
@@ -11,9 +12,6 @@ class RadarCenterMarker {
   RadarCenterMarker._();
 
   static BitmapDescriptor? _cachedIcon;
-
-  /// 雷达扫描环（米），由内到外透明度递减。
-  static const List<double> ringRadiiMeters = [120, 240, 400];
 
   static Future<BitmapDescriptor> icon() async {
     if (_cachedIcon != null) return _cachedIcon!;
@@ -99,6 +97,7 @@ class RadarCenterMarker {
 
   /// 地图上的雷达同心圆环（与中心 Marker 配合）。
   static Set<Circle> rings(LatLng center) {
+    final ringRadiiMeters = MapConfig.radarRingRadiiMeters;
     return {
       for (var i = 0; i < ringRadiiMeters.length; i++)
         Circle(

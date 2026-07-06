@@ -7,6 +7,7 @@ import '../../core/config/map_config.dart';
 import '../../core/config/map_marker_icons.dart';
 import '../../core/l10n/app_text.dart';
 import '../../core/providers/location_provider.dart';
+import '../../core/utils/distance.dart';
 import '../../core/utils/google_maps_ready.dart';
 import '../../core/utils/map_icon_bitmap.dart';
 import '../../core/utils/radar_center_marker.dart';
@@ -48,6 +49,18 @@ class NearbyMapView extends ConsumerWidget {
       ...RadarCenterMarker.rings(center),
     };
 
+    final maxKm = MapConfig.radarMaxRangeKm;
+    final centerLat = center.latitude;
+    final centerLng = center.longitude;
+    final nearbyInRange = nearby
+        .where((n) => isWithinKm(centerLat, centerLng, n.user.lat, n.user.lng, maxKm))
+        .take(30)
+        .toList();
+    final activitiesInRange = activities
+        .where((a) => isWithinKm(centerLat, centerLng, a.lat, a.lng, maxKm))
+        .take(12)
+        .toList();
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
       child: Column(
@@ -75,8 +88,8 @@ class NearbyMapView extends ConsumerWidget {
                     )),
                     center: center,
                     circles: circles,
-                    nearbyUsers: nearby.take(30).toList(),
-                    activities: activities.take(12).toList(),
+                    nearbyUsers: nearbyInRange,
+                    activities: activitiesInRange,
                     wallSpots: wallSpots,
                     userTags: me.tags,
                     onUserTap: (n) => _showUserSheet(context, ref, n),
@@ -241,7 +254,22 @@ class _DeferredGoogleMap extends StatefulWidget {
 
 class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
   late final Future<bool> _ready = waitForGoogleMapsReady();
+  GoogleMapController? _mapController;
   Set<Marker> _markers = {};
+  bool _showActivities = true;
+  bool _showNearbyUsers = true;
+  bool _showWallSpots = true;
+
+  CameraPosition get _homeCamera => CameraPosition(
+        target: widget.center,
+        zoom: MapConfig.initialZoomForLatitude(widget.center.latitude),
+      );
+
+  Future<void> _recenterMap() async {
+    final controller = _mapController;
+    if (controller == null) return;
+    await controller.animateCamera(CameraUpdate.newCameraPosition(_homeCamera));
+  }
 
   @override
   void initState() {
@@ -283,52 +311,58 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
       icon: MapMarkerIcons.activity,
       color: MapMarkerIcons.activityColor,
     );
-    for (final a in widget.activities) {
-      markers.add(
-        Marker(
-          markerId: MarkerId('activity_${a.id}'),
-          position: LatLng(a.lat, a.lng),
-          icon: activityIcon,
-          anchor: const Offset(0.5, 0.5),
-          onTap: () {
-            if (!mounted) return;
-            context.push('/activity/${a.id}');
-          },
-        ),
-      );
+    if (_showActivities) {
+      for (final a in widget.activities) {
+        markers.add(
+          Marker(
+            markerId: MarkerId('activity_${a.id}'),
+            position: LatLng(a.lat, a.lng),
+            icon: activityIcon,
+            anchor: const Offset(0.5, 0.5),
+            onTap: () {
+              if (!mounted) return;
+              context.push('/activity/${a.id}');
+            },
+          ),
+        );
+      }
     }
 
-    for (final n in widget.nearbyUsers) {
-      final color = n.user.tags.isNotEmpty ? n.user.tags.first.color : AppColors.neonCyan;
-      final userIcon = await MapIconBitmap.pin(
-        icon: MapMarkerIcons.nearbyUser,
-        color: color,
-        size: 44,
-        iconSize: 22,
-      );
-      markers.add(
-        Marker(
-          markerId: MarkerId('user_${n.user.id}'),
-          position: LatLng(n.user.lat, n.user.lng),
-          icon: userIcon,
-          anchor: const Offset(0.5, 0.5),
-          onTap: () => widget.onUserTap(n),
-        ),
-      );
+    if (_showNearbyUsers) {
+      for (final n in widget.nearbyUsers) {
+        final color = n.user.tags.isNotEmpty ? n.user.tags.first.color : AppColors.neonCyan;
+        final userIcon = await MapIconBitmap.pin(
+          icon: MapMarkerIcons.nearbyUser,
+          color: color,
+          size: 44,
+          iconSize: 22,
+        );
+        markers.add(
+          Marker(
+            markerId: MarkerId('user_${n.user.id}'),
+            position: LatLng(n.user.lat, n.user.lng),
+            icon: userIcon,
+            anchor: const Offset(0.5, 0.5),
+            onTap: () => widget.onUserTap(n),
+          ),
+        );
+      }
     }
 
-    for (final spot in widget.wallSpots) {
-      final color = spot.displayTag(widget.userTags).color;
-      final icon = await WallBubbleMarker.iconFor(color);
-      markers.add(
-        Marker(
-          markerId: MarkerId('wall_${spot.id}'),
-          position: LatLng(spot.lat, spot.lng),
-          icon: icon,
-          anchor: const Offset(0.5, 0.5),
-          onTap: () => widget.onWallSpotTap(spot),
-        ),
-      );
+    if (_showWallSpots) {
+      for (final spot in widget.wallSpots) {
+        final color = spot.displayTag(widget.userTags).color;
+        final icon = await WallBubbleMarker.iconFor(color);
+        markers.add(
+          Marker(
+            markerId: MarkerId('wall_${spot.id}'),
+            position: LatLng(spot.lat, spot.lng),
+            icon: icon,
+            anchor: const Offset(0.5, 0.5),
+            onTap: () => widget.onWallSpotTap(spot),
+          ),
+        );
+      }
     }
 
     if (!mounted) return;
@@ -346,17 +380,147 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
         if (snap.data != true) {
           return const _MapFallback(messageKey: 'map_load_error');
         }
-        return GoogleMap(
-          style: MapConfig.neonDarkMapStyle,
-          initialCameraPosition: CameraPosition(target: widget.center, zoom: 13),
-          myLocationEnabled: false,
-          myLocationButtonEnabled: false,
-          zoomControlsEnabled: false,
-          mapToolbarEnabled: false,
-          circles: widget.circles,
-          markers: _markers,
+        return Stack(
+          children: [
+            GoogleMap(
+              style: MapConfig.neonDarkMapStyle,
+              initialCameraPosition: _homeCamera,
+              onMapCreated: (controller) => _mapController = controller,
+              myLocationEnabled: false,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              circles: widget.circles,
+              markers: _markers,
+            ),
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _RecenterMapButton(onPressed: _recenterMap),
+                  const SizedBox(height: 8),
+                  _MapLayerToggle(
+                    icon: MapMarkerIcons.activity,
+                    color: MapMarkerIcons.activityColor,
+                    tooltipKey: 'map_toggle_activity',
+                    enabled: _showActivities,
+                    onChanged: (value) {
+                      setState(() => _showActivities = value);
+                      _loadMarkers();
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  _MapLayerToggle(
+                    icon: MapMarkerIcons.nearbyUser,
+                    color: AppColors.neonCyan,
+                    tooltipKey: 'map_toggle_nearby_user',
+                    enabled: _showNearbyUsers,
+                    onChanged: (value) {
+                      setState(() => _showNearbyUsers = value);
+                      _loadMarkers();
+                    },
+                  ),
+                  const SizedBox(height: 6),
+                  _MapLayerToggle(
+                    icon: MapMarkerIcons.wallMessage,
+                    color: MapMarkerIcons.wallDefaultColor,
+                    tooltipKey: 'map_toggle_wall',
+                    enabled: _showWallSpots,
+                    onChanged: (value) {
+                      setState(() => _showWallSpots = value);
+                      _loadMarkers();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
       },
+    );
+  }
+}
+
+class _MapLayerToggle extends ConsumerWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltipKey;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  const _MapLayerToggle({
+    required this.icon,
+    required this.color,
+    required this.tooltipKey,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Tooltip(
+      message: ref.tr(tooltipKey),
+      child: Material(
+        color: AppColors.bg2.withValues(alpha: enabled ? 0.92 : 0.55),
+        elevation: enabled ? 4 : 1,
+        shadowColor: color.withValues(alpha: enabled ? 0.25 : 0.08),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: () => onChanged(!enabled),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: enabled ? color.withValues(alpha: 0.75) : AppColors.glassBorder.withValues(alpha: 0.5),
+                width: enabled ? 1.5 : 1,
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: enabled ? color : AppColors.textMuted,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecenterMapButton extends ConsumerWidget {
+  final VoidCallback onPressed;
+  const _RecenterMapButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Tooltip(
+      message: ref.tr('map_recenter'),
+      child: Material(
+        color: AppColors.bg2.withValues(alpha: 0.92),
+        elevation: 4,
+        shadowColor: AppColors.neonCyan.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.glassBorder),
+            ),
+            child: const Icon(Icons.my_location, size: 22, color: AppColors.neonCyan),
+          ),
+        ),
+      ),
     );
   }
 }

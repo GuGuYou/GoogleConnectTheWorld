@@ -108,6 +108,10 @@ class AppText {
       'map_key_missing': '地图未配置 API Key。请复制 secrets/google_maps_api_key.example.json 并填入 Key，然后运行 dart run tool/sync_maps_api_key.dart',
       'map_key_invalid': 'Google Maps API Key 无效。请在 Google Cloud Console 启用 Maps JavaScript API，并检查 Key 限制（Web 需允许 localhost）',
       'map_load_error': '地图加载失败，请检查网络或 API Key 配置',
+      'map_recenter': '回到我的位置',
+      'map_toggle_activity': '活动',
+      'map_toggle_nearby_user': '附近用户',
+      'map_toggle_wall': '留言板',
       'location_fallback_hint': '定位不可用，已使用演示位置',
       // 异步留言板（Lobby 系统）
       'wall_spot_title': '这里的留言',
@@ -262,6 +266,10 @@ class AppText {
       'map_key_missing': 'Map API key missing. Copy secrets/google_maps_api_key.example.json, add your key, then run dart run tool/sync_maps_api_key.dart',
       'map_key_invalid': 'Invalid Google Maps API key. Enable Maps JavaScript API in Google Cloud Console and allow localhost for Web.',
       'map_load_error': 'Failed to load map. Check network or API key configuration.',
+      'map_recenter': 'Back to my location',
+      'map_toggle_activity': 'Activities',
+      'map_toggle_nearby_user': 'Nearby users',
+      'map_toggle_wall': 'Message board',
       'location_fallback_hint': 'Location unavailable — using demo coordinates',
       // Async message board (Lobby system)
       'wall_spot_title': 'Messages Here',

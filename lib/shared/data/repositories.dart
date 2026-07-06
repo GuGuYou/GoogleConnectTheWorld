@@ -247,7 +247,7 @@ final wallSpotsProvider = Provider<List<WallSpot>>((ref) {
 /// 留言板标签筛选（null = 全部）
 final wallTagFilterProvider = StateProvider<IpTag?>((ref) => null);
 
-/// 2km 内 + 标签过滤后的可见留言板
+/// 雷达范围内 + 标签过滤后的可见留言板
 final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
   final spots = ref.watch(wallSpotsProvider);
   final fallback = ref.watch(mapCenterProvider);
@@ -255,9 +255,9 @@ final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
   final lat = loc?.latitude ?? fallback.latitude;
   final lng = loc?.longitude ?? fallback.longitude;
   final filter = ref.watch(wallTagFilterProvider);
+  final maxKm = MapConfig.radarMaxRangeKm;
   return spots.where((spot) {
-    final km = haversineKm(lat, lng, spot.lat, spot.lng);
-    if (km > MapConfig.wallVisibleRadiusKm) return false;
+    if (!isWithinKm(lat, lng, spot.lat, spot.lng, maxKm)) return false;
     if (filter != null && !spot.tags.contains(filter)) return false;
     return true;
   }).toList();
