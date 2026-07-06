@@ -5,10 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/l10n/app_text.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../shared/data/mock_data_source.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
-import '../../shared/widgets/ip_tag_chip.dart';
+import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/neon_background.dart';
 import '../../shared/widgets/neon_button.dart';
 
@@ -22,7 +21,6 @@ class EditProfilePage extends ConsumerStatefulWidget {
 class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   late TextEditingController _nickname;
   late TextEditingController _bio;
-  late Set<String> _selectedTags;
 
   @override
   void initState() {
@@ -30,7 +28,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final me = ref.read(currentUserProvider);
     _nickname = TextEditingController(text: me.nickname);
     _bio = TextEditingController(text: me.bio);
-    _selectedTags = me.tags.map((e) => e.id).toSet();
   }
 
   @override
@@ -41,13 +38,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   void _save() {
-    final allTags = MockDataSource.instance.tags;
     ref.read(currentUserProvider.notifier).updateProfile(
           nickname: _nickname.text.trim(),
           bio: _bio.text.trim(),
-        );
-    ref.read(currentUserProvider.notifier).updateTags(
-          allTags.where((t) => _selectedTags.contains(t.id)).toList(),
         );
     context.pop();
   }
@@ -55,7 +48,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     final me = ref.watch(currentUserProvider);
-    final tags = MockDataSource.instance.tags;
 
     return Scaffold(
       appBar: AppBar(
@@ -77,19 +69,23 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             _input(_bio, lines: 3),
             const SizedBox(height: 16),
             _label(ref.tr('edit_tags')),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final t in tags)
-                  IpTagChip(
-                    tag: t,
-                    selected: _selectedTags.contains(t.id),
-                    onTap: () => setState(() {
-                      _selectedTags.contains(t.id) ? _selectedTags.remove(t.id) : _selectedTags.add(t.id);
-                    }),
+            GlassCard(
+              child: Row(
+                children: [
+                  const Icon(Icons.sell_outlined, color: AppColors.neonCyan),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      ref.tr('reselect_tags'),
+                      style: AppTextStyles.bodyStrong,
+                    ),
                   ),
-              ],
+                  Text('${me.tags.length}', style: AppTextStyles.caption),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right, color: AppColors.textMuted),
+                ],
+              ),
+              onTap: () => context.push('/tag-select?return=${Uri.encodeComponent('/profile')}'),
             ),
             const SizedBox(height: 28),
             NeonButton(label: ref.tr('save'), icon: Icons.check, onPressed: _save),
@@ -108,10 +104,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     return TextField(
       controller: c,
       maxLines: lines,
-      style: AppTextStyles.body.copyWith(color: Colors.white),
+      style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.04),
+        fillColor: Colors.white,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       ),
     );

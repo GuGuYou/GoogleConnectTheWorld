@@ -26,7 +26,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     final pages = [
       _ObData(Icons.tag, ref.tr('ob1_title'), ref.tr('ob1_desc'), AppColors.neonCyan),
       _ObData(Icons.location_searching, ref.tr('ob2_title'), ref.tr('ob2_desc'), AppColors.neonPink),
-      _ObData(Icons.groups, ref.tr('ob3_title'), ref.tr('ob3_desc'), AppColors.neonPurple),
+      _ObData(Icons.forum_outlined, ref.tr('ob3_title'), ref.tr('ob3_desc'), AppColors.neonPurple),
     ];
 
     return Scaffold(

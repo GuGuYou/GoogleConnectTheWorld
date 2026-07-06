@@ -12,8 +12,6 @@ import '../../features/avatar/avatar_customize_page.dart';
 import '../../features/avatar/avatar_setup_page.dart';
 import '../../features/chat/chat_list_page.dart';
 import '../../features/chat/chat_page.dart';
-import '../../features/discover/discover_page.dart';
-import '../../features/nearby/nearby_page.dart';
 import '../../features/onboarding/onboarding_page.dart';
 import '../../features/profile/about_page.dart';
 import '../../features/profile/edit_profile_page.dart';
@@ -37,18 +35,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/avatar-setup', builder: (c, s) => AvatarSetupPage(returnLocation: s.uri.queryParameters['return'] ?? '/tag-select')),
       GoRoute(path: '/avatar-customize', builder: (c, s) => AvatarCustomizePage(returnLocation: s.uri.queryParameters['return'] ?? '/tag-select')),
       GoRoute(path: '/avatar-ai', builder: (c, s) => AvatarAiGeneratePage(returnLocation: s.uri.queryParameters['return'] ?? '/tag-select')),
-      GoRoute(path: '/tag-select', builder: (c, s) => const TagSelectPage()),
+      GoRoute(path: '/tag-select', builder: (c, s) => TagSelectPage(returnLocation: s.uri.queryParameters['return'] ?? '/space')),
+      GoRoute(path: '/discover', redirect: (c, s) => '/space'),
+      GoRoute(path: '/nearby', redirect: (c, s) => '/space'),
 
-      // 主框架：底部 4 Tab
+      // 主框架：底部 Tab
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => MainShell(shell: shell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/discover', builder: (c, s) => const DiscoverPage()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/nearby', builder: (c, s) => const NearbyPage()),
-          ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/space', builder: (c, s) => const SpacePage()),
           ]),

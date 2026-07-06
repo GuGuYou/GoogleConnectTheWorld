@@ -61,6 +61,10 @@ class MockDataSource {
       // 音乐
       IpTag(id: 'm1', nameZh: '电子音乐', nameEn: 'EDM', category: 'music', icon: Icons.music_note),
       IpTag(id: 'm2', nameZh: '说唱', nameEn: 'Hip-Hop', category: 'music', icon: Icons.mic),
+      IpTag(id: 'm3', nameZh: '周杰伦', nameEn: 'Jay Chou', category: 'music', icon: Icons.piano),
+      IpTag(id: 'm4', nameZh: '林俊杰', nameEn: 'JJ Lin', category: 'music', icon: Icons.graphic_eq),
+      IpTag(id: 'm5', nameZh: 'Taylor Swift', nameEn: 'Taylor Swift', category: 'music', icon: Icons.album),
+      IpTag(id: 'm6', nameZh: 'YOASOBI', nameEn: 'YOASOBI', category: 'music', icon: Icons.library_music),
     ];
 
     // 当前用户

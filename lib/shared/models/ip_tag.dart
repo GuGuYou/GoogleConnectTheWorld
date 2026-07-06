@@ -7,7 +7,7 @@ class IpTag {
   final String id;
   final String nameZh;
   final String nameEn;
-  final String category; // game / anime / drama / comic / music
+  final String category; // game / anime / drama / comic / music / custom
   final IconData icon;
 
   const IpTag({
