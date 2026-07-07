@@ -54,28 +54,34 @@ class MapConfig {
 
   static bool get hasValidApiKey => _apiKey != null && _apiKey!.isNotEmpty;
 
-  /// 暗色赛博风格地图样式（替代原 OSM ColorFiltered 方案）。
-  static const String neonDarkMapStyle = '''
+  /// 极简黑白线稿地图样式（无 POI、无标签，白底黑线）。
+  static const String mapStyle = '''
 [
-  {"elementType":"geometry","stylers":[{"color":"#1d1d35"}]},
-  {"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},
-  {"elementType":"labels.text.stroke","stylers":[{"color":"#1a1a2e"}]},
-  {"featureType":"administrative","elementType":"geometry","stylers":[{"color":"#757575"}]},
-  {"featureType":"administrative.country","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]},
+  {"stylers":[{"saturation":-100}]},
+  {"elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"elementType":"labels","stylers":[{"visibility":"off"}]},
+  {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
+  {"featureType":"administrative","stylers":[{"visibility":"off"}]},
   {"featureType":"administrative.land_parcel","stylers":[{"visibility":"off"}]},
-  {"featureType":"administrative.locality","elementType":"labels.text.fill","stylers":[{"color":"#bdbdbd"}]},
-  {"featureType":"poi","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#181830"}]},
-  {"featureType":"poi.park","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
-  {"featureType":"road","elementType":"geometry.fill","stylers":[{"color":"#2c2c54"}]},
-  {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#8a8a8a"}]},
-  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#373773"}]},
-  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#3d3d8c"}]},
-  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#1f1f45"}]},
-  {"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
-  {"featureType":"transit","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e0e1f"}]},
-  {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#3d3d3d"}]}
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"landscape.man_made","elementType":"geometry","stylers":[{"color":"#fafafa"}]},
+  {"featureType":"poi","stylers":[{"visibility":"off"}]},
+  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"poi.park","elementType":"geometry.stroke","stylers":[{"color":"#bdbdbd"},{"weight":1}]},
+  {"featureType":"poi.park","elementType":"labels","stylers":[{"visibility":"off"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#9e9e9e"},{"weight":1}]},
+  {"featureType":"road","elementType":"labels","stylers":[{"visibility":"off"}]},
+  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"road.arterial","elementType":"geometry.stroke","stylers":[{"color":"#757575"},{"weight":1}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#212121"},{"weight":2}]},
+  {"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"road.local","elementType":"geometry.stroke","stylers":[{"color":"#bdbdbd"},{"weight":1}]},
+  {"featureType":"transit","stylers":[{"visibility":"off"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#ffffff"}]},
+  {"featureType":"water","elementType":"geometry.stroke","stylers":[{"color":"#212121"},{"weight":1}]},
+  {"featureType":"water","elementType":"labels","stylers":[{"visibility":"off"}]}
 ]
 ''';
 }
