@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/l10n/app_text.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../nearby/nearby_map_view.dart';
-import '../plaza/plaza_page.dart';
+import 'hive_room_scene.dart';
 
 /// "空间"：广场（虚拟场景）与地图（GPS + 兴趣点）融合的统一容器。
 ///
-/// 会议决定：将"广场"与"地图"两个原本割裂的功能合并成一个"空间"概念——
-/// 用户可在"场景"模式下探索虚拟场景、遇见正在附近的同好，感受氛围共鸣；
-/// 也可切换到"地图"模式查看真实地理位置与兴趣点，两者互为补充、共享同一入口。
+/// 场景模式占满全屏（标题/底栏由 [HiveRoomScene] 自己处理）；
+/// 地图模式显示真实地理位置与兴趣点。
 class SpacePage extends ConsumerStatefulWidget {
   const SpacePage({super.key});
 
@@ -20,8 +18,7 @@ class SpacePage extends ConsumerStatefulWidget {
 }
 
 class _SpacePageState extends ConsumerState<SpacePage> {
-  static const _floorTop = Color(0xFF0A0D1C);
-  static const _gridColor = Color(0xFF31E6FF);
+  static const _floorTop = Color(0xFF1A0F00);
 
   bool _sceneMode = true;
 
@@ -33,53 +30,42 @@ class _SpacePageState extends ConsumerState<SpacePage> {
         bottom: false,
         child: Column(
           children: [
+            // 顶部切换开关（两个模式共享）
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
               child: Row(
                 children: [
                   ShaderMask(
                     blendMode: BlendMode.srcIn,
                     shaderCallback: (b) => const LinearGradient(
-                      colors: [_gridColor, AppColors.neonPink],
+                      colors: [AppColors.neonCyan, AppColors.neonPink],
                     ).createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
                     child: Text(
-                      ref.tr('space_title'),
+                      _sceneMode ? 'Hive' : 'Map',
                       style: AppTextStyles.h1.copyWith(color: Colors.white),
                     ),
                   ),
                   const Spacer(),
                   _SpaceToggle(
                     sceneMode: _sceneMode,
-                    sceneLabel: ref.tr('space_scene'),
-                    mapLabel: ref.tr('space_map'),
                     onChanged: (v) => setState(() => _sceneMode = v),
                   ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-              child: Row(
-                children: [
-                  Icon(
-                    _sceneMode ? Icons.blur_on : Icons.map_outlined,
-                    size: 13,
-                    color: _gridColor.withValues(alpha: 0.7),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      _sceneMode ? ref.tr('space_scene_hint') : ref.tr('space_map_hint'),
-                      style: AppTextStyles.caption.copyWith(color: Colors.white54),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // AnimatedSwitcher：场景↔地图切换 ≤500ms
             Expanded(
-              child: _sceneMode
-                  ? const ClipRect(child: PlazaSceneView())
-                  : const NearbyMapView(),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 350),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                child: _sceneMode
+                    ? HiveRoomScene(
+                        key: const ValueKey('hive'),
+                        onSwitchToMap: () => setState(() => _sceneMode = false),
+                      )
+                    : const NearbyMapView(key: ValueKey('map')),
+              ),
             ),
           ],
         ),
@@ -90,15 +76,8 @@ class _SpacePageState extends ConsumerState<SpacePage> {
 
 class _SpaceToggle extends StatelessWidget {
   final bool sceneMode;
-  final String sceneLabel;
-  final String mapLabel;
   final ValueChanged<bool> onChanged;
-  const _SpaceToggle({
-    required this.sceneMode,
-    required this.sceneLabel,
-    required this.mapLabel,
-    required this.onChanged,
-  });
+  const _SpaceToggle({required this.sceneMode, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -110,14 +89,14 @@ class _SpaceToggle extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _seg(Icons.blur_on, sceneLabel, sceneMode, () => onChanged(true)),
-          _seg(Icons.map, mapLabel, !sceneMode, () => onChanged(false)),
+          _seg('Scene', sceneMode, () => onChanged(true)),
+          _seg('Map', !sceneMode, () => onChanged(false)),
         ],
       ),
     );
   }
 
-  Widget _seg(IconData icon, String label, bool active, VoidCallback onTap) {
+  Widget _seg(String label, bool active, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -127,12 +106,12 @@ class _SpaceToggle extends StatelessWidget {
           gradient: active ? AppColors.cyanPurple : null,
           borderRadius: BorderRadius.circular(18),
         ),
-        child: Row(
-          children: [
-            Icon(icon, size: 15, color: active ? Colors.white : Colors.white38),
-            const SizedBox(width: 4),
-            Text(label, style: TextStyle(fontSize: 12, color: active ? Colors.white : Colors.white38)),
-          ],
+        child: Text(
+          label,
+          style: TextStyle(
+              fontSize: 12,
+              color: active ? Colors.white : Colors.white38,
+              fontWeight: FontWeight.w600),
         ),
       ),
     );

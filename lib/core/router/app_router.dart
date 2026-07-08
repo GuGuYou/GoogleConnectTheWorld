@@ -12,8 +12,6 @@ import '../../features/avatar/avatar_customize_page.dart';
 import '../../features/avatar/avatar_setup_page.dart';
 import '../../features/chat/chat_list_page.dart';
 import '../../features/chat/chat_page.dart';
-import '../../features/discover/discover_page.dart';
-import '../../features/nearby/nearby_page.dart';
 import '../../features/onboarding/onboarding_page.dart';
 import '../../features/profile/about_page.dart';
 import '../../features/profile/edit_profile_page.dart';
@@ -21,6 +19,7 @@ import '../../features/profile/profile_page.dart';
 import '../../features/profile/settings_page.dart';
 import '../../features/profile/user_detail_page.dart';
 import '../../features/space/space_page.dart';
+import '../../features/space/tag_space_page.dart';
 import '../../features/splash/splash_page.dart';
 import '../../shared/widgets/main_shell.dart';
 
@@ -39,16 +38,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/avatar-ai', builder: (c, s) => AvatarAiGeneratePage(returnLocation: s.uri.queryParameters['return'] ?? '/tag-select')),
       GoRoute(path: '/tag-select', builder: (c, s) => const TagSelectPage()),
 
-      // 主框架：底部 4 Tab
+      // 主框架：底部 3 Tab
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => MainShell(shell: shell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/discover', builder: (c, s) => const DiscoverPage()),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(path: '/nearby', builder: (c, s) => const NearbyPage()),
-          ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/space', builder: (c, s) => const SpacePage()),
           ]),
@@ -65,6 +58,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/chat', builder: (c, s) => const ChatListPage()),
       GoRoute(path: '/chat/:id', builder: (c, s) => ChatPage(conversationId: s.pathParameters['id']!)),
       GoRoute(path: '/user/:id', builder: (c, s) => UserDetailPage(userId: s.pathParameters['id']!)),
+      GoRoute(
+        path: '/tag-space/:tagId',
+        builder: (c, s) {
+          final tagId = s.pathParameters['tagId']!;
+          // 从 MockDataSource 查找 tag 信息
+          return TagSpaceByTagIdPage(tagId: tagId);
+        },
+      ),
       GoRoute(path: '/activity/create', builder: (c, s) => const ActivityCreatePage()),
       GoRoute(path: '/activity/:id', builder: (c, s) => ActivityDetailPage(activityId: s.pathParameters['id']!)),
       GoRoute(path: '/profile/edit', builder: (c, s) => const EditProfilePage()),

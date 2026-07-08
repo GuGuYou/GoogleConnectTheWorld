@@ -15,7 +15,7 @@ class NicheTribeApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
-      title: 'GuGu',
+      title: 'GoBuzz',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       themeMode: ThemeMode.light,

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
-import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/distance.dart';
@@ -20,7 +19,6 @@ class UserDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lang = ref.watch(localeProvider).languageCode;
     final me = ref.watch(currentUserProvider);
     final user = ref.read(mockProvider).userById(userId);
     final dist = haversineKm(me.lat, me.lng, user.lat, user.lng);
@@ -37,7 +35,10 @@ class UserDetailPage extends ConsumerWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [user.tags.first.color.withValues(alpha: 0.7), AppColors.bg0],
+                colors: [
+                  user.tags.first.color.withValues(alpha: 0.7),
+                  AppColors.bg0
+                ],
               ),
             ),
           ),
@@ -46,7 +47,9 @@ class UserDetailPage extends ConsumerWidget {
               children: [
                 Align(
                   alignment: Alignment.topLeft,
-                  child: IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back)),
+                  child: IconButton(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Icons.arrow_back)),
                 ),
                 Expanded(
                   child: ListView(
@@ -57,12 +60,24 @@ class UserDetailPage extends ConsumerWidget {
                         child: Column(
                           children: [
                             user.virtualAvatar != null
-                                ? VirtualAvatarView(avatar: user.virtualAvatar!, size: 110, glow: true, online: user.online)
-                                : AvatarPlaceholder(seed: user.avatarSeed, label: user.nickname, size: 110, glow: true, online: user.online),
+                                ? VirtualAvatarView(
+                                    avatar: user.virtualAvatar!,
+                                    size: 110,
+                                    glow: true,
+                                    online: user.online)
+                                : AvatarPlaceholder(
+                                    seed: user.avatarSeed,
+                                    label: user.nickname,
+                                    size: 110,
+                                    glow: true,
+                                    online: user.online),
                             const SizedBox(height: 14),
-                            GradientText(user.nickname, style: AppTextStyles.h1),
+                            GradientText(user.nickname,
+                                style: AppTextStyles.h1),
                             const SizedBox(height: 6),
-                            Text('${user.age} · ${user.city} · ${formatDistance(dist)}', style: AppTextStyles.caption),
+                            Text(
+                                '${user.age} · ${user.city} · ${formatDistance(dist)}',
+                                style: AppTextStyles.caption),
                           ],
                         ),
                       ),
@@ -78,14 +93,19 @@ class UserDetailPage extends ConsumerWidget {
                           children: [
                             const Icon(Icons.bolt, color: Colors.white),
                             const SizedBox(width: 8),
-                            Text('${ref.tr('match_rate')}  $rate%', style: AppTextStyles.button.copyWith(fontSize: 18)),
+                            Text('${ref.tr('match_rate')}  $rate%',
+                                style: AppTextStyles.button
+                                    .copyWith(fontSize: 18)),
                             const Spacer(),
-                            Text('${common.length} ${ref.tr('common_tags')}', style: const TextStyle(color: Colors.white70)),
+                            Text('${common.length} ${ref.tr('common_tags')}',
+                                style: const TextStyle(color: Colors.white70)),
                           ],
                         ),
                       ),
                       const SizedBox(height: 20),
-                      Text(user.bio, style: AppTextStyles.body.copyWith(height: 1.7, color: AppColors.textPrimary)),
+                      Text(user.bio,
+                          style: AppTextStyles.body.copyWith(
+                              height: 1.7, color: AppColors.textPrimary)),
                       const SizedBox(height: 20),
                       Text(ref.tr('common_tags'), style: AppTextStyles.title),
                       const SizedBox(height: 12),
@@ -94,7 +114,9 @@ class UserDetailPage extends ConsumerWidget {
                         runSpacing: 10,
                         children: [
                           for (final t in user.tags)
-                            IpTagChip(tag: t, selected: common.any((c) => c.id == t.id)),
+                            IpTagChip(
+                                tag: t,
+                                selected: common.any((c) => c.id == t.id)),
                         ],
                       ),
                       const SizedBox(height: 100),

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
-import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
@@ -35,7 +34,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   void _send({bool image = false}) {
     final text = _input.text.trim();
     if (!image && text.isEmpty) return;
-    ref.read(chatProvider(widget.conversationId).notifier).send(text, isImage: image);
+    ref
+        .read(chatProvider(widget.conversationId).notifier)
+        .send(text, isImage: image);
     _input.clear();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
@@ -47,7 +48,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(localeProvider).languageCode;
     final mock = ref.watch(mockProvider);
     final peerId = widget.conversationId.replaceFirst('conv_', '');
     final peer = mock.userById(peerId);
@@ -63,21 +63,32 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 padding: const EdgeInsets.fromLTRB(4, 4, 16, 8),
                 child: Row(
                   children: [
-                    IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back)),
+                    IconButton(
+                        onPressed: () => context.pop(),
+                        icon: const Icon(Icons.arrow_back)),
                     peer.virtualAvatar != null
-                        ? VirtualAvatarView(avatar: peer.virtualAvatar!, size: 40, online: peer.online)
-                        : AvatarPlaceholder(seed: peer.avatarSeed, label: peer.nickname, size: 40, online: peer.online),
+                        ? VirtualAvatarView(
+                            avatar: peer.virtualAvatar!,
+                            size: 40,
+                            online: peer.online)
+                        : AvatarPlaceholder(
+                            seed: peer.avatarSeed,
+                            label: peer.nickname,
+                            size: 40,
+                            online: peer.online),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(peer.nickname, style: AppTextStyles.bodyStrong),
-                          Text(peer.online ? ref.tr('online') : peer.city, style: AppTextStyles.caption),
+                          Text(peer.online ? ref.tr('online') : peer.city,
+                              style: AppTextStyles.caption),
                         ],
                       ),
                     ),
-                    if (peer.tags.isNotEmpty) IpTagChip(tag: peer.tags.first, small: true),
+                    if (peer.tags.isNotEmpty)
+                      IpTagChip(tag: peer.tags.first, small: true),
                   ],
                 ),
               ),
@@ -86,9 +97,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               Expanded(
                 child: ListView.builder(
                   controller: _scroll,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   itemCount: messages.length,
-                  itemBuilder: (c, i) => MessageBubble(message: messages[i], imageMsgLabel: ref.tr('image_msg')),
+                  itemBuilder: (c, i) => MessageBubble(
+                      message: messages[i], imageMsgLabel: ref.tr('image_msg')),
                 ),
               ),
               // 输入栏
@@ -104,19 +117,22 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     children: [
                       IconButton(
                         onPressed: () => _send(image: true),
-                        icon: const Icon(Icons.image_outlined, color: AppColors.neonCyan),
+                        icon: const Icon(Icons.image_outlined,
+                            color: AppColors.neonCyan),
                       ),
                       Expanded(
                         child: TextField(
                           controller: _input,
-                          style: AppTextStyles.body.copyWith(color: Colors.white),
+                          style:
+                              AppTextStyles.body.copyWith(color: Colors.white),
                           onSubmitted: (_) => _send(),
                           decoration: InputDecoration(
                             hintText: ref.tr('chat_input_hint'),
                             hintStyle: AppTextStyles.caption,
                             filled: true,
                             fillColor: Colors.white.withValues(alpha: 0.05),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(24),
                               borderSide: BorderSide.none,
@@ -129,8 +145,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                         onTap: () => _send(),
                         child: Container(
                           padding: const EdgeInsets.all(11),
-                          decoration: const BoxDecoration(gradient: AppColors.pinkPurple, shape: BoxShape.circle),
-                          child: const Icon(Icons.send, size: 20, color: Colors.white),
+                          decoration: const BoxDecoration(
+                              gradient: AppColors.pinkPurple,
+                              shape: BoxShape.circle),
+                          child: const Icon(Icons.send,
+                              size: 20, color: Colors.white),
                         ),
                       ),
                     ],

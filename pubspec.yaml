@@ -1,5 +1,5 @@
-name: g_interest_social
-description: "LBS + IP 标签兴趣社交 App 高保真原型（Cyber Neon 风格）"
+name: gobuzz
+description: "GoBuzz — LBS + IP 标签兴趣社交 App（Cyber Neon 风格）"
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -45,6 +45,9 @@ dependencies:
   # 网络请求（调用自建 AI 生成后端）
   http: ^1.2.2
 
+  # 加密 / 哈希（匿名身份 + 日志脱敏）
+  crypto: ^3.0.6
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -55,6 +58,15 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/ui/
+    - assets/images/backgrounds/
+    - assets/images/banners/
+    - assets/images/icons/
+    - assets/images/decorations/
+    - assets/images/splash/
+    - assets/images/onboarding/
+    - assets/images/avatars/
+    - assets/images/placeholders/
     - assets/data/
     - assets/avatars/
     - secrets/google_maps_api_key.json

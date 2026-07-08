@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../../core/services/gps_fuzzer.dart';
 import '../models/activity.dart';
-import '../models/feed_post.dart';
 import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
@@ -32,7 +32,6 @@ class MockDataSource {
 
   // ---- 数据集合 ----
   final List<UserProfile> users = [];
-  final List<FeedPost> feeds = [];
   final List<ActivityItem> activities = [];
   final List<Conversation> conversations = [];
   final Map<String, List<ChatMessage>> messages = {};
@@ -63,7 +62,8 @@ class MockDataSource {
       IpTag(id: 'm2', nameZh: '说唱', nameEn: 'Hip-Hop', category: 'music', icon: Icons.mic),
     ];
 
-    // 当前用户
+    // 当前用户（坐标经过模糊化）
+    final meFuzzed = GpsFuzzer.fuzzSeeded(centerLat, centerLng, 42);
     me = UserProfile(
       id: 'me',
       nickname: 'NeonDrifter',
@@ -71,8 +71,8 @@ class MockDataSource {
       virtualAvatar: VirtualAvatar.seeded('me_seed_42'),
       bio: '夜猫子 / 主机党 / 二次元浓度过高，找搭子开黑看番！',
       tags: [tags[0], tags[3], tags[5], tags[9]],
-      lat: centerLat,
-      lng: centerLng,
+      lat: meFuzzed.lat,
+      lng: meFuzzed.lng,
       city: '深圳',
       online: true,
       verified: true,
@@ -81,7 +81,6 @@ class MockDataSource {
     );
 
     _genUsers();
-    _genFeeds();
     _genActivities();
     _genConversations();
     _genWallMessages();
@@ -114,64 +113,26 @@ class MockDataSource {
       final tagCount = 2 + _rnd.nextInt(4);
       final shuffled = [...tags]..shuffle(_rnd);
       final userTags = shuffled.take(tagCount).toList();
-      // 坐标围绕中心点 ±0.05° 抖动
-      final lat = centerLat + (_rnd.nextDouble() - 0.5) * 0.1;
-      final lng = centerLng + (_rnd.nextDouble() - 0.5) * 0.1;
+      // 原始坐标围绕中心点 ±0.05° 抖动
+      final rawLat = centerLat + (_rnd.nextDouble() - 0.5) * 0.1;
+      final rawLng = centerLng + (_rnd.nextDouble() - 0.5) * 0.1;
+      // GPS 模糊化（GDPR 合规）
+      final fuzzed = GpsFuzzer.fuzzSeeded(rawLat, rawLng, 100 + i);
       users.add(
         UserProfile(
           id: 'u$i',
           nickname: _names[i % _names.length] + (i >= _names.length ? '${i ~/ _names.length}' : ''),
           avatarSeed: 'seed_$i',
-          // 视觉风格已统一为"光遇"式可爱治愈风，Mock 用户不再随机分配 pixel 风格。
+          // 视觉风格已统一为可爱治愈风，Mock 用户不再随机分配 pixel 风格。
           virtualAvatar: VirtualAvatar.seeded('seed_$i'),
           bio: _bios[i % _bios.length],
           tags: userTags,
-          lat: lat,
-          lng: lng,
+          lat: fuzzed.lat,
+          lng: fuzzed.lng,
           online: _rnd.nextBool(),
           verified: _rnd.nextDouble() > 0.75,
           age: 18 + _rnd.nextInt(12),
           gender: _rnd.nextBool() ? 'f' : 'm',
-        ),
-      );
-    }
-  }
-
-  void _genFeeds() {
-    const zh = [
-      '有没有南山附近的原神搭子？周末想一起刷深渊～',
-      '今晚有人一起看咒术回战剧场版吗？求伴！',
-      '入手了塞尔达王国之泪，欢迎来我家联机！',
-      '漫展门票多了一张，有没有同好一起去？',
-      '周五夜场电子音乐，组队蹦迪走起！',
-      '最近在补怪奇物语，想找人一起讨论剧情',
-      '蜘蛛侠新作太燃了，有没有漫画同好聊聊',
-      '想组个长期开黑的小队，英雄联盟峡谷见',
-    ];
-    const en = [
-      'Any Genshin players near Nanshan? Let\'s clear Abyss this weekend!',
-      'Anyone watching the Jujutsu Kaisen movie tonight? Need a buddy!',
-      'Got Zelda TotK, come play co-op at my place!',
-      'Extra con ticket here, any fans wanna go together?',
-      'Friday night EDM, let\'s form a dance squad!',
-      'Binging Stranger Things lately, looking for someone to discuss plot',
-      'New Spider-Man is fire, any comic fans wanna chat?',
-      'Building a long-term LoL squad, see you on the Rift',
-    ];
-    for (var i = 0; i < 24; i++) {
-      final author = users[_rnd.nextInt(users.length)];
-      feeds.add(
-        FeedPost(
-          id: 'f$i',
-          authorId: author.id,
-          contentZh: zh[i % zh.length],
-          contentEn: en[i % en.length],
-          tag: author.tags.first,
-          likes: 5 + _rnd.nextInt(320),
-          comments: _rnd.nextInt(48),
-          distanceKm: 0.3 + _rnd.nextDouble() * 9,
-          imageCount: 1 + _rnd.nextInt(3),
-          coverSeed: 'feed_$i',
         ),
       );
     }
@@ -196,8 +157,11 @@ class MockDataSource {
     const locEn = ['Nanshan Tech Park', 'MixC Bay', 'Coastal City', 'OCT Harbour', 'Houhai Station', 'Window of the World', 'Shekou Net Valley'];
     for (var i = 0; i < 20; i++) {
       final tag = tags[_rnd.nextInt(tags.length)];
-      final lat = centerLat + (_rnd.nextDouble() - 0.5) * 0.08;
-      final lng = centerLng + (_rnd.nextDouble() - 0.5) * 0.08;
+      final rawLat = centerLat + (_rnd.nextDouble() - 0.5) * 0.08;
+      final rawLng = centerLng + (_rnd.nextDouble() - 0.5) * 0.08;
+      final fuzzed = GpsFuzzer.fuzzSeeded(rawLat, rawLng, 200 + i);
+      final lat = fuzzed.lat;
+      final lng = fuzzed.lng;
       final p = 3 + _rnd.nextInt(16);
       activities.add(
         ActivityItem(
@@ -249,8 +213,8 @@ class MockDataSource {
   }
 
   void _genWallMessages() {
-    // 10 个留言板坐标，距中心约 0.5–1.8km
-    final spotCoords = <(double, double)>[
+    // 10 个留言板坐标（原始），距中心约 0.5–1.8km，生成时全部模糊化
+    final rawSpotCoords = <(double, double)>[
       (centerLat + 0.0045, centerLng + 0.0030),
       (centerLat - 0.0055, centerLng + 0.0045),
       (centerLat + 0.0030, centerLng - 0.0060),
@@ -292,15 +256,18 @@ class MockDataSource {
       '像素风爱好者打卡，8-bit 万岁',
     ];
     var msgIdx = 0;
-    for (var s = 0; s < spotCoords.length; s++) {
-      final (lat, lng) = spotCoords[s];
+    for (var s = 0; s < rawSpotCoords.length; s++) {
+      final (rawLat, rawLng) = rawSpotCoords[s];
+      final spotFuzzed = GpsFuzzer.fuzzSeeded(rawLat, rawLng, 300 + s);
+      final spotLat = spotFuzzed.lat;
+      final spotLng = spotFuzzed.lng;
       final count = 2 + _rnd.nextInt(3);
       for (var j = 0; j < count; j++) {
         final author = users[_rnd.nextInt(users.length)];
-        final jitterLat = lat + (_rnd.nextDouble() - 0.5) * 0.0008;
-        final jitterLng = lng + (_rnd.nextDouble() - 0.5) * 0.0008;
+        final jitterLat = spotLat + (_rnd.nextDouble() - 0.5) * 0.0004;
+        final jitterLng = spotLng + (_rnd.nextDouble() - 0.5) * 0.0004;
         wallMessages.add(
-          WallMessage(
+          WallMessage.clean(
             id: 'wm_$msgIdx',
             spotId: 'spot_$s',
             lat: jitterLat,

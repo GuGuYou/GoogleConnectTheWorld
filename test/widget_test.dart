@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:g_interest_social/app.dart';
-import 'package:g_interest_social/core/providers/locale_provider.dart';
+import 'package:gobuzz/app.dart';
+import 'package:gobuzz/core/providers/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -17,6 +18,8 @@ void main() {
     );
 
     await tester.pump();
-    expect(find.text('GuGu'), findsOneWidget);
+    expect(find.text('GoBuzz'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }

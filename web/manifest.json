@@ -1,6 +1,6 @@
 {
-    "name": "g_interest_social",
-    "short_name": "g_interest_social",
+    "name": "GoBuzz",
+    "short_name": "GoBuzz",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

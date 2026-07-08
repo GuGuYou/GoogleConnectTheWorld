@@ -76,6 +76,17 @@ class _CreateWallSpotSheetState extends ConsumerState<_CreateWallSpotSheet> {
     Navigator.of(context).pop();
 
     final messenger = ScaffoldMessenger.of(context);
+    if (spot == null) {
+      // 内容被审核拦截
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(ref.tr('wall_content_blocked')),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     if (existingBefore != null) {
       messenger.showSnackBar(
         SnackBar(

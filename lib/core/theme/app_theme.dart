@@ -12,12 +12,12 @@ class AppTheme {
     final base = ThemeData.light(useMaterial3: true);
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.bg0,
-      colorScheme: const ColorScheme.light(
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.neonPink,
         secondary: AppColors.neonCyan,
         tertiary: AppColors.neonPurple,
         surface: AppColors.surface,
-        onPrimary: Colors.white,
+        onPrimary: Color(0xFF241600),
         onSurface: AppColors.textPrimary,
       ),
       textTheme: GoogleFonts.nunitoTextTheme(base.textTheme).apply(
@@ -42,20 +42,21 @@ class AppTheme {
       highlightColor: Colors.transparent,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.bg2,
+        fillColor: const Color(0xFFFFFBEE),
         hintStyle: GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 14),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.divider),
+          borderSide: const BorderSide(color: Color(0xFFFFD84A)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.neonPink, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.neonYellow, width: 1.5),
         ),
       ),
     );

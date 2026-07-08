@@ -5,17 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../core/l10n/app_text.dart';
 import '../../core/theme/app_colors.dart';
 
-/// 底部 4 Tab 主框架：玻璃拟态导航栏 + 霓虹高亮
+/// 底部 3 Tab 主框架：玻璃拟态导航栏 + 霓虹高亮
 class MainShell extends ConsumerWidget {
   final StatefulNavigationShell shell;
   const MainShell({super.key, required this.shell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Tab: 广场(地图+蜂巢) / 活动 / 我的
     final items = [
-      (_NavItem(Icons.explore_outlined, Icons.explore, ref.tr('tab_discover'))),
-      (_NavItem(Icons.near_me_outlined, Icons.near_me, ref.tr('tab_nearby'))),
-      (_NavItem(Icons.workspaces_outlined, Icons.workspaces, ref.tr('tab_space'))),
+      (_NavItem(Icons.hub_outlined, Icons.hub, ref.tr('tab_space'))),
       (_NavItem(Icons.celebration_outlined, Icons.celebration, ref.tr('tab_activity'))),
       (_NavItem(Icons.person_outline, Icons.person, ref.tr('tab_profile'))),
     ];

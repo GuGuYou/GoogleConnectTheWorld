@@ -47,12 +47,18 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     final me = ref.read(currentUserProvider);
-    ref.read(wallMessagesProvider.notifier).postWallMessage(
+    final (msg, error) = ref.read(wallMessagesProvider.notifier).postWallMessage(
           content: text,
           lat: widget.spot.lat,
           lng: widget.spot.lng,
           author: me,
         );
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), behavior: SnackBarBehavior.floating),
+      );
+      return;
+    }
     _controller.clear();
     FocusScope.of(context).unfocus();
   }
@@ -149,7 +155,11 @@ class WallMessageTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!message.isDisplayable) return const SizedBox.shrink();
+
     final author = ref.watch(mockProvider).userById(message.authorId);
+    final isDeleted = message.isDeleted;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -161,17 +171,136 @@ class WallMessageTile extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [for (final t in message.tags.take(3)) IpTagChip(tag: t, small: true)],
+              if (!isDeleted) ...[
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [for (final t in message.tags.take(3)) IpTagChip(tag: t, small: true)],
+                ),
+                const SizedBox(height: 6),
+                if (message.parentId != null)
+                  Text(ref.tr('wall_reply_prefix'),
+                      style: AppTextStyles.caption.copyWith(color: AppColors.textMuted, fontSize: 10)),
+              ],
+              Text(
+                message.content,
+                style: AppTextStyles.body.copyWith(
+                  color: isDeleted ? AppColors.textMuted : null,
+                  fontStyle: isDeleted ? FontStyle.italic : null,
+                ),
               ),
               const SizedBox(height: 6),
-              Text(message.content, style: AppTextStyles.body),
+              Row(
+                children: [
+                  // 共鸣（点赞）
+                  _ActionBtn(
+                    icon: message.likedByMe ? Icons.favorite : Icons.favorite_border,
+                    label: '${message.likeCount}',
+                    color: message.likedByMe ? AppColors.neonPink : AppColors.textMuted,
+                    onTap: isDeleted
+                        ? null
+                        : () => ref.read(wallMessagesProvider.notifier).toggleLike(message.id),
+                  ),
+                  const SizedBox(width: 12),
+                  // 回复
+                  _ActionBtn(
+                    icon: Icons.reply,
+                    label: ref.tr('wall_reply'),
+                    color: AppColors.textMuted,
+                    onTap: isDeleted ? null : () => _showReplySheet(context, ref),
+                  ),
+                  const Spacer(),
+                  // 软删除（仅自己的留言）
+                  if (message.authorId == ref.read(currentUserProvider).id && !isDeleted)
+                    _ActionBtn(
+                      icon: Icons.delete_outline,
+                      label: '',
+                      color: AppColors.textMuted,
+                      onTap: () {
+                        ref.read(wallMessagesProvider.notifier).softDelete(message.id);
+                      },
+                    ),
+                ],
+              ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  void _showReplySheet(BuildContext context, WidgetRef ref) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(ref.tr('wall_reply_title'), style: AppTextStyles.title),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          style: AppTextStyles.body,
+          decoration: InputDecoration(
+            hintText: ref.tr('wall_reply_hint'),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.06),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(ref.tr('cancel'), style: const TextStyle(color: AppColors.textMuted)),
+          ),
+          NeonButton(
+            label: ref.tr('send'),
+            icon: Icons.send,
+            expand: false,
+            onPressed: () {
+              final text = controller.text.trim();
+              if (text.isEmpty) return;
+              final me = ref.read(currentUserProvider);
+              ref.read(wallMessagesProvider.notifier).postReply(
+                    content: text,
+                    parent: message,
+                    author: me,
+                  );
+              Navigator.pop(ctx);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback? onTap;
+  const _ActionBtn({
+    required this.icon,
+    required this.label,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          if (label.isNotEmpty) ...[
+            const SizedBox(width: 4),
+            Text(label,
+                style: AppTextStyles.caption.copyWith(color: color, fontSize: 11)),
+          ],
+        ],
+      ),
     );
   }
 }

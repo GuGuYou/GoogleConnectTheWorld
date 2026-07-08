@@ -6,10 +6,11 @@ import '../../core/config/api_config.dart';
 import '../../core/config/map_config.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/location_provider.dart';
+import '../../core/services/content_filter.dart';
 import '../../core/utils/distance.dart';
 import '../../core/utils/wall_cluster.dart';
 import '../models/activity.dart';
-import '../models/feed_post.dart';
+import '../models/hive_room.dart';
 import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
@@ -56,8 +57,12 @@ class CurrentUserNotifier extends Notifier<UserProfile> {
   @override
   UserProfile build() => ref.read(mockProvider).me;
 
+  /// 用户可关注的最大标签数（鼓励聚焦）
+  int get maxTags => 8;
+
   void updateTags(List<IpTag> tags) {
-    state = state.copyWith(tags: tags);
+    final capped = tags.take(maxTags).toList();
+    state = state.copyWith(tags: capped);
     ref.read(mockProvider).me = state;
   }
 
@@ -95,20 +100,6 @@ final nearbyUsersProvider = Provider<List<UserWithDistance>>((ref) {
       final m = b.matchRate.compareTo(a.matchRate);
       return m != 0 ? m : a.distanceKm.compareTo(b.distanceKm);
     });
-  return list;
-});
-
-/// 距离筛选（公里），0 = 全部
-final distanceFilterProvider = StateProvider<double>((ref) => 0);
-
-/// 发现页 Feed（可按距离筛选）
-final feedsProvider = Provider<List<FeedPost>>((ref) {
-  final mock = ref.watch(mockProvider);
-  final maxKm = ref.watch(distanceFilterProvider);
-  final list = [...mock.feeds];
-  if (maxKm > 0) {
-    return list.where((f) => f.distanceKm <= maxKm).toList();
-  }
   return list;
 });
 
@@ -190,12 +181,18 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
   @override
   List<WallMessage> build() => [...ref.read(mockProvider).wallMessages];
 
-  void postWallMessage({
+  /// 发布留言（含内容审核）。
+  /// 返回 (WallMessage?, String?) — 成功返回留言对象，失败返回拦截原因。
+  (WallMessage?, String?) postWallMessage({
     required String content,
     required double lat,
     required double lng,
     required UserProfile author,
   }) {
+    final trimmed = content.trim();
+    final (code, reason) = ContentFilter.check(trimmed);
+    final isVisible = code == ContentFilter.pass;
+
     final spotId = spotIdForCoordinate(state, lat, lng);
     final msg = WallMessage(
       id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
@@ -205,21 +202,32 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
       authorId: author.id,
       avatarSeed: author.avatarSeed,
       tags: author.tags,
-      content: content.trim(),
+      content: trimmed,
+      isVisible: isVisible,
       createdAt: DateTime.now(),
     );
     state = [...state, msg];
     ref.read(mockProvider).wallMessages.add(msg);
+
+    if (!isVisible) {
+      return (null, reason ?? '内容包含不当信息，请修改后重试');
+    }
+    return (msg, null);
   }
 
-  /// 在当前位置创建留言板并发布首条留言；100m 内已有留言板时在该板追加留言
-  WallSpot createWallSpot({
+  /// 在当前位置创建留言板并发布首条留言；100m 内已有留言板时在该板追加留言。
+  /// 内容经过审核，违规内容返回 null。
+  WallSpot? createWallSpot({
     required double lat,
     required double lng,
     required UserProfile author,
     required List<IpTag> tags,
     required String content,
   }) {
+    final trimmed = content.trim();
+    final (code, _) = ContentFilter.check(trimmed);
+    final isVisible = code == ContentFilter.pass;
+
     final spotId = spotIdForCoordinate(state, lat, lng);
     final msg = WallMessage(
       id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
@@ -229,12 +237,100 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
       authorId: author.id,
       avatarSeed: author.avatarSeed,
       tags: tags,
-      content: content.trim(),
+      content: trimmed,
+      isVisible: isVisible,
       createdAt: DateTime.now(),
     );
     state = [...state, msg];
     ref.read(mockProvider).wallMessages.add(msg);
-    return findSpotNear(state, lat, lng)!;
+
+    if (!isVisible) return null;
+    return findSpotNear(state, lat, lng);
+  }
+
+  /// 点赞/取消点赞（共鸣）
+  void toggleLike(String messageId) {
+    state = [
+      for (final m in state)
+        if (m.id == messageId)
+          WallMessage(
+            id: m.id,
+            spotId: m.spotId,
+            lat: m.lat,
+            lng: m.lng,
+            authorId: m.authorId,
+            avatarSeed: m.avatarSeed,
+            tags: m.tags,
+            content: m.content,
+            likeCount: m.likedByMe ? m.likeCount - 1 : m.likeCount + 1,
+            likedByMe: !m.likedByMe,
+            isVisible: m.isVisible,
+            isDeleted: m.isDeleted,
+            createdAt: m.createdAt,
+            parentId: m.parentId,
+          )
+        else
+          m,
+    ];
+  }
+
+  /// 回复留言
+  (WallMessage?, String?) postReply({
+    required String content,
+    required WallMessage parent,
+    required UserProfile author,
+  }) {
+    final trimmed = content.trim();
+    final (code, reason) = ContentFilter.check(trimmed);
+    final isVisible = code == ContentFilter.pass;
+
+    final msg = WallMessage(
+      id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
+      spotId: parent.spotId,
+      lat: parent.lat,
+      lng: parent.lng,
+      authorId: author.id,
+      avatarSeed: author.avatarSeed,
+      tags: author.tags,
+      content: trimmed,
+      parentId: parent.id,
+      replyToAuthorId: parent.authorId,
+      isVisible: isVisible,
+      createdAt: DateTime.now(),
+    );
+    state = [...state, msg];
+    ref.read(mockProvider).wallMessages.add(msg);
+
+    if (!isVisible) {
+      return (null, reason ?? '回复包含不当内容');
+    }
+    return (msg, null);
+  }
+
+  /// 软删除留言
+  void softDelete(String messageId) {
+    state = [
+      for (final m in state)
+        if (m.id == messageId)
+          WallMessage(
+            id: m.id,
+            spotId: m.spotId,
+            lat: m.lat,
+            lng: m.lng,
+            authorId: m.authorId,
+            avatarSeed: m.avatarSeed,
+            tags: m.tags,
+            content: '[该留言已删除]',
+            likeCount: m.likeCount,
+            likedByMe: m.likedByMe,
+            isVisible: m.isVisible,
+            isDeleted: true,
+            createdAt: m.createdAt,
+            parentId: m.parentId,
+          )
+        else
+          m,
+    ];
   }
 }
 
@@ -255,7 +351,7 @@ final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
   final lat = loc?.latitude ?? fallback.latitude;
   final lng = loc?.longitude ?? fallback.longitude;
   final filter = ref.watch(wallTagFilterProvider);
-  final maxKm = MapConfig.radarMaxRangeKm;
+  const maxKm = MapConfig.radarMaxRangeKm;
   return spots.where((spot) {
     if (!isWithinKm(lat, lng, spot.lat, spot.lng, maxKm)) return false;
     if (filter != null && !spot.tags.contains(filter)) return false;
@@ -277,3 +373,111 @@ final wallMessagesForSpotProvider = Provider.family<List<WallMessage>, String>((
   if (spot == null) return [];
   return messagesForSpot(messages, spot);
 });
+
+// ══════════════════════════════════════════════════════════════════
+// Block 3：蜂巢数据驱动
+// ══════════════════════════════════════════════════════════════════
+
+/// 蜂巢房间列表（从用户 tag 动态生成，3-6 格）
+///
+/// 逻辑：
+/// 1. 取当前用户的前 6 个 tag，每个 tag = 一个房间
+/// 2. 按同好数排序（附近有多少用户共享此 tag）
+/// 3. 不足 3 格时从全局热门 tag 补位
+/// 4. 每 60s 重新计算（或推送即时刷新）
+final hiveRoomsProvider = Provider<List<HiveRoomData>>((ref) {
+  final mock = ref.watch(mockProvider);
+  final me = ref.watch(currentUserProvider);
+  final nearby = ref.watch(nearbyUsersProvider);
+
+  // 1. 取当前用户 tag（最多 6 个）
+  final myTags = me.tags.take(6).toList();
+
+  // 2. 每个 tag 生成一个房间
+  final rooms = <HiveRoomData>[];
+  for (final tag in myTags) {
+    final sameTagUsers = nearby.where((u) {
+      return u.user.tags.any((t) => t.id == tag.id);
+    }).toList();
+
+    rooms.add(HiveRoomData(
+      id: 'hive_${tag.id}',
+      tag: tag,
+      title: tag.name('zh'),
+      action: _actionForTag(tag),
+      icon: tag.icon,
+      emoji: _emojiForTag(tag),
+      color: tag.color,
+      onlineCount: sameTagUsers.where((u) => u.user.online).length,
+      users: sameTagUsers.take(4).map((u) => u.user).toList(),
+    ));
+  }
+
+  // 3. 按同好数排序
+  rooms.sort((a, b) => b.onlineCount.compareTo(a.onlineCount));
+
+  // 4. 不足 3 格时从全局热门补位
+  if (rooms.length < 3) {
+    final allTags = mock.tags;
+    // 取未被用户 tag 包含的热门 tag
+    final hotTags = allTags
+        .where((t) => !myTags.any((mt) => mt.id == t.id))
+        .take(3 - rooms.length)
+        .toList();
+
+    for (final tag in hotTags) {
+      final sameTagUsers = nearby.where((u) {
+        return u.user.tags.any((t) => t.id == tag.id);
+      }).toList();
+
+      rooms.add(HiveRoomData(
+        id: 'hive_${tag.id}',
+        tag: tag,
+        title: '🔥 ${tag.name('zh')}',
+        action: '热门推荐',
+        icon: tag.icon,
+        emoji: _emojiForTag(tag),
+        color: tag.color,
+        onlineCount: sameTagUsers.where((u) => u.user.online).length,
+        users: sameTagUsers.take(4).map((u) => u.user).toList(),
+        isHotFill: true,
+      ));
+    }
+  }
+
+  return rooms.take(6).toList();
+});
+
+String _emojiForTag(ipTag) {
+  switch (ipTag.category) {
+    case 'game':
+      return '🎮';
+    case 'anime':
+      return '🎬';
+    case 'drama':
+      return '📺';
+    case 'comic':
+      return '📚';
+    case 'music':
+      return '🎵';
+    default:
+      return '⬡';
+  }
+}
+
+String _actionForTag(ipTag) {
+  switch (ipTag.category) {
+    case 'game':
+      return '一起开黑';
+    case 'anime':
+      return '一起追番';
+    case 'drama':
+      return '一起追剧';
+    case 'comic':
+      return '一起看漫';
+    case 'music':
+      return '一起听歌';
+    default:
+      return '一起玩耍';
+  }
+}

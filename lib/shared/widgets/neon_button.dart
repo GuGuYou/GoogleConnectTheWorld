@@ -43,13 +43,23 @@ class _NeonButtonState extends State<NeonButton> {
           width: widget.expand ? double.infinity : null,
           padding: widget.padding,
           decoration: BoxDecoration(
-            gradient: enabled ? widget.gradient : const LinearGradient(colors: [AppColors.bg2, AppColors.bg2]),
+            gradient: enabled
+                ? widget.gradient
+                : const LinearGradient(colors: [AppColors.bg2, AppColors.bg2]),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: enabled ? const Color(0xFF2F6BD8) : const Color(0xFFD6D6D6),
+                color:
+                    enabled ? const Color(0xFF8A5B00) : const Color(0xFF3B310E),
                 offset: const Offset(0, 4),
               ),
+              if (enabled)
+                BoxShadow(
+                  color: AppColors.neonYellow.withValues(alpha: 0.38),
+                  blurRadius: 22,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 8),
+                ),
             ],
           ),
           child: Row(
@@ -57,10 +67,12 @@ class _NeonButtonState extends State<NeonButton> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.icon != null) ...[
-                Icon(widget.icon, size: 18, color: Colors.white),
+                Icon(widget.icon, size: 18, color: const Color(0xFF241600)),
                 const SizedBox(width: 8),
               ],
-              Text(widget.label, style: AppTextStyles.button),
+              Text(widget.label,
+                  style: AppTextStyles.button
+                      .copyWith(color: const Color(0xFF241600))),
             ],
           ),
         ),

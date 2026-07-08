@@ -20,14 +20,22 @@ class SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<SplashPage> {
+  Timer? _redirectTimer;
+
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(milliseconds: 2200), () {
+    _redirectTimer = Timer(const Duration(milliseconds: 2200), () {
       if (!mounted) return;
       final logged = ref.read(authProvider);
-      context.go(logged ? '/discover' : '/onboarding');
+      context.go(logged ? '/space' : '/onboarding');
     });
+  }
+
+  @override
+  void dispose() {
+    _redirectTimer?.cancel();
+    super.dispose();
   }
 
   @override

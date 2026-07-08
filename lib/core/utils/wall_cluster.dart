@@ -4,12 +4,14 @@ import '../../shared/models/wall_message.dart';
 import '../../shared/models/wall_spot.dart';
 import 'distance.dart';
 
-/// 将留言按坐标就近聚合为留言板（默认 100m）
+/// 将可见留言按坐标就近聚合为留言板（默认 100m）。
+/// 排除锚点、已删除、审核未通过的留言。
 List<WallSpot> buildWallSpots(List<WallMessage> messages) {
-  if (messages.isEmpty) return [];
+  final displayable = messages.where((m) => m.isDisplayable).toList();
+  if (displayable.isEmpty) return [];
 
   final clusters = <List<WallMessage>>[];
-  for (final msg in messages) {
+  for (final msg in displayable) {
     var placed = false;
     for (final cluster in clusters) {
       final rep = cluster.first;
@@ -59,8 +61,7 @@ String spotIdForCoordinate(List<WallMessage> existing, double lat, double lng) {
 
 List<WallMessage> messagesForSpot(List<WallMessage> messages, WallSpot spot) {
   return messages
-      .where((m) =>
-          !m.isAnchor &&
+      .where((m) => m.isDisplayable &&
           haversineKm(m.lat, m.lng, spot.lat, spot.lng) * 1000 <= MapConfig.wallClusterRadiusMeters)
       .toList()
     ..sort((a, b) => b.createdAt.compareTo(a.createdAt));

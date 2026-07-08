@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
-import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/extensions.dart';
@@ -56,8 +55,11 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
       category: _tag!.category,
       tag: _tag!,
       time: _time,
-      locationZh: _location.text.trim().isEmpty ? '深圳·南山' : _location.text.trim(),
-      locationEn: _location.text.trim().isEmpty ? 'Shenzhen · Nanshan' : _location.text.trim(),
+      locationZh:
+          _location.text.trim().isEmpty ? '深圳·南山' : _location.text.trim(),
+      locationEn: _location.text.trim().isEmpty
+          ? 'Shenzhen · Nanshan'
+          : _location.text.trim(),
       lat: MockDataSource.centerLat,
       lng: MockDataSource.centerLng,
       hostId: 'me',
@@ -75,7 +77,6 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
 
   @override
   Widget build(BuildContext context) {
-    final lang = ref.watch(localeProvider).languageCode;
     final tags = MockDataSource.instance.tags;
 
     return Scaffold(
@@ -88,8 +89,11 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
                 padding: const EdgeInsets.fromLTRB(4, 4, 20, 8),
                 child: Row(
                   children: [
-                    IconButton(onPressed: () => context.pop(), icon: const Icon(Icons.arrow_back)),
-                    GradientText(ref.tr('create_title'), style: AppTextStyles.h2),
+                    IconButton(
+                        onPressed: () => context.pop(),
+                        icon: const Icon(Icons.arrow_back)),
+                    GradientText(ref.tr('create_title'),
+                        style: AppTextStyles.h2),
                   ],
                 ),
               ),
@@ -121,7 +125,8 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
                           context: context,
                           initialDate: _time,
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 90)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 90)),
                         );
                         if (d != null) setState(() => _time = d);
                       },
@@ -133,9 +138,12 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today, size: 18, color: AppColors.neonCyan),
+                            const Icon(Icons.calendar_today,
+                                size: 18, color: AppColors.neonCyan),
                             const SizedBox(width: 10),
-                            Text('${_time.year}-${_time.month}-${_time.day}', style: AppTextStyles.body.copyWith(color: Colors.white)),
+                            Text('${_time.year}-${_time.month}-${_time.day}',
+                                style: AppTextStyles.body
+                                    .copyWith(color: Colors.white)),
                           ],
                         ),
                       ),
@@ -147,7 +155,10 @@ class _ActivityCreatePageState extends ConsumerState<ActivityCreatePage> {
                     _label(ref.tr('field_desc')),
                     _input(_desc, ref.tr('field_desc'), lines: 4),
                     const SizedBox(height: 24),
-                    NeonButton(label: ref.tr('publish'), icon: Icons.send, onPressed: _publish),
+                    NeonButton(
+                        label: ref.tr('publish'),
+                        icon: Icons.send,
+                        onPressed: _publish),
                     const SizedBox(height: 30),
                   ],
                 ),

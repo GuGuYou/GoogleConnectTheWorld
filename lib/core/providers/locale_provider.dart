@@ -18,7 +18,7 @@ class LocaleNotifier extends Notifier<Locale> {
   @override
   Locale build() {
     final prefs = ref.read(sharedPrefsProvider);
-    final code = prefs.getString(_key) ?? 'zh';
+    final code = prefs.getString(_key) ?? 'en';
     return Locale(code);
   }
 

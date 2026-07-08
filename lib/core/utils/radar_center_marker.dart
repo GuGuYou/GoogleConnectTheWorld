@@ -19,8 +19,8 @@ class RadarCenterMarker {
     const size = 72.0;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final center = Offset(size / 2, size / 2);
-    final color = AppColors.neonCyan;
+    const center = Offset(size / 2, size / 2);
+    const color = AppColors.neonCyan;
 
     // 外圈雷达环（静态图形，动画由地图 Circle 层补充）
     for (var i = 3; i >= 1; i--) {
