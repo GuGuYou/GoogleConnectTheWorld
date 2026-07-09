@@ -165,30 +165,49 @@ class NearbyMapView extends ConsumerWidget {
   }
 }
 
-class _CreateWallSpotButton extends ConsumerWidget {
+/// 悬浮「New Board」胶囊按钮：与全局 [NeonButton] 同一视觉语言
+/// （蜂蜜金渐变 + 深色字标 + 金色辉光 + 按压缩放），保持紧凑悬浮形态。
+class _CreateWallSpotButton extends ConsumerStatefulWidget {
   final VoidCallback onPressed;
   const _CreateWallSpotButton({required this.onPressed});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(16),
+  ConsumerState<_CreateWallSpotButton> createState() =>
+      _CreateWallSpotButtonState();
+}
+
+class _CreateWallSpotButtonState extends ConsumerState<_CreateWallSpotButton> {
+  static const _ink = Color(0xFF241600);
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapUp: (_) => setState(() => _down = false),
+      onTapCancel: () => setState(() => _down = false),
+      onTap: widget.onPressed,
+      child: AnimatedScale(
+        scale: _down ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 80),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
           decoration: BoxDecoration(
-            gradient: AppColors.cyanPurple,
-            borderRadius: BorderRadius.circular(16),
+            gradient: AppColors.pinkPurple,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.35),
+              width: 1,
+            ),
             boxShadow: [
-              BoxShadow(
-                color: AppColors.neonCyan.withValues(alpha: 0.5),
-                blurRadius: 16,
+              const BoxShadow(
+                color: Color(0xFF8A5B00),
+                offset: Offset(0, 3),
               ),
               BoxShadow(
-                color: AppColors.neonYellow.withValues(alpha: 0.14),
-                blurRadius: 22,
+                color: AppColors.neonYellow.withValues(alpha: 0.4),
+                blurRadius: 18,
+                spreadRadius: 1,
                 offset: const Offset(0, 6),
               ),
             ],
@@ -196,11 +215,11 @@ class _CreateWallSpotButton extends ConsumerWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_location_alt, size: 18, color: Colors.white),
+              const Icon(Icons.add_location_alt, size: 18, color: _ink),
               const SizedBox(width: 6),
               Text(
                 ref.tr('wall_create_btn'),
-                style: AppTextStyles.button.copyWith(fontSize: 13),
+                style: AppTextStyles.button.copyWith(fontSize: 13, color: _ink),
               ),
             ],
           ),
@@ -229,29 +248,41 @@ class _MapBottomMask extends ConsumerWidget {
         height: _kMapBottomMaskHeight,
         color: AppColors.bg0,
         padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        alignment: Alignment.centerLeft,
         child: tags.isEmpty
             ? const SizedBox.shrink()
-            : SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (final tag in tags)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: IpTagChip(
-                          tag: tag,
-                          large: true,
-                          selected: tagFilter == tag,
-                          onTap: () {
-                            ref.read(wallTagFilterProvider.notifier).update(
-                                  (current) => current == tag ? null : tag,
-                                );
-                          },
-                        ),
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    // 内容不足时居中，超出时可横向滚动。
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (final tag in tags)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              child: IpTagChip(
+                                tag: tag,
+                                large: true,
+                                iconOverride: MapMarkerIcons.wallMessage,
+                                selected: tagFilter == tag,
+                                onTap: () {
+                                  ref
+                                      .read(wallTagFilterProvider.notifier)
+                                      .update(
+                                        (current) =>
+                                            current == tag ? null : tag,
+                                      );
+                                },
+                              ),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
+                    ),
+                  );
+                },
               ),
       ),
     );
