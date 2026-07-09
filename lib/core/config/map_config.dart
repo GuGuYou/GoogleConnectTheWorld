@@ -18,8 +18,9 @@ class MapConfig {
   /// 决定地图初始视野、雷达同心圆最外圈，以及活动/用户/留言板图标的可见范围。
   static const double radarMaxRangeKm = 3.0;
 
-  /// 雷达圆环与中心标记颜色（亮青色，与深蓝底图高对比）。
-  static const Color radarColor = Color(0xFF5CEFFF);
+  /// 雷达主色（蜂蜜金）与强调色（薄荷青），与蜂巢主题一致。
+  static const Color radarColor = Color(0xFFFFD84A);
+  static const Color radarAccentColor = Color(0xFF9EF1E5);
 
   /// 雷达最大扫描半径（米）
   static double get radarMaxRangeMeters => radarMaxRangeKm * 1000;
@@ -58,32 +59,33 @@ class MapConfig {
 
   static bool get hasValidApiKey => _apiKey != null && _apiKey!.isNotEmpty;
 
-  /// 深蓝底 + 黄色线稿地图样式（无 POI、无标签）。
+  /// 暖褐蜂蜜底 + 低对比金调路网（无 POI、无标签，突出地图标记）。
+  /// 与全局蜂巢主题（bg0 #070807 / bg1 #111006 / 蜂蜜金 #FFD84A）保持一致。
   static const String mapStyle = '''
 [
-  {"elementType":"geometry","stylers":[{"color":"#1a2238"}]},
+  {"elementType":"geometry","stylers":[{"color":"#14120a"}]},
   {"elementType":"labels","stylers":[{"visibility":"off"}]},
   {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
   {"featureType":"administrative","stylers":[{"visibility":"off"}]},
   {"featureType":"administrative.land_parcel","stylers":[{"visibility":"off"}]},
-  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"landscape.man_made","elementType":"geometry","stylers":[{"color":"#1e2844"}]},
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"landscape.man_made","elementType":"geometry","stylers":[{"color":"#1c180b"}]},
   {"featureType":"poi","stylers":[{"visibility":"off"}]},
-  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"poi.park","elementType":"geometry.stroke","stylers":[{"color":"#fbbc05"},{"weight":1}]},
+  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"poi.park","elementType":"geometry.stroke","stylers":[{"color":"#2c2611"},{"weight":1}]},
   {"featureType":"poi.park","elementType":"labels","stylers":[{"visibility":"off"}]},
-  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#e8b923"},{"weight":1}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#312a12"},{"weight":1}]},
   {"featureType":"road","elementType":"labels","stylers":[{"visibility":"off"}]},
-  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"road.arterial","elementType":"geometry.stroke","stylers":[{"color":"#fbbc05"},{"weight":1}]},
-  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#ffd54f"},{"weight":2}]},
-  {"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"road.local","elementType":"geometry.stroke","stylers":[{"color":"#c9a227"},{"weight":1}]},
+  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"road.arterial","elementType":"geometry.stroke","stylers":[{"color":"#3f3617"},{"weight":1}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#5c4b1d"},{"weight":1}]},
+  {"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"road.local","elementType":"geometry.stroke","stylers":[{"color":"#241f0e"},{"weight":1}]},
   {"featureType":"transit","stylers":[{"visibility":"off"}]},
-  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#141c30"}]},
-  {"featureType":"water","elementType":"geometry.stroke","stylers":[{"color":"#fbbc05"},{"weight":1}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#0b0a05"}]},
+  {"featureType":"water","elementType":"geometry.stroke","stylers":[{"color":"#241f0e"},{"weight":1}]},
   {"featureType":"water","elementType":"labels","stylers":[{"visibility":"off"}]}
 ]
 ''';

@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../config/map_marker_icons.dart';
 import 'map_icon_bitmap.dart';
 
-/// 留言板地图标记：圆形 Pin（与活动、用户样式一致）。
+/// 留言板地图标记：圆角半透明六边形（与活动、用户样式一致）。
 class WallBubbleMarker {
   WallBubbleMarker._();
 

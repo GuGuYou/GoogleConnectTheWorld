@@ -30,8 +30,11 @@ class MapMarkerIcons {
   static const IconData wallMessage = Icons.event_note;
   static const IconData nearbyUser = Icons.emoji_people;
 
-  static const Color activityColor = Color(0xFFEA4335);
-  static const Color wallDefaultColor = Color(0xFF4285F4);
+  /// 活动 Pin 主色：琥珀橙（暖调，在蜂蜜金底图上醒目且与主题一致）。
+  static const Color activityColor = Color(0xFFFF8F1F);
+
+  /// 留言板默认色：蜂蜜金（介于用户薄荷青与活动琥珀橙之间，对应品牌渐变中段）。
+  static const Color wallDefaultColor = Color(0xFFFFD84A);
 
   /// 活动 Pin 备选
   static const activityPresets = <(String, IconData)>[
@@ -45,7 +48,7 @@ class MapMarkerIcons {
     ('sports_esports', Icons.sports_esports),
   ];
 
-  /// 留言墙 Pin 备选（圆形，与活动/用户一致）
+  /// 留言墙 Pin 备选（六边形，与活动/用户一致）
   static const wallPresets = <(String, IconData)>[
     ('chat_bubble_rounded', Icons.chat_bubble_rounded),
     ('forum', Icons.forum),

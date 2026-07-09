@@ -26,6 +26,12 @@ import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/ip_tag_chip.dart';
 import '../../shared/widgets/neon_button.dart';
 
+/// 地图容器圆角，与 [ClipRRect] 及底部遮罩保持一致。
+const _kMapCornerRadius = 20.0;
+
+/// 底部遮罩高度：覆盖 Google 归属信息，并容纳留言板分类标签。
+const _kMapBottomMaskHeight = 80.0;
+
 /// 地图视图：Google Maps + 附近用户光点 + 活动 pin + 异步留言墙（Lobby 系统）。
 class NearbyMapView extends ConsumerWidget {
   const NearbyMapView({super.key});
@@ -43,7 +49,6 @@ class NearbyMapView extends ConsumerWidget {
     final activities = ref.watch(activitiesProvider);
     final wallSpots = ref.watch(visibleWallSpotsProvider);
     final me = ref.watch(currentUserProvider);
-    final tagFilter = ref.watch(wallTagFilterProvider);
 
     final circles = <Circle>{
       ...RadarCenterMarker.rings(center),
@@ -74,14 +79,13 @@ class NearbyMapView extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-          // 地图区域：使用 flex 控制比例（5:2），给底部 tag 让出空间
+          // 地图区域占满剩余空间（分类标签已移入地图底部遮罩）
           Expanded(
-            flex: 5,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(_kMapCornerRadius),
                   child: _DeferredGoogleMap(
                     key: ValueKey(Object.hash(
                       MapMarkerIcons.activity.codePoint,
@@ -104,35 +108,6 @@ class NearbyMapView extends ConsumerWidget {
               ],
             ),
           ),
-          // 底部 Tag 筛选条：固定高度 + 加大尺寸
-          if (me.tags.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            SizedBox(
-              height: 56,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    for (final tag in me.tags)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: IpTagChip(
-                          tag: tag,
-                          large: true,
-                          selected: tagFilter == tag,
-                          onTap: () {
-                            ref.read(wallTagFilterProvider.notifier).update(
-                                  (current) => current == tag ? null : tag,
-                                );
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -208,9 +183,13 @@ class _CreateWallSpotButton extends ConsumerWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.neonCyan.withValues(alpha: 0.35),
+                color: AppColors.neonCyan.withValues(alpha: 0.5),
                 blurRadius: 16,
-                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: AppColors.neonYellow.withValues(alpha: 0.14),
+                blurRadius: 22,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
@@ -226,6 +205,54 @@ class _CreateWallSpotButton extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 地图底部遮罩：遮挡 Google 归属信息，并承载留言板分类筛选。
+class _MapBottomMask extends ConsumerWidget {
+  final List<IpTag> tags;
+
+  const _MapBottomMask({required this.tags});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tagFilter = ref.watch(wallTagFilterProvider);
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(_kMapCornerRadius),
+        bottomRight: Radius.circular(_kMapCornerRadius),
+      ),
+      child: Container(
+        height: _kMapBottomMaskHeight,
+        color: AppColors.bg0,
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        alignment: Alignment.centerLeft,
+        child: tags.isEmpty
+            ? const SizedBox.shrink()
+            : SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final tag in tags)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: IpTagChip(
+                          tag: tag,
+                          large: true,
+                          selected: tagFilter == tag,
+                          onTap: () {
+                            ref.read(wallTagFilterProvider.notifier).update(
+                                  (current) => current == tag ? null : tag,
+                                );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -300,6 +327,7 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
   Future<void> _loadMarkers() async {
     // 改 map_marker_icons.dart 后清缓存，避免热重载仍显示旧图标
     MapIconBitmap.clearCache();
+    RadarCenterMarker.clearCache();
     WallBubbleMarker.clearCache();
 
     final markers = <Marker>{};
@@ -401,24 +429,18 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
               circles: widget.circles,
               markers: _markers,
             ),
-            // 底部覆盖层：完全遮挡 Google Maps 自带的 logo / "Map data" / "Keyboard shortcuts" 等
-            // 使用 100px 实心背景色，完全覆盖边角 Google 元素
+            // 底部遮罩：Google 归属信息 + 留言板分类标签
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              height: 100,
-              child: IgnorePointer(
-                child: Container(
-                  color: AppColors.bg0,
-                ),
-              ),
+              child: _MapBottomMask(tags: widget.userTags),
             ),
-            // "New Board" 按钮：放置在地图区域内部（覆盖层之上）
+            // "New Board" 按钮：浮于遮罩上方的地图区域
             if (widget.onCreateBoard != null)
               Positioned(
                 right: 14,
-                bottom: 14,
+                bottom: _kMapBottomMaskHeight + 14,
                 child: _CreateWallSpotButton(
                   onPressed: widget.onCreateBoard!,
                 ),
@@ -473,6 +495,36 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
   }
 }
 
+BoxDecoration _mapControlDecoration({
+  required Color glowColor,
+  required bool active,
+}) {
+  return BoxDecoration(
+    color: const Color(0xCC171308),
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(
+      color: active ? glowColor.withValues(alpha: 0.7) : AppColors.glassBorder.withValues(alpha: 0.35),
+      width: active ? 1.5 : 1,
+    ),
+    boxShadow: active
+        ? [
+            BoxShadow(color: glowColor.withValues(alpha: 0.5), blurRadius: 16),
+            BoxShadow(
+              color: AppColors.neonYellow.withValues(alpha: 0.14),
+              blurRadius: 22,
+              offset: const Offset(0, 6),
+            ),
+          ]
+        : [
+            BoxShadow(
+              color: AppColors.neonYellow.withValues(alpha: 0.08),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+  );
+}
+
 class _MapLayerToggle extends ConsumerWidget {
   final IconData icon;
   final Color color;
@@ -493,10 +545,7 @@ class _MapLayerToggle extends ConsumerWidget {
     return Tooltip(
       message: ref.tr(tooltipKey),
       child: Material(
-        color: AppColors.bg2.withValues(alpha: enabled ? 0.92 : 0.55),
-        elevation: enabled ? 4 : 1,
-        shadowColor: color.withValues(alpha: enabled ? 0.25 : 0.08),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.transparent,
         child: InkWell(
           onTap: () => onChanged(!enabled),
           borderRadius: BorderRadius.circular(12),
@@ -504,13 +553,7 @@ class _MapLayerToggle extends ConsumerWidget {
             width: 44,
             height: 44,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: enabled ? color.withValues(alpha: 0.75) : AppColors.glassBorder.withValues(alpha: 0.5),
-                width: enabled ? 1.5 : 1,
-              ),
-            ),
+            decoration: _mapControlDecoration(glowColor: color, active: enabled),
             child: Icon(
               icon,
               size: 22,
@@ -532,10 +575,7 @@ class _RecenterMapButton extends ConsumerWidget {
     return Tooltip(
       message: ref.tr('map_recenter'),
       child: Material(
-        color: AppColors.bg2.withValues(alpha: 0.92),
-        elevation: 4,
-        shadowColor: AppColors.neonCyan.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(12),
@@ -543,10 +583,7 @@ class _RecenterMapButton extends ConsumerWidget {
             width: 44,
             height: 44,
             alignment: Alignment.center,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.glassBorder),
-            ),
+            decoration: _mapControlDecoration(glowColor: AppColors.neonCyan, active: true),
             child: const Icon(Icons.my_location, size: 22, color: AppColors.neonCyan),
           ),
         ),
@@ -564,7 +601,7 @@ class _MapFallback extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(_kMapCornerRadius),
         child: Container(
           color: AppColors.bg2,
           alignment: Alignment.center,
