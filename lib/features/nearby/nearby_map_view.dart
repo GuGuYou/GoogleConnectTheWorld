@@ -74,7 +74,9 @@ class NearbyMapView extends ConsumerWidget {
                 textAlign: TextAlign.center,
               ),
             ),
+          // 地图区域：使用 flex 控制比例（5:2），给底部 tag 让出空间
           Expanded(
+            flex: 5,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -94,40 +96,40 @@ class NearbyMapView extends ConsumerWidget {
                     userTags: me.tags,
                     onUserTap: (n) => _showUserSheet(context, ref, n),
                     onWallSpotTap: (spot) => showWallSpotSheet(context, ref, spot),
+                    onCreateBoard: me.tags.isNotEmpty
+                        ? () => showCreateWallSpotSheet(context, ref)
+                        : null,
                   ),
                 ),
-                if (me.tags.isNotEmpty)
-                  Positioned(
-                    right: 12,
-                    bottom: 12,
-                    child: _CreateWallSpotButton(
-                      onPressed: () => showCreateWallSpotSheet(context, ref),
-                    ),
-                  ),
               ],
             ),
           ),
+          // 底部 Tag 筛选条：固定高度 + 加大尺寸
           if (me.tags.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  for (final tag in me.tags)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: IpTagChip(
-                        tag: tag,
-                        small: true,
-                        selected: tagFilter == tag,
-                        onTap: () {
-                          ref.read(wallTagFilterProvider.notifier).update(
-                                (current) => current == tag ? null : tag,
-                              );
-                        },
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 56,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    for (final tag in me.tags)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: IpTagChip(
+                          tag: tag,
+                          large: true,
+                          selected: tagFilter == tag,
+                          onTap: () {
+                            ref.read(wallTagFilterProvider.notifier).update(
+                                  (current) => current == tag ? null : tag,
+                                );
+                          },
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -137,11 +139,15 @@ class NearbyMapView extends ConsumerWidget {
   }
 
   void _showUserSheet(BuildContext context, WidgetRef ref, UserWithDistance n) {
+    // 预留底部导航栏高度 (64) + 系统手势条高度，避免与底部 Tab 重叠
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+    const navBarHeight = 64.0;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (_) => Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + navBarHeight + bottomInset),
         child: GlassCard(
           blur: 20,
           child: Column(
@@ -166,7 +172,7 @@ class NearbyMapView extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Wrap(spacing: 8, runSpacing: 8, children: [for (final t in n.user.tags.take(4)) IpTagChip(tag: t, small: true)]),
+              Wrap(spacing: 8, runSpacing: 8, children: [for (final t in n.user.tags.take(4)) IpTagChip(tag: t)]),
               const SizedBox(height: 16),
               NeonButton(
                 label: ref.tr('say_hi'),
@@ -235,6 +241,7 @@ class _DeferredGoogleMap extends StatefulWidget {
   final List<IpTag> userTags;
   final void Function(UserWithDistance user) onUserTap;
   final void Function(WallSpot spot) onWallSpotTap;
+  final VoidCallback? onCreateBoard;
 
   const _DeferredGoogleMap({
     super.key,
@@ -246,6 +253,7 @@ class _DeferredGoogleMap extends StatefulWidget {
     required this.userTags,
     required this.onUserTap,
     required this.onWallSpotTap,
+    this.onCreateBoard,
   });
 
   @override
@@ -393,6 +401,28 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
               circles: widget.circles,
               markers: _markers,
             ),
+            // 底部覆盖层：完全遮挡 Google Maps 自带的 logo / "Map data" / "Keyboard shortcuts" 等
+            // 使用 100px 实心背景色，完全覆盖边角 Google 元素
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 100,
+              child: IgnorePointer(
+                child: Container(
+                  color: AppColors.bg0,
+                ),
+              ),
+            ),
+            // "New Board" 按钮：放置在地图区域内部（覆盖层之上）
+            if (widget.onCreateBoard != null)
+              Positioned(
+                right: 14,
+                bottom: 14,
+                child: _CreateWallSpotButton(
+                  onPressed: widget.onCreateBoard!,
+                ),
+              ),
             Positioned(
               top: 12,
               right: 12,

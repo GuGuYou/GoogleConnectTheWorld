@@ -10,6 +10,7 @@ class IpTagChip extends ConsumerWidget {
   final IpTag tag;
   final bool selected;
   final bool small;
+  final bool large;
   final VoidCallback? onTap;
 
   const IpTagChip({
@@ -17,6 +18,7 @@ class IpTagChip extends ConsumerWidget {
     required this.tag,
     this.selected = false,
     this.small = false,
+    this.large = false,
     this.onTap,
   });
 
@@ -29,8 +31,8 @@ class IpTagChip extends ConsumerWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: EdgeInsets.symmetric(
-          horizontal: small ? 8 : 12,
-          vertical: small ? 4 : 7,
+          horizontal: large ? 18 : (small ? 8 : 12),
+          vertical: large ? 12 : (small ? 4 : 7),
         ),
         decoration: BoxDecoration(
           color: selected
@@ -48,14 +50,15 @@ class IpTagChip extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(tag.icon, size: small ? 12 : 15, color: color),
-            SizedBox(width: small ? 4 : 6),
+            Icon(tag.icon,
+                size: large ? 20 : (small ? 12 : 15), color: color),
+            SizedBox(width: large ? 8 : (small ? 4 : 6)),
             Text(
               tag.name(lang),
               style: TextStyle(
                 color:
                     selected ? AppColors.textPrimary : AppColors.textSecondary,
-                fontSize: small ? 11 : 13,
+                fontSize: large ? 16 : (small ? 11 : 13),
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               ),
             ),

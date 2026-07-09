@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../nearby/nearby_map_view.dart';
-import 'hive_room_scene.dart';
+import 'hive_scene/hive_isometric_page.dart';
 
 /// "空间"：广场（虚拟场景）与地图（GPS + 兴趣点）融合的统一容器。
 ///
@@ -60,7 +60,7 @@ class _SpacePageState extends ConsumerState<SpacePage> {
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 child: _sceneMode
-                    ? HiveRoomScene(
+                    ? HiveIsometricPage(
                         key: const ValueKey('hive'),
                         onSwitchToMap: () => setState(() => _sceneMode = false),
                       )
