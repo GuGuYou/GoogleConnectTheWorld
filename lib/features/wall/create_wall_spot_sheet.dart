@@ -7,6 +7,7 @@ import '../../core/l10n/app_text.dart';
 import '../../core/providers/location_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/map_pointer_blocker.dart';
 import '../../core/utils/wall_cluster.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/models/ip_tag.dart';
@@ -20,10 +21,12 @@ void showCreateWallSpotSheet(BuildContext context, WidgetRef ref) {
     context: context,
     barrierDismissible: true,
     barrierColor: Colors.black.withValues(alpha: 0.42),
-    builder: (_) => const Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.fromLTRB(20, 72, 20, 108),
-      child: _CreateWallSpotSheet(),
+    builder: (_) => const MapPointerBlocker(
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.fromLTRB(20, 72, 20, 108),
+        child: _CreateWallSpotSheet(),
+      ),
     ),
   );
 }

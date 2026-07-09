@@ -9,6 +9,7 @@ import '../../core/l10n/app_text.dart';
 import '../../core/providers/location_provider.dart';
 import '../../core/utils/distance.dart';
 import '../../core/utils/google_maps_ready.dart';
+import '../../core/utils/map_pointer_blocker.dart';
 import '../../core/utils/map_icon_bitmap.dart';
 import '../../core/utils/nearby_user_marker.dart';
 import '../../core/utils/radar_center_marker.dart';
@@ -122,43 +123,56 @@ class NearbyMapView extends ConsumerWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => Padding(
-        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + navBarHeight + bottomInset),
-        child: GlassCard(
-          blur: 20,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  n.user.virtualAvatar != null
-                      ? VirtualAvatarView(avatar: n.user.virtualAvatar!, size: 56, online: n.user.online)
-                      : AvatarPlaceholder(seed: n.user.avatarSeed, label: n.user.nickname, size: 56, online: n.user.online),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (sheetContext) => MapPointerBlocker(
+        child: SizedBox(
+          width: MediaQuery.sizeOf(sheetContext).width,
+          height: MediaQuery.sizeOf(sheetContext).height,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + navBarHeight + bottomInset),
+              child: GlassCard(
+                blur: 20,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Text(n.user.nickname, style: AppTextStyles.title),
-                        Text('${ref.tr('match_rate')} ${n.matchRate}%', style: AppTextStyles.caption.copyWith(color: AppColors.neonPink)),
+                        n.user.virtualAvatar != null
+                            ? VirtualAvatarView(avatar: n.user.virtualAvatar!, size: 56, online: n.user.online)
+                            : AvatarPlaceholder(seed: n.user.avatarSeed, label: n.user.nickname, size: 56, online: n.user.online),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(n.user.nickname, style: AppTextStyles.title),
+                              Text('${ref.tr('match_rate')} ${n.matchRate}%', style: AppTextStyles.caption.copyWith(color: AppColors.neonPink)),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: AppColors.textMuted),
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                        ),
                       ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Wrap(spacing: 8, runSpacing: 8, children: [for (final t in n.user.tags.take(4)) IpTagChip(tag: t)]),
+                    const SizedBox(height: 16),
+                    NeonButton(
+                      label: ref.tr('say_hi'),
+                      icon: Icons.waving_hand,
+                      onPressed: () {
+                        Navigator.pop(context);
+                        context.push('/chat/conv_${n.user.id}');
+                      },
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              Wrap(spacing: 8, runSpacing: 8, children: [for (final t in n.user.tags.take(4)) IpTagChip(tag: t)]),
-              const SizedBox(height: 16),
-              NeonButton(
-                label: ref.tr('say_hi'),
-                icon: Icons.waving_hand,
-                onPressed: () {
-                  Navigator.pop(context);
-                  context.push('/chat/conv_${n.user.id}');
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
