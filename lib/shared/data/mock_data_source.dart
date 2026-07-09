@@ -8,7 +8,7 @@ import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
 import '../models/virtual_avatar.dart';
-import '../models/wall_message.dart';
+import '../models/board.dart';
 
 /// 全局 Mock 数据源（单例）。所有页面数据均来源于此。
 /// 切换真实后端时只需替换为 RemoteDataSource，业务层零改动。
@@ -35,7 +35,7 @@ class MockDataSource {
   final List<ActivityItem> activities = [];
   final List<Conversation> conversations = [];
   final Map<String, List<ChatMessage>> messages = {};
-  final List<WallMessage> wallMessages = [];
+  final List<Board> boards = [];
 
   void _generate() {
     tags = const [
@@ -83,7 +83,7 @@ class MockDataSource {
     _genUsers();
     _genActivities();
     _genConversations();
-    _genWallMessages();
+    _genBoards();
   }
 
   static const _names = [
@@ -123,13 +123,22 @@ class MockDataSource {
           id: 'u$i',
           nickname: _names[i % _names.length] + (i >= _names.length ? '${i ~/ _names.length}' : ''),
           avatarSeed: 'seed_$i',
-          // 视觉风格已统一为可爱治愈风，Mock 用户不再随机分配 pixel 风格。
-          virtualAvatar: VirtualAvatar.seeded('seed_$i'),
+          // 按序号分配捏脸参数，地图上相邻用户头像更易区分。
+          virtualAvatar: VirtualAvatar(
+            source: AvatarSource.local,
+            style: AvatarVisualStyle.cute,
+            seed: 'seed_$i',
+            colorIndex: i % 6,
+            faceIndex: i % 3,
+            eyeIndex: (i ~/ 2) % 4,
+            mouthIndex: (i ~/ 3) % 4,
+            accessoryIndex: i % 5,
+          ),
           bio: _bios[i % _bios.length],
           tags: userTags,
           lat: fuzzed.lat,
           lng: fuzzed.lng,
-          online: _rnd.nextBool(),
+          online: i < 12 ? true : _rnd.nextBool(),
           verified: _rnd.nextDouble() > 0.75,
           age: 18 + _rnd.nextInt(12),
           gender: _rnd.nextBool() ? 'f' : 'm',
@@ -212,7 +221,7 @@ class MockDataSource {
     }
   }
 
-  void _genWallMessages() {
+  void _genBoards() {
     // 10 个留言板坐标（原始），距中心约 0.5–1.8km，生成时全部模糊化
     final rawSpotCoords = <(double, double)>[
       (centerLat + 0.0045, centerLng + 0.0030),
@@ -266,8 +275,8 @@ class MockDataSource {
         final author = users[_rnd.nextInt(users.length)];
         final jitterLat = spotLat + (_rnd.nextDouble() - 0.5) * 0.0004;
         final jitterLng = spotLng + (_rnd.nextDouble() - 0.5) * 0.0004;
-        wallMessages.add(
-          WallMessage.clean(
+        boards.add(
+          Board.clean(
             id: 'wm_$msgIdx',
             spotId: 'spot_$s',
             lat: jitterLat,

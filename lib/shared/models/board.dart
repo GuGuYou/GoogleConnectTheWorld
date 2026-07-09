@@ -3,8 +3,8 @@ import 'ip_tag.dart';
 /// 留言内容类型
 enum WallContentType { text, voice, image, mixed }
 
-/// 异步留言墙单条留言（Block 1A 升级版）
-class WallMessage {
+/// 异步留言板单条留言（Block 1A 升级版）
+class Board {
   final String id;
   final String spotId;
   final double lat;
@@ -37,7 +37,7 @@ class WallMessage {
   /// 占位锚点：用于在用户位置创建空留言板，不在留言列表中展示
   final bool isAnchor;
 
-  const WallMessage({
+  const Board({
     required this.id,
     required this.spotId,
     required this.lat,
@@ -62,7 +62,7 @@ class WallMessage {
   });
 
   /// 创建带有默认审核通过状态的留言（便捷构造）
-  const WallMessage.clean({
+  const Board.clean({
     required this.id,
     required this.spotId,
     required this.lat,

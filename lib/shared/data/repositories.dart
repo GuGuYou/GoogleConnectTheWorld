@@ -15,7 +15,7 @@ import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
 import '../models/virtual_avatar.dart';
-import '../models/wall_message.dart';
+import '../models/board.dart';
 import '../models/wall_spot.dart';
 import 'avatar_generator_repository.dart';
 import 'mock_data_source.dart';
@@ -174,16 +174,16 @@ class ChatNotifier extends FamilyNotifier<List<ChatMessage>, String> {
 }
 
 /// 异步留言墙消息列表
-final wallMessagesProvider =
-    NotifierProvider<WallMessagesNotifier, List<WallMessage>>(WallMessagesNotifier.new);
+final boardsProvider =
+    NotifierProvider<BoardsNotifier, List<Board>>(BoardsNotifier.new);
 
-class WallMessagesNotifier extends Notifier<List<WallMessage>> {
+class BoardsNotifier extends Notifier<List<Board>> {
   @override
-  List<WallMessage> build() => [...ref.read(mockProvider).wallMessages];
+  List<Board> build() => [...ref.read(mockProvider).boards];
 
   /// 发布留言（含内容审核）。
-  /// 返回 (WallMessage?, String?) — 成功返回留言对象，失败返回拦截原因。
-  (WallMessage?, String?) postWallMessage({
+  /// 返回 (Board?, String?) — 成功返回留言对象，失败返回拦截原因。
+  (Board?, String?) postBoard({
     required String content,
     required double lat,
     required double lng,
@@ -194,7 +194,7 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
     final isVisible = code == ContentFilter.pass;
 
     final spotId = spotIdForCoordinate(state, lat, lng);
-    final msg = WallMessage(
+    final msg = Board(
       id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
       spotId: spotId,
       lat: lat,
@@ -207,7 +207,7 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
       createdAt: DateTime.now(),
     );
     state = [...state, msg];
-    ref.read(mockProvider).wallMessages.add(msg);
+    ref.read(mockProvider).boards.add(msg);
 
     if (!isVisible) {
       return (null, reason ?? '内容包含不当信息，请修改后重试');
@@ -229,7 +229,7 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
     final isVisible = code == ContentFilter.pass;
 
     final spotId = spotIdForCoordinate(state, lat, lng);
-    final msg = WallMessage(
+    final msg = Board(
       id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
       spotId: spotId,
       lat: lat,
@@ -242,7 +242,7 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
       createdAt: DateTime.now(),
     );
     state = [...state, msg];
-    ref.read(mockProvider).wallMessages.add(msg);
+    ref.read(mockProvider).boards.add(msg);
 
     if (!isVisible) return null;
     return findSpotNear(state, lat, lng);
@@ -253,7 +253,7 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
     state = [
       for (final m in state)
         if (m.id == messageId)
-          WallMessage(
+          Board(
             id: m.id,
             spotId: m.spotId,
             lat: m.lat,
@@ -275,16 +275,16 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
   }
 
   /// 回复留言
-  (WallMessage?, String?) postReply({
+  (Board?, String?) postReply({
     required String content,
-    required WallMessage parent,
+    required Board parent,
     required UserProfile author,
   }) {
     final trimmed = content.trim();
     final (code, reason) = ContentFilter.check(trimmed);
     final isVisible = code == ContentFilter.pass;
 
-    final msg = WallMessage(
+    final msg = Board(
       id: 'wm_${DateTime.now().millisecondsSinceEpoch}',
       spotId: parent.spotId,
       lat: parent.lat,
@@ -299,7 +299,7 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
       createdAt: DateTime.now(),
     );
     state = [...state, msg];
-    ref.read(mockProvider).wallMessages.add(msg);
+    ref.read(mockProvider).boards.add(msg);
 
     if (!isVisible) {
       return (null, reason ?? '回复包含不当内容');
@@ -312,7 +312,7 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
     state = [
       for (final m in state)
         if (m.id == messageId)
-          WallMessage(
+          Board(
             id: m.id,
             spotId: m.spotId,
             lat: m.lat,
@@ -336,7 +336,7 @@ class WallMessagesNotifier extends Notifier<List<WallMessage>> {
 
 /// 全量留言板聚合点
 final wallSpotsProvider = Provider<List<WallSpot>>((ref) {
-  final messages = ref.watch(wallMessagesProvider);
+  final messages = ref.watch(boardsProvider);
   return buildWallSpots(messages);
 });
 
@@ -360,8 +360,8 @@ final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
 });
 
 /// 某留言板的历史留言（按时间倒序）
-final wallMessagesForSpotProvider = Provider.family<List<WallMessage>, String>((ref, spotId) {
-  final messages = ref.watch(wallMessagesProvider);
+final boardsForSpotProvider = Provider.family<List<Board>, String>((ref, spotId) {
+  final messages = ref.watch(boardsProvider);
   final spots = ref.watch(wallSpotsProvider);
   WallSpot? spot;
   for (final s in spots) {

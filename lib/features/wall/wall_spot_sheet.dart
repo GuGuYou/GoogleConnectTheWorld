@@ -5,7 +5,7 @@ import '../../core/l10n/app_text.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
-import '../../shared/models/wall_message.dart';
+import '../../shared/models/board.dart';
 import '../../shared/models/wall_spot.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
 import '../../shared/widgets/glass_card.dart';
@@ -47,7 +47,7 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     final me = ref.read(currentUserProvider);
-    final (msg, error) = ref.read(wallMessagesProvider.notifier).postWallMessage(
+    final (msg, error) = ref.read(boardsProvider.notifier).postBoard(
           content: text,
           lat: widget.spot.lat,
           lng: widget.spot.lng,
@@ -65,7 +65,7 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final messages = ref.watch(wallMessagesForSpotProvider(widget.spot.id));
+    final messages = ref.watch(boardsForSpotProvider(widget.spot.id));
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
 
     return Padding(
@@ -107,7 +107,7 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
                         shrinkWrap: true,
                         itemCount: messages.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (_, i) => WallMessageTile(message: messages[i]),
+                        itemBuilder: (_, i) => BoardTile(message: messages[i]),
                       ),
               ),
               const SizedBox(height: 12),
@@ -149,9 +149,9 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
   }
 }
 
-class WallMessageTile extends ConsumerWidget {
-  final WallMessage message;
-  const WallMessageTile({super.key, required this.message});
+class BoardTile extends ConsumerWidget {
+  final Board message;
+  const BoardTile({super.key, required this.message});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -199,7 +199,7 @@ class WallMessageTile extends ConsumerWidget {
                     color: message.likedByMe ? AppColors.neonPink : AppColors.textMuted,
                     onTap: isDeleted
                         ? null
-                        : () => ref.read(wallMessagesProvider.notifier).toggleLike(message.id),
+                        : () => ref.read(boardsProvider.notifier).toggleLike(message.id),
                   ),
                   const SizedBox(width: 12),
                   // 回复
@@ -217,7 +217,7 @@ class WallMessageTile extends ConsumerWidget {
                       label: '',
                       color: AppColors.textMuted,
                       onTap: () {
-                        ref.read(wallMessagesProvider.notifier).softDelete(message.id);
+                        ref.read(boardsProvider.notifier).softDelete(message.id);
                       },
                     ),
                 ],
@@ -260,7 +260,7 @@ class WallMessageTile extends ConsumerWidget {
               final text = controller.text.trim();
               if (text.isEmpty) return;
               final me = ref.read(currentUserProvider);
-              ref.read(wallMessagesProvider.notifier).postReply(
+              ref.read(boardsProvider.notifier).postReply(
                     content: text,
                     parent: message,
                     author: me,

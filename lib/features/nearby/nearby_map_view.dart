@@ -10,6 +10,7 @@ import '../../core/providers/location_provider.dart';
 import '../../core/utils/distance.dart';
 import '../../core/utils/google_maps_ready.dart';
 import '../../core/utils/map_icon_bitmap.dart';
+import '../../core/utils/nearby_user_marker.dart';
 import '../../core/utils/radar_center_marker.dart';
 import '../../core/utils/wall_bubble_marker.dart';
 import '../../core/theme/app_colors.dart';
@@ -89,8 +90,8 @@ class NearbyMapView extends ConsumerWidget {
                   child: _DeferredGoogleMap(
                     key: ValueKey(Object.hash(
                       MapMarkerIcons.activity.codePoint,
-                      MapMarkerIcons.wallMessage.codePoint,
-                      MapMarkerIcons.nearbyUser.codePoint,
+                      MapMarkerIcons.board.codePoint,
+                      'nearby_avatar_v2',
                     )),
                     center: center,
                     circles: circles,
@@ -215,7 +216,7 @@ class _CreateWallSpotButtonState extends ConsumerState<_CreateWallSpotButton> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.add_location_alt, size: 18, color: _ink),
+              Icon(MapMarkerIcons.wallCreate, size: 18, color: _ink),
               const SizedBox(width: 6),
               Text(
                 ref.tr('wall_create_btn'),
@@ -266,7 +267,7 @@ class _MapBottomMask extends ConsumerWidget {
                               child: IpTagChip(
                                 tag: tag,
                                 large: true,
-                                iconOverride: MapMarkerIcons.wallMessage,
+                                iconOverride: MapMarkerIcons.board,
                                 selected: tagFilter == tag,
                                 onTap: () {
                                   ref
@@ -360,6 +361,7 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
     MapIconBitmap.clearCache();
     RadarCenterMarker.clearCache();
     WallBubbleMarker.clearCache();
+    NearbyUserMarker.clearCache();
 
     final markers = <Marker>{};
 
@@ -398,11 +400,13 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
     if (_showNearbyUsers) {
       for (final n in widget.nearbyUsers) {
         final color = n.user.tags.isNotEmpty ? n.user.tags.first.color : AppColors.neonCyan;
-        final userIcon = await MapIconBitmap.pin(
-          icon: MapMarkerIcons.nearbyUser,
-          color: color,
-          size: 44,
-          iconSize: 22,
+        final userIcon = await NearbyUserMarker.iconFor(
+          userId: n.user.id,
+          avatarSeed: n.user.avatarSeed,
+          nickname: n.user.nickname,
+          virtualAvatar: n.user.virtualAvatar,
+          ringColor: color,
+          online: n.user.online,
         );
         markers.add(
           Marker(
@@ -507,7 +511,7 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
                   ),
                   const SizedBox(height: 6),
                   _MapLayerToggle(
-                    icon: MapMarkerIcons.wallMessage,
+                    icon: MapMarkerIcons.board,
                     color: MapMarkerIcons.wallDefaultColor,
                     tooltipKey: 'map_toggle_wall',
                     enabled: _showWallSpots,
