@@ -340,8 +340,12 @@ final wallSpotsProvider = Provider<List<WallSpot>>((ref) {
   return buildWallSpots(messages);
 });
 
-/// 留言板标签筛选（空集 = 全部显示）
-final wallTagFilterProvider = StateProvider<Set<IpTag>>((ref) => {});
+/// 地图标签筛选。
+/// 初始化时默认全选当前用户的全部标签（底部按钮均为选中态）；空集 = 全部隐藏。
+/// 同时作用于地图上的留言板、活动与附近用户三类标记。
+final wallTagFilterProvider = StateProvider<Set<IpTag>>(
+  (ref) => ref.read(currentUserProvider).tags.toSet(),
+);
 
 /// 雷达范围内 + 标签过滤后的可见留言板
 final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
@@ -351,13 +355,12 @@ final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
   final lat = loc?.latitude ?? fallback.latitude;
   final lng = loc?.longitude ?? fallback.longitude;
   final filters = ref.watch(wallTagFilterProvider);
+  // 一个标签都不选 = 全部隐藏。
+  if (filters.isEmpty) return const [];
   const maxKm = MapConfig.radarMaxRangeKm;
   return spots.where((spot) {
     if (!isWithinKm(lat, lng, spot.lat, spot.lng, maxKm)) return false;
-    if (filters.isNotEmpty &&
-        !spot.tags.any((tag) => filters.contains(tag))) {
-      return false;
-    }
+    if (!spot.tags.any((tag) => filters.contains(tag))) return false;
     return true;
   }).toList();
 });

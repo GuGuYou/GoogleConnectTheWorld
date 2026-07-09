@@ -51,6 +51,9 @@ class NearbyMapView extends ConsumerWidget {
     final activities = ref.watch(activitiesProvider);
     final wallSpots = ref.watch(visibleWallSpotsProvider);
     final me = ref.watch(currentUserProvider);
+    // 底部标签筛选：空集=全部隐藏；非空时只显示命中所选标签的标记。
+    // 留言板已在 visibleWallSpotsProvider 内按同一集合过滤，此处过滤活动与用户。
+    final tagFilters = ref.watch(wallTagFilterProvider);
 
     final circles = <Circle>{
       ...RadarCenterMarker.rings(center),
@@ -61,10 +64,12 @@ class NearbyMapView extends ConsumerWidget {
     final centerLng = center.longitude;
     final nearbyInRange = nearby
         .where((n) => isWithinKm(centerLat, centerLng, n.user.lat, n.user.lng, maxKm))
+        .where((n) => n.user.tags.any((t) => tagFilters.contains(t)))
         .take(30)
         .toList();
     final activitiesInRange = activities
         .where((a) => isWithinKm(centerLat, centerLng, a.lat, a.lng, maxKm))
+        .where((a) => tagFilters.contains(a.tag))
         .take(12)
         .toList();
 
