@@ -32,10 +32,13 @@ class MapConfig {
         radarMaxRangeMeters,
       ];
 
-  /// 根据纬度计算初始缩放级别，使视野直径约为 [radarMaxRangeKm] 的 2 倍。
+  /// 初始视野直径相对 [radarMaxRangeKm] 的倍数（越小视角越近）。
+  static const double initialViewRangeFactor = 1.3;
+
+  /// 根据纬度计算初始缩放级别，使视野直径约为 [radarMaxRangeKm] × [initialViewRangeFactor]。
   static double initialZoomForLatitude(double latitude, {double viewportHeightPx = 480}) {
     const earthCircumference = 40075016.686;
-    const diameterMeters = radarMaxRangeKm * 2000 * 1.1;
+    final diameterMeters = radarMaxRangeKm * 1000 * initialViewRangeFactor;
     final latRad = latitude * math.pi / 180;
     final metersPerPixel = diameterMeters / viewportHeightPx;
     final zoom = math.log(earthCircumference * math.cos(latRad) / (256 * metersPerPixel)) / math.ln2;

@@ -340,8 +340,8 @@ final wallSpotsProvider = Provider<List<WallSpot>>((ref) {
   return buildWallSpots(messages);
 });
 
-/// 留言板标签筛选（null = 全部）
-final wallTagFilterProvider = StateProvider<IpTag?>((ref) => null);
+/// 留言板标签筛选（空集 = 全部显示）
+final wallTagFilterProvider = StateProvider<Set<IpTag>>((ref) => {});
 
 /// 雷达范围内 + 标签过滤后的可见留言板
 final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
@@ -350,11 +350,14 @@ final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
   final loc = ref.watch(currentLocationProvider).valueOrNull;
   final lat = loc?.latitude ?? fallback.latitude;
   final lng = loc?.longitude ?? fallback.longitude;
-  final filter = ref.watch(wallTagFilterProvider);
+  final filters = ref.watch(wallTagFilterProvider);
   const maxKm = MapConfig.radarMaxRangeKm;
   return spots.where((spot) {
     if (!isWithinKm(lat, lng, spot.lat, spot.lng, maxKm)) return false;
-    if (filter != null && !spot.tags.contains(filter)) return false;
+    if (filters.isNotEmpty &&
+        !spot.tags.any((tag) => filters.contains(tag))) {
+      return false;
+    }
     return true;
   }).toList();
 });

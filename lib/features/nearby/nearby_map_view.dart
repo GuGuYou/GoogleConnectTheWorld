@@ -238,7 +238,7 @@ class _MapBottomMask extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tagFilter = ref.watch(wallTagFilterProvider);
+    final tagFilters = ref.watch(wallTagFilterProvider);
 
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -268,14 +268,19 @@ class _MapBottomMask extends ConsumerWidget {
                                 tag: tag,
                                 large: true,
                                 iconOverride: MapMarkerIcons.board,
-                                selected: tagFilter == tag,
+                                selected: tagFilters.contains(tag),
                                 onTap: () {
                                   ref
                                       .read(wallTagFilterProvider.notifier)
-                                      .update(
-                                        (current) =>
-                                            current == tag ? null : tag,
-                                      );
+                                      .update((current) {
+                                    final next = Set<IpTag>.from(current);
+                                    if (next.contains(tag)) {
+                                      next.remove(tag);
+                                    } else {
+                                      next.add(tag);
+                                    }
+                                    return next;
+                                  });
                                 },
                               ),
                             ),
