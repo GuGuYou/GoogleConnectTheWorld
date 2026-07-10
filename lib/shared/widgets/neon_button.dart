@@ -64,11 +64,16 @@ class _NeonButtonState extends State<NeonButton> {
                 Icon(widget.icon, size: 18, color: AppColors.ctaText),
                 const SizedBox(width: 8),
               ],
-              Text(widget.label,
-                  style: AppTextStyles.button.copyWith(
-                      color: enabled
-                          ? AppColors.ctaText
-                          : AppColors.textMuted)),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(widget.label,
+                      style: AppTextStyles.button.copyWith(
+                          color: enabled
+                              ? AppColors.ctaText
+                              : AppColors.textMuted)),
+                ),
+              ),
             ],
           ),
         ),

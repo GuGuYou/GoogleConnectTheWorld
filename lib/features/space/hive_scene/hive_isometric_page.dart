@@ -270,19 +270,30 @@ class _BottomPlayerBar extends StatelessWidget {
                 ],
               ),
               const Spacer(),
-              // 快捷标签
-              ...sceneState.rooms.take(3).map((r) => Padding(
-                padding: const EdgeInsets.only(left: 6),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: r.color.withOpacity(0.2),
-                    border: Border.all(color: r.color.withOpacity(0.4)),
+              // 快捷标签（可收缩，避免窄屏溢出）
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ...sceneState.rooms.take(3).map((r) => Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: r.color.withOpacity(0.2),
+                            border: Border.all(color: r.color.withOpacity(0.4)),
+                          ),
+                          child: Text(r.type.label.split(' ').last, style: TextStyle(color: r.color, fontSize: 10)),
+                        ),
+                      )),
+                    ],
                   ),
-                  child: Text(r.type.label.split(' ').last, style: TextStyle(color: r.color, fontSize: 10)),
                 ),
-              )),
+              ),
             ],
           ),
         ),

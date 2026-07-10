@@ -63,7 +63,7 @@ class ActivityCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -87,7 +87,7 @@ class ActivityCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   SizedBox(
                     width: 170,
                     child: Text(
@@ -95,12 +95,13 @@ class ActivityCard extends StatelessWidget {
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
+                        height: 1.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 5),
                   _row(Icons.schedule,
                       DateFormat('MM/dd HH:mm').format(activity.time)),
                   const SizedBox(height: 3),
