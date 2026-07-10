@@ -52,8 +52,11 @@ class AvatarCustomizePage extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  child:
-                      VirtualAvatarView(avatar: avatar, size: 124, glow: true),
+                  child: VirtualAvatarView(
+                      avatar: avatar,
+                      size: 124,
+                      glow: true,
+                      heroPlaceholder: true),
                 ),
               ),
               const SizedBox(height: 22),

@@ -17,17 +17,17 @@ class NeonBackground extends StatelessWidget {
       child: Stack(
         children: [
           const Positioned.fill(child: _HoneycombPattern()),
+          // 顶部主暖光（对应设计稿 #FF8C00 辉光椭圆）
           Positioned(
-              top: -120,
-              left: 60,
-              right: 60,
-              child:
-                  _blob(AppColors.glowOrange.withValues(alpha: 0.16), 260)),
+              top: -160,
+              left: -40,
+              right: -40,
+              child: _blob(AppColors.glowOrange.withValues(alpha: 0.42), 460)),
           Positioned(
-              top: 180,
-              left: -80,
-              child:
-                  _blob(AppColors.glowOrange.withValues(alpha: 0.10), 300)),
+              top: 30,
+              left: 30,
+              right: 30,
+              child: _blob(AppColors.glowOrange.withValues(alpha: 0.16), 300)),
           child,
         ],
       ),
