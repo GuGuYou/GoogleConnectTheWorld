@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import '../../core/config/map_marker_icons.dart';
 import '../../core/l10n/app_text.dart';
 import '../../core/providers/location_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/map_pointer_blocker.dart';
 import '../../core/utils/wall_cluster.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/models/ip_tag.dart';
@@ -19,10 +21,12 @@ void showCreateWallSpotSheet(BuildContext context, WidgetRef ref) {
     context: context,
     barrierDismissible: true,
     barrierColor: Colors.black.withValues(alpha: 0.42),
-    builder: (_) => const Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.fromLTRB(20, 72, 20, 108),
-      child: _CreateWallSpotSheet(),
+    builder: (_) => const MapPointerBlocker(
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.fromLTRB(20, 72, 20, 108),
+        child: _CreateWallSpotSheet(),
+      ),
     ),
   );
 }
@@ -63,8 +67,8 @@ class _CreateWallSpotSheetState extends ConsumerState<_CreateWallSpotSheet> {
     final me = ref.read(currentUserProvider);
     final selectedTags = me.tags.where((t) => _selectedTagIds.contains(t.id)).toList();
 
-    final existingBefore = findSpotNear(ref.read(wallMessagesProvider), loc.latitude, loc.longitude);
-    final spot = ref.read(wallMessagesProvider.notifier).createWallSpot(
+    final existingBefore = findSpotNear(ref.read(boardsProvider), loc.latitude, loc.longitude);
+    final spot = ref.read(boardsProvider.notifier).createWallSpot(
           lat: loc.latitude,
           lng: loc.longitude,
           author: me,
@@ -225,7 +229,7 @@ class _CreateWallSpotSheetState extends ConsumerState<_CreateWallSpotSheet> {
             const SizedBox(height: 20),
             NeonButton(
               label: ref.tr('wall_create_submit'),
-              icon: Icons.add_location_alt,
+              icon: MapMarkerIcons.wallCreate,
               onPressed: canCreate && me.tags.isNotEmpty ? _create : null,
             ),
           ],

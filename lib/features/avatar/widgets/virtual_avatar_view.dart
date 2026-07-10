@@ -37,7 +37,25 @@ class VirtualAvatarView extends StatelessWidget {
     [Color(0xFFFFF176), Color(0xFF42A5F5)],
   ];
 
-  /// 若 AI 已生成真实头像图片（data URI 或网络 URL），解析成 ImageProvider；否则返回 null 走程序化绘制兜底。
+  /// 将虚拟形象绘制到 [rect] 区域（供地图标记等离屏 Canvas 使用）。
+  static void paintAvatar(Canvas canvas, Rect rect, VirtualAvatar avatar) {
+    final colors = palettes[avatar.colorIndex % palettes.length];
+    canvas.save();
+    canvas.translate(rect.left, rect.top);
+    final local = Offset.zero & rect.size;
+    if (avatar.style == AvatarVisualStyle.pixel) {
+      canvas.clipRRect(RRect.fromRectAndRadius(local, Radius.circular(rect.width * 0.18)));
+    } else {
+      canvas.clipRRect(RRect.fromRectAndRadius(local, Radius.circular(rect.width / 2)));
+    }
+    canvas.drawRect(local, Paint()..color = colors.last);
+    final painter = avatar.style == AvatarVisualStyle.pixel
+        ? _PixelAvatarPainter(avatar, colors)
+        : _CuteAvatarPainter(avatar, colors);
+    painter.paint(canvas, local.size);
+    canvas.restore();
+  }
+
   static ImageProvider? _resolveGeneratedImage(VirtualAvatar avatar) {
     final url = avatar.generatedImageUrl;
     if (avatar.source != AvatarSource.gemini || url == null || url.isEmpty) return null;

@@ -47,6 +47,7 @@ dependencies:
 
   # 加密 / 哈希（匿名身份 + 日志脱敏）
   crypto: ^3.0.6
+  pointer_interceptor: ^0.10.1+2
 
 dev_dependencies:
   flutter_test:

@@ -13,6 +13,9 @@ class IpTagChip extends ConsumerWidget {
   final bool large;
   final VoidCallback? onTap;
 
+  /// 可选：覆盖默认的 [IpTag.icon]（例如地图筛选统一显示留言板气泡图标）。
+  final IconData? iconOverride;
+
   const IpTagChip({
     super.key,
     required this.tag,
@@ -20,6 +23,7 @@ class IpTagChip extends ConsumerWidget {
     this.small = false,
     this.large = false,
     this.onTap,
+    this.iconOverride,
   });
 
   @override
@@ -47,7 +51,7 @@ class IpTagChip extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(tag.icon,
+            Icon(iconOverride ?? tag.icon,
                 size: large ? 20 : (small ? 12 : 15), color: color),
             SizedBox(width: large ? 8 : (small ? 4 : 6)),
             Text(

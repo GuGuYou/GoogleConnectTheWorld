@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Google Maps 配置：API Key 与暗色地图样式。
@@ -17,6 +18,10 @@ class MapConfig {
   /// 决定地图初始视野、雷达同心圆最外圈，以及活动/用户/留言板图标的可见范围。
   static const double radarMaxRangeKm = 3.0;
 
+  /// 雷达主色（蜂蜜金）与强调色（薄荷青），与蜂巢主题一致。
+  static const Color radarColor = Color(0xFFFFD84A);
+  static const Color radarAccentColor = Color(0xFF9EF1E5);
+
   /// 雷达最大扫描半径（米）
   static double get radarMaxRangeMeters => radarMaxRangeKm * 1000;
 
@@ -27,10 +32,13 @@ class MapConfig {
         radarMaxRangeMeters,
       ];
 
-  /// 根据纬度计算初始缩放级别，使视野直径约为 [radarMaxRangeKm] 的 2 倍。
+  /// 初始视野直径相对 [radarMaxRangeKm] 的倍数（越小视角越近）。
+  static const double initialViewRangeFactor = 1.3;
+
+  /// 根据纬度计算初始缩放级别，使视野直径约为 [radarMaxRangeKm] × [initialViewRangeFactor]。
   static double initialZoomForLatitude(double latitude, {double viewportHeightPx = 480}) {
     const earthCircumference = 40075016.686;
-    const diameterMeters = radarMaxRangeKm * 2000 * 1.1;
+    final diameterMeters = radarMaxRangeKm * 1000 * initialViewRangeFactor;
     final latRad = latitude * math.pi / 180;
     final metersPerPixel = diameterMeters / viewportHeightPx;
     final zoom = math.log(earthCircumference * math.cos(latRad) / (256 * metersPerPixel)) / math.ln2;
@@ -54,28 +62,34 @@ class MapConfig {
 
   static bool get hasValidApiKey => _apiKey != null && _apiKey!.isNotEmpty;
 
-  /// 暗色赛博风格地图样式（替代原 OSM ColorFiltered 方案）。
-  static const String neonDarkMapStyle = '''
+  /// 暖褐蜂蜜底 + 低对比金调路网（无 POI、无标签，突出地图标记）。
+  /// 与全局蜂巢主题（bg0 #070807 / bg1 #111006 / 蜂蜜金 #FFD84A）保持一致。
+  static const String mapStyle = '''
 [
-  {"elementType":"geometry","stylers":[{"color":"#1d1d35"}]},
-  {"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},
-  {"elementType":"labels.text.stroke","stylers":[{"color":"#1a1a2e"}]},
-  {"featureType":"administrative","elementType":"geometry","stylers":[{"color":"#757575"}]},
-  {"featureType":"administrative.country","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]},
+  {"elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"elementType":"labels","stylers":[{"visibility":"off"}]},
+  {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
+  {"featureType":"administrative","stylers":[{"visibility":"off"}]},
   {"featureType":"administrative.land_parcel","stylers":[{"visibility":"off"}]},
-  {"featureType":"administrative.locality","elementType":"labels.text.fill","stylers":[{"color":"#bdbdbd"}]},
-  {"featureType":"poi","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#181830"}]},
-  {"featureType":"poi.park","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
-  {"featureType":"road","elementType":"geometry.fill","stylers":[{"color":"#2c2c54"}]},
-  {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#8a8a8a"}]},
-  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#373773"}]},
-  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#3d3d8c"}]},
-  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#1f1f45"}]},
-  {"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
-  {"featureType":"transit","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
-  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e0e1f"}]},
-  {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#3d3d3d"}]}
+  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"landscape.man_made","elementType":"geometry","stylers":[{"color":"#181712"}]},
+  {"featureType":"poi","stylers":[{"visibility":"off"}]},
+  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"poi.park","elementType":"geometry.stroke","stylers":[{"color":"#20201e"},{"weight":1}]},
+  {"featureType":"poi.park","elementType":"labels","stylers":[{"visibility":"off"}]},
+  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#232322"},{"weight":1}]},
+  {"featureType":"road","elementType":"labels","stylers":[{"visibility":"off"}]},
+  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"road.arterial","elementType":"geometry.stroke","stylers":[{"color":"#282827"},{"weight":1}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#2f2f2e"},{"weight":1}]},
+  {"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#14120a"}]},
+  {"featureType":"road.local","elementType":"geometry.stroke","stylers":[{"color":"#1f1f1e"},{"weight":1}]},
+  {"featureType":"transit","stylers":[{"visibility":"off"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#101010"}]},
+  {"featureType":"water","elementType":"geometry.stroke","stylers":[{"color":"#1c1c1b"},{"weight":1}]},
+  {"featureType":"water","elementType":"labels","stylers":[{"visibility":"off"}]}
 ]
 ''';
 }

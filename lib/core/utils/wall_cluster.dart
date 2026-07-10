@@ -1,16 +1,16 @@
 import '../config/map_config.dart';
 import '../../shared/models/ip_tag.dart';
-import '../../shared/models/wall_message.dart';
+import '../../shared/models/board.dart';
 import '../../shared/models/wall_spot.dart';
 import 'distance.dart';
 
 /// 将可见留言按坐标就近聚合为留言板（默认 100m）。
 /// 排除锚点、已删除、审核未通过的留言。
-List<WallSpot> buildWallSpots(List<WallMessage> messages) {
+List<WallSpot> buildWallSpots(List<Board> messages) {
   final displayable = messages.where((m) => m.isDisplayable).toList();
   if (displayable.isEmpty) return [];
 
-  final clusters = <List<WallMessage>>[];
+  final clusters = <List<Board>>[];
   for (final msg in displayable) {
     var placed = false;
     for (final cluster in clusters) {
@@ -30,7 +30,7 @@ List<WallSpot> buildWallSpots(List<WallMessage> messages) {
   ];
 }
 
-WallSpot _spotFromCluster(String id, List<WallMessage> cluster) {
+WallSpot _spotFromCluster(String id, List<Board> cluster) {
   final lat = cluster.map((m) => m.lat).reduce((a, b) => a + b) / cluster.length;
   final lng = cluster.map((m) => m.lng).reduce((a, b) => a + b) / cluster.length;
   final tagSet = <IpTag>{};
@@ -49,7 +49,7 @@ WallSpot _spotFromCluster(String id, List<WallMessage> cluster) {
 }
 
 /// 查找坐标所属的留言板 id，若无则生成新 id
-String spotIdForCoordinate(List<WallMessage> existing, double lat, double lng) {
+String spotIdForCoordinate(List<Board> existing, double lat, double lng) {
   final spots = buildWallSpots(existing);
   for (final spot in spots) {
     if (haversineKm(lat, lng, spot.lat, spot.lng) * 1000 <= MapConfig.wallClusterRadiusMeters) {
@@ -59,7 +59,7 @@ String spotIdForCoordinate(List<WallMessage> existing, double lat, double lng) {
   return 'spot_${DateTime.now().millisecondsSinceEpoch}';
 }
 
-List<WallMessage> messagesForSpot(List<WallMessage> messages, WallSpot spot) {
+List<Board> messagesForSpot(List<Board> messages, WallSpot spot) {
   return messages
       .where((m) => m.isDisplayable &&
           haversineKm(m.lat, m.lng, spot.lat, spot.lng) * 1000 <= MapConfig.wallClusterRadiusMeters)
@@ -68,7 +68,7 @@ List<WallMessage> messagesForSpot(List<WallMessage> messages, WallSpot spot) {
 }
 
 /// 查找坐标附近是否已有留言板（100m 内）
-WallSpot? findSpotNear(List<WallMessage> messages, double lat, double lng) {
+WallSpot? findSpotNear(List<Board> messages, double lat, double lng) {
   for (final spot in buildWallSpots(messages)) {
     if (haversineKm(lat, lng, spot.lat, spot.lng) * 1000 <= MapConfig.wallClusterRadiusMeters) {
       return spot;

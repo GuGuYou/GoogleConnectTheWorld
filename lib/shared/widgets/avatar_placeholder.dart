@@ -19,6 +19,45 @@ class AvatarPlaceholder extends StatelessWidget {
     this.glow = false,
   });
 
+  /// 离屏绘制占位头像（地图标记等场景）。
+  static void paintOnCanvas(
+    Canvas canvas,
+    Rect rect, {
+    required String seed,
+    required String label,
+  }) {
+    final idx = seed.hashCode.abs() % _palettes.length;
+    final colors = _palettes[idx];
+    final center = rect.center;
+    final radius = rect.width / 2;
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..shader = LinearGradient(
+          colors: colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ).createShader(rect),
+    );
+    final initial = label.isNotEmpty ? label.characters.first.toUpperCase() : '?';
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: initial,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: radius * 0.85,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    textPainter.paint(
+      canvas,
+      Offset(center.dx - textPainter.width / 2, center.dy - textPainter.height / 2),
+    );
+  }
+
   static const _palettes = [
     [AppColors.neonPink, AppColors.neonPurple],
     [AppColors.neonCyan, AppColors.neonPurple],

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/utils/map_pointer_blocker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
-import '../../shared/models/wall_message.dart';
+import '../../shared/models/board.dart';
 import '../../shared/models/wall_spot.dart';
 import '../../shared/widgets/avatar_placeholder.dart';
 import '../../shared/widgets/glass_card.dart';
@@ -18,10 +19,12 @@ void showWallSpotSheet(BuildContext context, WidgetRef ref, WallSpot spot) {
     context: context,
     barrierDismissible: true,
     barrierColor: Colors.black.withValues(alpha: 0.42),
-    builder: (_) => Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.fromLTRB(20, 72, 20, 108),
-      child: _WallSpotSheet(spot: spot),
+    builder: (_) => MapPointerBlocker(
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.fromLTRB(20, 72, 20, 108),
+        child: _WallSpotSheet(spot: spot),
+      ),
     ),
   );
 }
@@ -47,7 +50,7 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     final me = ref.read(currentUserProvider);
-    final (msg, error) = ref.read(wallMessagesProvider.notifier).postWallMessage(
+    final (msg, error) = ref.read(boardsProvider.notifier).postBoard(
           content: text,
           lat: widget.spot.lat,
           lng: widget.spot.lng,
@@ -65,7 +68,7 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final messages = ref.watch(wallMessagesForSpotProvider(widget.spot.id));
+    final messages = ref.watch(boardsForSpotProvider(widget.spot.id));
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
 
     return Padding(
@@ -107,7 +110,7 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
                         shrinkWrap: true,
                         itemCount: messages.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (_, i) => WallMessageTile(message: messages[i]),
+                        itemBuilder: (_, i) => BoardTile(message: messages[i]),
                       ),
               ),
               const SizedBox(height: 12),
@@ -149,9 +152,9 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
   }
 }
 
-class WallMessageTile extends ConsumerWidget {
-  final WallMessage message;
-  const WallMessageTile({super.key, required this.message});
+class BoardTile extends ConsumerWidget {
+  final Board message;
+  const BoardTile({super.key, required this.message});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -199,7 +202,7 @@ class WallMessageTile extends ConsumerWidget {
                     color: message.likedByMe ? AppColors.neonPink : AppColors.textMuted,
                     onTap: isDeleted
                         ? null
-                        : () => ref.read(wallMessagesProvider.notifier).toggleLike(message.id),
+                        : () => ref.read(boardsProvider.notifier).toggleLike(message.id),
                   ),
                   const SizedBox(width: 12),
                   // 回复
@@ -217,7 +220,7 @@ class WallMessageTile extends ConsumerWidget {
                       label: '',
                       color: AppColors.textMuted,
                       onTap: () {
-                        ref.read(wallMessagesProvider.notifier).softDelete(message.id);
+                        ref.read(boardsProvider.notifier).softDelete(message.id);
                       },
                     ),
                 ],
@@ -233,42 +236,44 @@ class WallMessageTile extends ConsumerWidget {
     final controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(ref.tr('wall_reply_title'), style: AppTextStyles.title),
-        content: TextField(
-          controller: controller,
-          maxLines: 3,
-          style: AppTextStyles.body,
-          decoration: InputDecoration(
-            hintText: ref.tr('wall_reply_hint'),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.06),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      builder: (ctx) => MapPointerBlocker(
+        child: AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: Text(ref.tr('wall_reply_title'), style: AppTextStyles.title),
+          content: TextField(
+            controller: controller,
+            maxLines: 3,
+            style: AppTextStyles.body,
+            decoration: InputDecoration(
+              hintText: ref.tr('wall_reply_hint'),
+              filled: true,
+              fillColor: Colors.white.withValues(alpha: 0.06),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(ref.tr('cancel'), style: const TextStyle(color: AppColors.textMuted)),
+            ),
+            NeonButton(
+              label: ref.tr('send'),
+              icon: Icons.send,
+              expand: false,
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isEmpty) return;
+                final me = ref.read(currentUserProvider);
+                ref.read(boardsProvider.notifier).postReply(
+                      content: text,
+                      parent: message,
+                      author: me,
+                    );
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(ref.tr('cancel'), style: const TextStyle(color: AppColors.textMuted)),
-          ),
-          NeonButton(
-            label: ref.tr('send'),
-            icon: Icons.send,
-            expand: false,
-            onPressed: () {
-              final text = controller.text.trim();
-              if (text.isEmpty) return;
-              final me = ref.read(currentUserProvider);
-              ref.read(wallMessagesProvider.notifier).postReply(
-                    content: text,
-                    parent: message,
-                    author: me,
-                  );
-              Navigator.pop(ctx);
-            },
-          ),
-        ],
       ),
     );
   }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// 地图标记图标配置。
 ///
-/// 修改 [activity]、[wallMessage]、[nearbyUser] 即可切换地图上的图标。
+/// 修改 [activity]、[board]、[nearbyUser] 即可切换地图上的图标。
 /// 下方 [presets] 列出常用备选，复制 codePoint 对应的图标名到上方即可。
 ///
 /// ## 可选图标库（在 pubspec.yaml 添加依赖后替换 IconData 来源）
@@ -27,11 +27,15 @@ class MapMarkerIcons {
   // ---- 当前选用（改这里）----
   // 保存后热重载即可；若仍不变请 Hot Restart（Ctrl+Shift+F5）
   static const IconData activity = Icons.local_activity;
-  static const IconData wallMessage = Icons.event_note;
+  static const IconData board = Icons.assignment;
   static const IconData nearbyUser = Icons.emoji_people;
+  static const IconData wallCreate = Icons.assignment_add;
 
-  static const Color activityColor = Color(0xFFEA4335);
-  static const Color wallDefaultColor = Color(0xFF4285F4);
+  /// 活动 Pin 主色：琥珀橙（暖调，在蜂蜜金底图上醒目且与主题一致）。
+  static const Color activityColor = Color(0xFFFF8F1F);
+
+  /// 留言板默认色：蜂蜜金（介于用户薄荷青与活动琥珀橙之间，对应品牌渐变中段）。
+  static const Color wallDefaultColor = Color(0xFFFFD84A);
 
   /// 活动 Pin 备选
   static const activityPresets = <(String, IconData)>[
@@ -45,8 +49,9 @@ class MapMarkerIcons {
     ('sports_esports', Icons.sports_esports),
   ];
 
-  /// 留言墙 Pin 备选（圆形，与活动/用户一致）
+  /// 留言墙 Pin 备选（六边形，与活动/用户一致）
   static const wallPresets = <(String, IconData)>[
+    ('assignment', Icons.assignment),
     ('chat_bubble_rounded', Icons.chat_bubble_rounded),
     ('forum', Icons.forum),
     ('message', Icons.message),
