@@ -71,3 +71,10 @@ flutter:
     - assets/data/
     - assets/avatars/
     - secrets/google_maps_api_key.json
+
+  fonts:
+    # TikTok Sans (variable: wght 300-900, opsz, wdth, slnt). Brand display
+    # font from the Figma redesign. OFL-licensed — see TikTokSans-OFL.txt.
+    - family: TikTok Sans
+      fonts:
+        - asset: assets/fonts/TikTokSans.ttf

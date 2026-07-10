@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
+import 'app_text_styles.dart';
 
 class AppTheme {
   AppTheme._();
@@ -20,7 +20,8 @@ class AppTheme {
         onPrimary: AppColors.ctaText,
         onSurface: AppColors.textPrimary,
       ),
-      textTheme: GoogleFonts.interTextTheme(base.textTheme).apply(
+      textTheme: base.textTheme.apply(
+        fontFamily: AppTextStyles.fontFamily,
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,
       ),
@@ -29,11 +30,8 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.rubik(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
-        ),
+        titleTextStyle:
+            AppTextStyles.tt(size: 22, weight: FontWeight.w700),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       dividerColor: AppColors.divider,
@@ -43,7 +41,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.inputFill,
-        hintStyle: GoogleFonts.inter(color: AppColors.inputHint, fontSize: 14),
+        hintStyle: AppTextStyles.tt(
+            size: 14, weight: FontWeight.w400, color: AppColors.inputHint),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
