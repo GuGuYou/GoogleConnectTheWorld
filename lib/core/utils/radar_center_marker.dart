@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../config/map_config.dart';
+import '../theme/app_colors.dart';
 
 /// 用户本人位置的雷达中心：同心圆环 + 十字准星 + 中心光点。
 class RadarCenterMarker {
@@ -12,16 +13,14 @@ class RadarCenterMarker {
 
   static BitmapDescriptor? _cachedIcon;
 
-  static Color get _color => MapConfig.radarColor;
-
   static Future<BitmapDescriptor> icon() async {
     if (_cachedIcon != null) return _cachedIcon!;
 
     const size = 72.0;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
-    final center = Offset(size / 2, size / 2);
-    final color = _color;
+    const center = Offset(size / 2, size / 2);
+    const color = AppColors.neonCyan;
 
     // 外圈雷达环（静态图形，动画由地图 Circle 层补充）
     for (var i = 3; i >= 1; i--) {
@@ -105,8 +104,8 @@ class RadarCenterMarker {
           circleId: CircleId('me_ring_$i'),
           center: center,
           radius: ringRadiiMeters[i],
-          fillColor: _color.withValues(alpha: 0.06 + i * 0.03),
-          strokeColor: _color.withValues(alpha: 0.5 - i * 0.1),
+          fillColor: AppColors.neonCyan.withValues(alpha: 0.04 + i * 0.02),
+          strokeColor: AppColors.neonCyan.withValues(alpha: 0.25 - i * 0.05),
           strokeWidth: 2,
           zIndex: 1 + i,
         ),

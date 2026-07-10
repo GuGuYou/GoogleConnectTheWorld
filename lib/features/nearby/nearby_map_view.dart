@@ -391,7 +391,7 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
         return Stack(
           children: [
             GoogleMap(
-              style: MapConfig.mapStyle,
+              style: MapConfig.neonDarkMapStyle,
               initialCameraPosition: _homeCamera,
               onMapCreated: (controller) => _mapController = controller,
               myLocationEnabled: false,
