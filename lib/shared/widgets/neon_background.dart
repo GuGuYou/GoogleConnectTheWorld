@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 
+/// Flat #050605 backdrop with soft orange glows and faint honeycomb texture,
+/// matching the Figma frame base (glow ellipses #FF8C00 + scattered hexes).
 class NeonBackground extends StatelessWidget {
   final Widget child;
   const NeonBackground({super.key, required this.child});
@@ -11,24 +13,21 @@ class NeonBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF070807), Color(0xFF161100), Color(0xFF050503)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
+      color: AppColors.bg0,
       child: Stack(
         children: [
           const Positioned.fill(child: _HoneycombPattern()),
           Positioned(
-              top: -90,
-              right: -80,
-              child: _blob(AppColors.neonYellow.withValues(alpha: 0.22), 280)),
+              top: -120,
+              left: 60,
+              right: 60,
+              child:
+                  _blob(AppColors.glowOrange.withValues(alpha: 0.16), 260)),
           Positioned(
-              bottom: -100,
-              left: -100,
-              child: _blob(AppColors.neonPurple.withValues(alpha: 0.18), 260)),
+              top: 180,
+              left: -80,
+              child:
+                  _blob(AppColors.glowOrange.withValues(alpha: 0.10), 300)),
           child,
         ],
       ),
@@ -60,7 +59,7 @@ class _HoneycombPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.neonYellow.withValues(alpha: 0.08)
+      ..color = AppColors.neonYellow.withValues(alpha: 0.04)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     const radius = 26.0;

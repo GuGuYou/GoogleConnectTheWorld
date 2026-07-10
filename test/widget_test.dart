@@ -20,6 +20,9 @@ void main() {
     await tester.pump();
     expect(find.text('GoBuzz'), findsOneWidget);
 
+    // Let flutter_animate's zero-duration start timers fire before teardown.
+    await tester.pump(const Duration(milliseconds: 100));
     await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 }

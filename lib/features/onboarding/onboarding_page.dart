@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
@@ -19,12 +20,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   final _controller = PageController();
   int _index = 0;
 
-  // ── Warm amber palette for onboarding ──────────────────────────
-  static const darkBg = Color(0xFF1A1612);
-  static const warmGlow = Color(0xFF2E2118);
-  static const amberDark = Color(0xFFE67E22);
-  static const amberGold = Color(0xFFFFCC66);
-  static const creamWhite = Color(0xFFFFF5E6);
+  // ── Palette aliases → canonical Figma tokens (AppColors) ───────
+  static const darkBg = AppColors.bg0;
+  static const warmGlow = Color(0xFF2E1A00);
+  static const amberDark = Color(0xFFE47701);
+  static const amberGold = AppColors.neonYellow;
+  static const creamWhite = AppColors.textPrimary;
 
   static const onboardingGradient = LinearGradient(
     colors: [amberGold, amberDark],
