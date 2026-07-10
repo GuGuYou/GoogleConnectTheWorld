@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
@@ -19,12 +19,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   final _controller = PageController();
   int _index = 0;
 
-  // ── Warm amber palette for onboarding ──────────────────────────
-  static const darkBg = Color(0xFF1A1612);
-  static const warmGlow = Color(0xFF2E2118);
-  static const amberDark = Color(0xFFE67E22);
-  static const amberGold = Color(0xFFFFCC66);
-  static const creamWhite = Color(0xFFFFF5E6);
+  // ── Palette aliases → canonical Figma tokens (AppColors) ───────
+  static const darkBg = AppColors.bg0;
+  static const warmGlow = Color(0xFF2E1A00);
+  static const amberDark = Color(0xFFE47701);
+  static const amberGold = AppColors.neonYellow;
+  static const creamWhite = AppColors.textPrimary;
 
   static const onboardingGradient = LinearGradient(
     colors: [amberGold, amberDark],
@@ -135,9 +135,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                       Text(
                         pages[_index].desc,
                         textAlign: TextAlign.left,
-                        style: GoogleFonts.nunito(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
+                        style: AppTextStyles.tt(
+                          size: 13.5,
+                          weight: FontWeight.w600,
                           color: creamWhite.withValues(alpha: 0.65),
                           height: 1.55,
                         ),
@@ -180,9 +180,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     if (parts.length == 1) {
       return Text(
         data.title,
-        style: GoogleFonts.baloo2(
-          fontSize: 26,
-          fontWeight: FontWeight.w800,
+        style: AppTextStyles.tt(
+          size: 26,
+          weight: FontWeight.w800,
           color: creamWhite,
           letterSpacing: -0.3,
         ),
@@ -191,9 +191,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     return RichText(
       textAlign: TextAlign.left,
       text: TextSpan(
-        style: GoogleFonts.baloo2(
-          fontSize: 26,
-          fontWeight: FontWeight.w800,
+        style: AppTextStyles.tt(
+          size: 26,
+          weight: FontWeight.w800,
           color: creamWhite,
           letterSpacing: -0.3,
         ),
@@ -207,12 +207,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     onboardingGradient.createShader(bounds),
                 child: Text(
                   ' ${parts[1]} ',
-                  style: GoogleFonts.baloo2(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    fontStyle: FontStyle.italic,
+                  style: AppTextStyles.tt(
+                    size: 26,
+                    weight: FontWeight.w800,
                     color: Colors.white,
-                  ),
+                    letterSpacing: -0.3,
+                  ).copyWith(fontStyle: FontStyle.italic),
                 ),
               ),
             ),
@@ -303,9 +303,9 @@ class _CtaButtonState extends State<_CtaButton> {
             children: [
               Text(
                 widget.label,
-                style: GoogleFonts.baloo2(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
+                style: AppTextStyles.tt(
+                  size: 16,
+                  weight: FontWeight.w800,
                   color: const Color(0xFF2E1810),
                   letterSpacing: 0.3,
                 ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
+import 'app_text_styles.dart';
 
 class AppTheme {
   AppTheme._();
@@ -14,13 +14,14 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.bg0,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.neonPink,
-        secondary: AppColors.neonCyan,
+        secondary: AppColors.neonYellow,
         tertiary: AppColors.neonPurple,
         surface: AppColors.surface,
-        onPrimary: Color(0xFF241600),
+        onPrimary: AppColors.ctaText,
         onSurface: AppColors.textPrimary,
       ),
-      textTheme: GoogleFonts.nunitoTextTheme(base.textTheme).apply(
+      textTheme: base.textTheme.apply(
+        fontFamily: AppTextStyles.fontFamily,
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,
       ),
@@ -29,34 +30,32 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.baloo2(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
-        ),
+        titleTextStyle:
+            AppTextStyles.tt(size: 22, weight: FontWeight.w700),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       dividerColor: AppColors.divider,
-      iconTheme: const IconThemeData(color: AppColors.textSecondary),
+      iconTheme: const IconThemeData(color: AppColors.neonYellow),
       splashColor: AppColors.neonPink.withValues(alpha: 0.12),
       highlightColor: Colors.transparent,
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFFFFBEE),
-        hintStyle: GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 14),
+        fillColor: AppColors.inputFill,
+        hintStyle: AppTextStyles.tt(
+            size: 14, weight: FontWeight.w400, color: AppColors.inputHint),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFFFD84A)),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.neonYellow, width: 1.5),
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.neonYellow, width: 1),
         ),
       ),
     );

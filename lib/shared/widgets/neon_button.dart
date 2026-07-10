@@ -18,7 +18,7 @@ class NeonButton extends StatefulWidget {
     this.icon,
     this.gradient = AppColors.pinkPurple,
     this.expand = true,
-    this.padding = const EdgeInsets.symmetric(vertical: 15, horizontal: 24),
+    this.padding = const EdgeInsets.symmetric(vertical: 13, horizontal: 24),
   });
 
   @override
@@ -46,19 +46,13 @@ class _NeonButtonState extends State<NeonButton> {
             gradient: enabled
                 ? widget.gradient
                 : const LinearGradient(colors: [AppColors.bg2, AppColors.bg2]),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(200),
             boxShadow: [
-              BoxShadow(
-                color:
-                    enabled ? const Color(0xFF8A5B00) : const Color(0xFF3B310E),
-                offset: const Offset(0, 4),
-              ),
               if (enabled)
                 BoxShadow(
-                  color: AppColors.neonYellow.withValues(alpha: 0.38),
-                  blurRadius: 22,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 8),
+                  color: AppColors.neonGreen.withValues(alpha: 0.28),
+                  blurRadius: 20,
+                  offset: const Offset(0, 6),
                 ),
             ],
           ),
@@ -67,12 +61,19 @@ class _NeonButtonState extends State<NeonButton> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.icon != null) ...[
-                Icon(widget.icon, size: 18, color: const Color(0xFF241600)),
+                Icon(widget.icon, size: 18, color: AppColors.ctaText),
                 const SizedBox(width: 8),
               ],
-              Text(widget.label,
-                  style: AppTextStyles.button
-                      .copyWith(color: const Color(0xFF241600))),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(widget.label,
+                      style: AppTextStyles.button.copyWith(
+                          color: enabled
+                              ? AppColors.ctaText
+                              : AppColors.textMuted)),
+                ),
+              ),
             ],
           ),
         ),

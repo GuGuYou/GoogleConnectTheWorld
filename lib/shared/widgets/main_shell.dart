@@ -23,11 +23,11 @@ class MainShell extends ConsumerWidget {
       extendBody: true,
       body: shell,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.bg1.withValues(alpha: 0.92),
-          border: const Border(top: BorderSide(color: AppColors.divider)),
+        decoration: const BoxDecoration(
+          color: AppColors.navBg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           boxShadow: [
-            BoxShadow(color: AppColors.neonPurple.withValues(alpha: 0.18), blurRadius: 20),
+            BoxShadow(color: Color(0x66000000), blurRadius: 16, offset: Offset(0, -4)),
           ],
         ),
         child: SafeArea(
@@ -73,21 +73,17 @@ class _NavButton extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ShaderMask(
-            blendMode: BlendMode.srcIn,
-            shaderCallback: (b) => (active
-                    ? AppColors.pinkPurple
-                    : const LinearGradient(
-                        colors: [AppColors.textMuted, AppColors.textMuted]))
-                .createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
-            child: Icon(active ? item.activeIcon : item.icon, size: 25),
+          Icon(
+            active ? item.activeIcon : item.icon,
+            size: 22,
+            color: active ? AppColors.neonGreen : AppColors.textMuted,
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
             item.label,
             style: TextStyle(
               fontSize: 11,
-              color: active ? AppColors.neonPink : AppColors.textMuted,
+              color: active ? AppColors.neonYellow : AppColors.textMuted,
               fontWeight: active ? FontWeight.w600 : FontWeight.w400,
             ),
           ),

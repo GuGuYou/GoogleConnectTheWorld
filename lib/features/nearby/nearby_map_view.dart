@@ -81,7 +81,7 @@ class NearbyMapView extends ConsumerWidget {
               clipBehavior: Clip.none,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(7),
                   child: _DeferredGoogleMap(
                     key: ValueKey(Object.hash(
                       MapMarkerIcons.activity.codePoint,
@@ -391,7 +391,7 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
         return Stack(
           children: [
             GoogleMap(
-              style: MapConfig.mapStyle,
+              style: MapConfig.neonDarkMapStyle,
               initialCameraPosition: _homeCamera,
               onMapCreated: (controller) => _mapController = controller,
               myLocationEnabled: false,
@@ -564,15 +564,19 @@ class _MapFallback extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 90),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(7),
         child: Container(
-          color: AppColors.bg2,
+          color: AppColors.bg1,
           alignment: Alignment.center,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.radar, size: 64, color: AppColors.neonCyan.withValues(alpha: 0.6)),
-              const SizedBox(height: 16),
+              Image.asset(
+                'assets/images/decorations/fig_buzz_orbit.png',
+                width: 220,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Text(

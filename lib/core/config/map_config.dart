@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Google Maps 配置：API Key 与暗色地图样式。
@@ -17,9 +16,6 @@ class MapConfig {
   /// 雷达最大扫描半径（公里），以用户位置为中心。
   /// 决定地图初始视野、雷达同心圆最外圈，以及活动/用户/留言板图标的可见范围。
   static const double radarMaxRangeKm = 3.0;
-
-  /// 雷达圆环与中心标记颜色（亮青色，与深蓝底图高对比）。
-  static const Color radarColor = Color(0xFF5CEFFF);
 
   /// 雷达最大扫描半径（米）
   static double get radarMaxRangeMeters => radarMaxRangeKm * 1000;
@@ -58,33 +54,28 @@ class MapConfig {
 
   static bool get hasValidApiKey => _apiKey != null && _apiKey!.isNotEmpty;
 
-  /// 深蓝底 + 黄色线稿地图样式（无 POI、无标签）。
-  static const String mapStyle = '''
+  /// 暗色赛博风格地图样式（替代原 OSM ColorFiltered 方案）。
+  static const String neonDarkMapStyle = '''
 [
-  {"elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"elementType":"labels","stylers":[{"visibility":"off"}]},
-  {"elementType":"labels.icon","stylers":[{"visibility":"off"}]},
-  {"featureType":"administrative","stylers":[{"visibility":"off"}]},
+  {"elementType":"geometry","stylers":[{"color":"#1d1d35"}]},
+  {"elementType":"labels.text.fill","stylers":[{"color":"#8ec3b9"}]},
+  {"elementType":"labels.text.stroke","stylers":[{"color":"#1a1a2e"}]},
+  {"featureType":"administrative","elementType":"geometry","stylers":[{"color":"#757575"}]},
+  {"featureType":"administrative.country","elementType":"labels.text.fill","stylers":[{"color":"#9e9e9e"}]},
   {"featureType":"administrative.land_parcel","stylers":[{"visibility":"off"}]},
-  {"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"landscape.man_made","elementType":"geometry","stylers":[{"color":"#1e2844"}]},
-  {"featureType":"poi","stylers":[{"visibility":"off"}]},
-  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"poi.park","elementType":"geometry.stroke","stylers":[{"color":"#fbbc05"},{"weight":1}]},
-  {"featureType":"poi.park","elementType":"labels","stylers":[{"visibility":"off"}]},
-  {"featureType":"road","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"road","elementType":"geometry.stroke","stylers":[{"color":"#e8b923"},{"weight":1}]},
-  {"featureType":"road","elementType":"labels","stylers":[{"visibility":"off"}]},
-  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"road.arterial","elementType":"geometry.stroke","stylers":[{"color":"#fbbc05"},{"weight":1}]},
-  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#ffd54f"},{"weight":2}]},
-  {"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#1a2238"}]},
-  {"featureType":"road.local","elementType":"geometry.stroke","stylers":[{"color":"#c9a227"},{"weight":1}]},
-  {"featureType":"transit","stylers":[{"visibility":"off"}]},
-  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#141c30"}]},
-  {"featureType":"water","elementType":"geometry.stroke","stylers":[{"color":"#fbbc05"},{"weight":1}]},
-  {"featureType":"water","elementType":"labels","stylers":[{"visibility":"off"}]}
+  {"featureType":"administrative.locality","elementType":"labels.text.fill","stylers":[{"color":"#bdbdbd"}]},
+  {"featureType":"poi","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
+  {"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#181830"}]},
+  {"featureType":"poi.park","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
+  {"featureType":"road","elementType":"geometry.fill","stylers":[{"color":"#2c2c54"}]},
+  {"featureType":"road","elementType":"labels.text.fill","stylers":[{"color":"#8a8a8a"}]},
+  {"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#373773"}]},
+  {"featureType":"road.highway","elementType":"geometry","stylers":[{"color":"#3d3d8c"}]},
+  {"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#1f1f45"}]},
+  {"featureType":"road.local","elementType":"labels.text.fill","stylers":[{"color":"#616161"}]},
+  {"featureType":"transit","elementType":"labels.text.fill","stylers":[{"color":"#757575"}]},
+  {"featureType":"water","elementType":"geometry","stylers":[{"color":"#0e0e1f"}]},
+  {"featureType":"water","elementType":"labels.text.fill","stylers":[{"color":"#3d3d3d"}]}
 ]
 ''';
 }

@@ -11,15 +11,24 @@ class VirtualAvatarView extends StatelessWidget {
   final bool glow;
   final bool online;
 
+  /// When there is no AI-generated image, show the Figma 3D hero avatar
+  /// (`fig_avatar_hero.png`) instead of the procedural fallback. Used for
+  /// the profile hero and customize preview to match the redesign; other
+  /// contexts (e.g. many nearby users) keep the distinct procedural look.
+  final bool heroPlaceholder;
+
   const VirtualAvatarView({
     super.key,
     required this.avatar,
     this.size = 72,
     this.glow = false,
     this.online = false,
+    this.heroPlaceholder = false,
   });
 
-  static const _palettes = [
+  static const _heroAsset = 'assets/images/avatars/fig_avatar_hero.png';
+
+  static const palettes = [
     [Color(0xFFFF7AAE), Color(0xFFFFC6D9)],
     [Color(0xFF6DE7FF), Color(0xFF6B7CFF)],
     [Color(0xFFFFD36B), Color(0xFFFF8A5C)],
@@ -46,8 +55,15 @@ class VirtualAvatarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = _palettes[avatar.colorIndex % _palettes.length];
+    final colors = palettes[avatar.colorIndex % palettes.length];
     final generatedImage = _resolveGeneratedImage(avatar);
+    // No AI image + hero context → show the 3D hero art on a warm backdrop.
+    final useHero = generatedImage == null && heroPlaceholder;
+    final procedural = CustomPaint(
+      painter: avatar.style == AvatarVisualStyle.pixel
+          ? _PixelAvatarPainter(avatar, colors)
+          : _CuteAvatarPainter(avatar, colors),
+    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -57,28 +73,36 @@ class VirtualAvatarView extends StatelessWidget {
           decoration: BoxDecoration(
             shape: avatar.style == AvatarVisualStyle.pixel ? BoxShape.rectangle : BoxShape.circle,
             borderRadius: avatar.style == AvatarVisualStyle.pixel ? BorderRadius.circular(size * 0.18) : null,
-            color: colors.last,
-            boxShadow: glow ? [BoxShadow(color: colors.first.withValues(alpha: 0.55), blurRadius: 18)] : null,
+            color: useHero ? AppColors.hexFill : colors.last,
+            boxShadow: glow
+                ? [
+                    BoxShadow(
+                      color: (useHero ? AppColors.glowOrange : colors.first)
+                          .withValues(alpha: 0.55),
+                      blurRadius: 18,
+                    )
+                  ]
+                : null,
             border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 2),
           ),
           clipBehavior: Clip.antiAlias,
-          child: generatedImage != null
-              ? Image(
-                  image: generatedImage,
+          child: useHero
+              ? Image.asset(
+                  _heroAsset,
                   fit: BoxFit.cover,
                   width: size,
                   height: size,
-                  errorBuilder: (context, error, stackTrace) => CustomPaint(
-                    painter: avatar.style == AvatarVisualStyle.pixel
-                        ? _PixelAvatarPainter(avatar, colors)
-                        : _CuteAvatarPainter(avatar, colors),
-                  ),
+                  errorBuilder: (context, error, stackTrace) => procedural,
                 )
-              : CustomPaint(
-                  painter: avatar.style == AvatarVisualStyle.pixel
-                      ? _PixelAvatarPainter(avatar, colors)
-                      : _CuteAvatarPainter(avatar, colors),
-                ),
+              : generatedImage != null
+                  ? Image(
+                      image: generatedImage,
+                      fit: BoxFit.cover,
+                      width: size,
+                      height: size,
+                      errorBuilder: (context, error, stackTrace) => procedural,
+                    )
+                  : procedural,
         ),
         if (online)
           Positioned(
