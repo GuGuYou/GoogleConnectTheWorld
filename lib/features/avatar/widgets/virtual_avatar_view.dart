@@ -19,7 +19,7 @@ class VirtualAvatarView extends StatelessWidget {
     this.online = false,
   });
 
-  static const _palettes = [
+  static const palettes = [
     [Color(0xFFFF7AAE), Color(0xFFFFC6D9)],
     [Color(0xFF6DE7FF), Color(0xFF6B7CFF)],
     [Color(0xFFFFD36B), Color(0xFFFF8A5C)],
@@ -46,7 +46,7 @@ class VirtualAvatarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = _palettes[avatar.colorIndex % _palettes.length];
+    final colors = palettes[avatar.colorIndex % palettes.length];
     final generatedImage = _resolveGeneratedImage(avatar);
     return Stack(
       clipBehavior: Clip.none,
