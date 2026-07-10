@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/l10n/app_text.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../shared/widgets/gradient_text.dart';
+import '../../shared/widgets/neon_button.dart';
 import '../nearby/nearby_map_view.dart';
 import 'hive_scene/hive_isometric_page.dart';
 
 /// "空间"：广场（虚拟场景）与地图（GPS + 兴趣点）融合的统一容器。
 ///
 /// 场景模式占满全屏（标题/底栏由 [HiveRoomScene] 自己处理）；
-/// 地图模式显示真实地理位置与兴趣点。
+/// 地图模式显示真实地理位置与兴趣点，首次进入先展示 Buzz around 引导。
 class SpacePage extends ConsumerStatefulWidget {
   const SpacePage({super.key});
 
@@ -18,14 +21,13 @@ class SpacePage extends ConsumerStatefulWidget {
 }
 
 class _SpacePageState extends ConsumerState<SpacePage> {
-  static const _floorTop = Color(0xFF1A0F00);
-
   bool _sceneMode = true;
+  bool _mapIntroSeen = false;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: _floorTop,
+      color: AppColors.bg0,
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -35,15 +37,9 @@ class _SpacePageState extends ConsumerState<SpacePage> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
               child: Row(
                 children: [
-                  ShaderMask(
-                    blendMode: BlendMode.srcIn,
-                    shaderCallback: (b) => const LinearGradient(
-                      colors: [AppColors.neonCyan, AppColors.neonPink],
-                    ).createShader(Rect.fromLTWH(0, 0, b.width, b.height)),
-                    child: Text(
-                      _sceneMode ? 'Hive' : 'Map',
-                      style: AppTextStyles.h1.copyWith(color: Colors.white),
-                    ),
+                  GradientText(
+                    _sceneMode ? 'Hive' : 'Map',
+                    style: AppTextStyles.h1,
                   ),
                   const Spacer(),
                   _SpaceToggle(
@@ -64,11 +60,59 @@ class _SpacePageState extends ConsumerState<SpacePage> {
                         key: const ValueKey('hive'),
                         onSwitchToMap: () => setState(() => _sceneMode = false),
                       )
-                    : const NearbyMapView(key: ValueKey('map')),
+                    : _mapIntroSeen
+                        ? const NearbyMapView(key: ValueKey('map'))
+                        : _BuzzIntro(
+                            key: const ValueKey('buzz-intro'),
+                            onStart: () =>
+                                setState(() => _mapIntroSeen = true),
+                          ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 首次进入地图模式的引导态（Figma "Buzz around" 帧）。
+class _BuzzIntro extends ConsumerWidget {
+  final VoidCallback onStart;
+  const _BuzzIntro({super.key, required this.onStart});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 100),
+      child: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: Image.asset(
+                'assets/images/decorations/fig_buzz_orbit.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          GradientText(
+            ref.tr('buzz_intro_title'),
+            textAlign: TextAlign.center,
+            style: AppTextStyles.display(context).copyWith(fontSize: 32),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            ref.tr('buzz_intro_desc'),
+            textAlign: TextAlign.center,
+            style: AppTextStyles.body,
+          ),
+          const SizedBox(height: 24),
+          NeonButton(
+            label: ref.tr('buzz_intro_cta'),
+            icon: Icons.arrow_forward_rounded,
+            onPressed: onStart,
+          ),
+        ],
       ),
     );
   }
@@ -84,8 +128,8 @@ class _SpaceToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.chipSurface,
+        borderRadius: BorderRadius.circular(200),
       ),
       child: Row(
         children: [
@@ -103,14 +147,14 @@ class _SpaceToggle extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          gradient: active ? AppColors.cyanPurple : null,
-          borderRadius: BorderRadius.circular(18),
+          color: active ? AppColors.neonGreen : null,
+          borderRadius: BorderRadius.circular(200),
         ),
         child: Text(
           label,
           style: TextStyle(
               fontSize: 12,
-              color: active ? Colors.white : Colors.white38,
+              color: active ? AppColors.ctaText : AppColors.textMuted,
               fontWeight: FontWeight.w600),
         ),
       ),

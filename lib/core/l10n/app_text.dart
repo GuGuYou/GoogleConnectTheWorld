@@ -126,6 +126,9 @@ class AppText {
       'map_toggle_nearby_user': '附近用户',
       'map_toggle_wall': '留言板',
       'location_fallback_hint': '定位不可用，已使用演示位置',
+      'buzz_intro_title': 'Buzz around',
+      'buzz_intro_desc': '基于位置的社交：看看附近谁在线、谁准备好连接。',
+      'buzz_intro_cta': '开始探索',
       // 异步留言板（Lobby 系统）
       'wall_spot_title': '这里的留言',
       'wall_spot_summary': '曾有 {count} 条留言留在此地',
@@ -308,6 +311,9 @@ class AppText {
       'map_toggle_nearby_user': 'Nearby users',
       'map_toggle_wall': 'Message board',
       'location_fallback_hint': 'Location unavailable — using demo coordinates',
+      'buzz_intro_title': 'Buzz around',
+      'buzz_intro_desc': "Location-aware social that shows who's nearby and ready to connect.",
+      'buzz_intro_cta': 'Start buzzing',
       // Async message board (Lobby system)
       'wall_spot_title': 'Messages Here',
       'wall_spot_summary': '{count} messages left at this spot',
