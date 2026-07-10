@@ -37,12 +37,9 @@ class IpTagChip extends ConsumerWidget {
         decoration: BoxDecoration(
           color: selected
               ? color.withValues(alpha: 0.24)
-              : const Color(0xCC171308),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: selected ? color : color.withValues(alpha: 0.35),
-            width: selected ? 1.4 : 1,
-          ),
+              : AppColors.chipSurface,
+          borderRadius: BorderRadius.circular(20),
+          border: selected ? Border.all(color: color, width: 1.4) : null,
           boxShadow: selected
               ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 12)]
               : null,
@@ -57,7 +54,7 @@ class IpTagChip extends ConsumerWidget {
               tag.name(lang),
               style: TextStyle(
                 color:
-                    selected ? AppColors.textPrimary : AppColors.textSecondary,
+                    selected ? AppColors.textPrimary : AppColors.neonYellow,
                 fontSize: large ? 16 : (small ? 11 : 13),
                 fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               ),

@@ -8,7 +8,9 @@ import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
+import '../../shared/models/activity.dart';
 import '../../shared/widgets/gradient_text.dart';
+import '../../shared/widgets/hexagon.dart';
 import '../../shared/widgets/neon_background.dart';
 import 'widgets/activity_card.dart';
 
@@ -32,16 +34,24 @@ class ActivityListPage extends ConsumerWidget {
               child: Row(
                 children: [
                   GradientText(ref.tr('activity_title'), style: AppTextStyles.h1),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.auto_awesome,
+                      size: 14, color: Color(0xFFFFE523)),
                   const Spacer(),
                   GestureDetector(
                     onTap: () => context.push('/activity/create'),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(gradient: AppColors.pinkPurple, borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                          color: AppColors.neonGreen,
+                          borderRadius: BorderRadius.circular(200)),
                       child: Row(children: [
-                        const Icon(Icons.add, size: 16, color: Colors.white),
+                        const Icon(Icons.add, size: 14, color: Colors.white),
                         const SizedBox(width: 4),
-                        Text(ref.tr('activity_create'), style: AppTextStyles.button.copyWith(fontSize: 13)),
+                        Text(ref.tr('activity_create'),
+                            style: AppTextStyles.caption.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600)),
                       ]),
                     ),
                   ),
@@ -54,11 +64,35 @@ class ActivityListPage extends ConsumerWidget {
                 children: [
                   // 热门活动横向轮播
                   Padding(
-                    padding: const EdgeInsets.only(left: 4, bottom: 10),
-                    child: Text('🔥 ${ref.tr('activity_hot')}', style: AppTextStyles.title),
+                    padding: const EdgeInsets.only(left: 4, bottom: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GradientText(ref.tr('activity_hot'),
+                                style: AppTextStyles.title
+                                    .copyWith(fontSize: 18)),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.auto_awesome,
+                                size: 10, color: Color(0xFFFF8223)),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: 55,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: AppColors.neonGreen,
+                            borderRadius: BorderRadius.circular(200),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   SizedBox(
-                    height: 150,
+                    height: 113,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: hot.length,
@@ -66,27 +100,10 @@ class ActivityListPage extends ConsumerWidget {
                         final a = hot[i];
                         return GestureDetector(
                           onTap: () => context.push('/activity/${a.id}'),
-                          child: Container(
-                            width: 260,
-                            margin: const EdgeInsets.only(right: 12),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(18),
-                              gradient: LinearGradient(
-                                colors: [a.tag.color.withValues(alpha: 0.8), AppColors.bg1],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                            ),
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Icon(a.tag.icon, color: Colors.white, size: 30),
-                                Text(a.title(lang), style: AppTextStyles.h2, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                Text('${a.participants} ${ref.tr('activity_participants')}', style: AppTextStyles.caption.copyWith(color: Colors.white70)),
-                              ],
-                            ),
+                          child: _HotCard(
+                            activity: a,
+                            lang: lang,
+                            joinedLabel: ref.tr('activity_participants'),
                           ),
                         );
                       },
@@ -103,6 +120,104 @@ class ActivityListPage extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Hot-carousel card per the Figma comp: hexagon icon, two-line title,
+/// joined count, HOT ribbon in the top-right corner.
+class _HotCard extends StatelessWidget {
+  final ActivityItem activity;
+  final String lang;
+  final String joinedLabel;
+
+  const _HotCard({
+    required this.activity,
+    required this.lang,
+    required this.joinedLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 135,
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(7),
+        color: AppColors.cardSurface,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipPath(
+                  clipper: const HexagonClipper(),
+                  child: Container(
+                    width: 37,
+                    height: 37,
+                    color: AppColors.hexFill,
+                    child: Icon(activity.tag.icon,
+                        size: 16, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Expanded(
+                  child: Text(
+                    activity.title(lang),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${activity.participants} $joinedLabel',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption
+                      .copyWith(fontSize: 10, color: AppColors.textMuted),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(8, 2, 8, 3),
+              decoration: const BoxDecoration(
+                color: Color(0xFF0D0900),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(7),
+                  bottomLeft: Radius.circular(10),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.local_fire_department,
+                      size: 10, color: Color(0xFFF05005)),
+                  const SizedBox(width: 2),
+                  Text(
+                    'HOT',
+                    style: AppTextStyles.caption.copyWith(
+                      fontSize: 8,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.neonYellow,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

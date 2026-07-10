@@ -32,6 +32,7 @@ class AppColors {
   static const Color inputFill = Color(0xFF151410);
   static const Color inputHint = Color(0xFF83591F);
   static const Color ctaText = Color(0xFF000000);
+  static const Color iconGold = Color(0xFFE3C67A);
   static const Color navBg = Color(0xFF000000);
   static const Color glowOrange = Color(0xFFFF8C00);
 
