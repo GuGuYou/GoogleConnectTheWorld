@@ -11,19 +11,41 @@ import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/gradient_text.dart';
 import '../../shared/widgets/neon_background.dart';
 import '../../shared/widgets/neon_button.dart';
-import 'widgets/virtual_avatar_view.dart';
 
+/// Avatar customizer matching the Figma "Customize Avatar" frame: six part
+/// rows (Face Shape / Hairstyle / Eyes / Mouth / Accessory / Background),
+/// each a thumbnail strip + colour wheel. All selections persist to
+/// [avatarDraftProvider]; the background choice composites live behind the
+/// 3D hero. (Face/hair/eyes/mouth/accessory persist but aren't composited on
+/// the static hero — that needs layered art or the AI-generated avatar.)
 class AvatarCustomizePage extends ConsumerWidget {
   final String returnLocation;
   const AvatarCustomizePage({super.key, this.returnLocation = '/tag-select'});
 
-  static String _part(String slug, int n) =>
-      'assets/images/avatars/parts/fig_${slug}_${(n + 2).toString().padLeft(2, '0')}.png';
+  static const _dir = 'assets/images/avatars/parts';
+  static const _wheel = '$_dir/fig_face_07.png';
+
+  static String _icon(String slug) => '$_dir/fig_${slug}_01.png';
+  static String _opt(String slug, int i) =>
+      '$_dir/fig_${slug}_${(i + 2).toString().padLeft(2, '0')}.png';
+  static String _bg(int i) => _opt('bg', i);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final avatar = ref.watch(avatarDraftProvider);
-    final notifier = ref.read(avatarDraftProvider.notifier);
+    final n = ref.read(avatarDraftProvider.notifier);
+
+    final rows = <_RowCfg>[
+      _RowCfg('avatar_face', 'face', 5, avatar.faceIndex, n.setFace),
+      _RowCfg('avatar_hair', 'hair', 4, avatar.hairIndex, n.setHair),
+      _RowCfg('avatar_eyes', 'eyes', 5, avatar.eyeIndex, n.setEyes),
+      _RowCfg('avatar_mouth', 'mouth', 5, avatar.mouthIndex, n.setMouth),
+      _RowCfg('avatar_accessory', 'acc', 5, avatar.accessoryIndex,
+          n.setAccessory),
+      _RowCfg('avatar_background', 'bg', 5, avatar.backgroundIndex,
+          n.setBackground),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -35,66 +57,15 @@ class AvatarCustomizePage extends ConsumerWidget {
       body: NeonBackground(
         child: SafeArea(
           child: ListView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             children: [
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: AppColors.neonYellow.withValues(alpha: 0.4)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.glowOrange.withValues(alpha: 0.25),
-                        blurRadius: 36,
-                        spreadRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: VirtualAvatarView(
-                      avatar: avatar,
-                      size: 124,
-                      glow: true,
-                      heroPlaceholder: true),
-                ),
-              ),
+              Center(child: _Preview(bgIndex: avatar.backgroundIndex)),
               const SizedBox(height: 22),
-              _ColorRow(
-                title: ref.tr('avatar_color'),
-                iconAsset: _part('bg', -1),
-                value: avatar.colorIndex,
-                onTap: notifier.setColor,
-              ),
-              _PartRow(
-                title: ref.tr('avatar_face'),
-                slug: 'face',
-                count: 3,
-                value: avatar.faceIndex,
-                onTap: notifier.setFace,
-              ),
-              _PartRow(
-                title: ref.tr('avatar_eyes'),
-                slug: 'eyes',
-                count: 4,
-                value: avatar.eyeIndex,
-                onTap: notifier.setEyes,
-              ),
-              _PartRow(
-                title: ref.tr('avatar_mouth'),
-                slug: 'mouth',
-                count: 4,
-                value: avatar.mouthIndex,
-                onTap: notifier.setMouth,
-              ),
-              _PartRow(
-                title: ref.tr('avatar_accessory'),
-                slug: 'acc',
-                count: 5,
-                value: avatar.accessoryIndex,
-                onTap: notifier.setAccessory,
-              ),
-              const SizedBox(height: 22),
+              for (final r in rows) ...[
+                _PartRow(cfg: r),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 10),
               NeonButton(
                 label: ref.tr('avatar_save_next'),
                 icon: Icons.check,
@@ -113,59 +84,46 @@ class AvatarCustomizePage extends ConsumerWidget {
   }
 }
 
-/// Category row per the Figma comp: leading icon + gold label on the left,
-/// thumbnail strip in an inset panel on the right.
-class _CategoryRow extends StatelessWidget {
-  final String title;
-  final String iconAsset;
-  final List<Widget> options;
+class _RowCfg {
+  final String labelKey;
+  final String slug;
+  final int count;
+  final int value;
+  final ValueChanged<int> onSelect;
+  const _RowCfg(
+      this.labelKey, this.slug, this.count, this.value, this.onSelect);
+}
 
-  const _CategoryRow({
-    required this.title,
-    required this.iconAsset,
-    required this.options,
-  });
+/// 3D hero avatar composited over the selected background orb (live).
+class _Preview extends StatelessWidget {
+  final int bgIndex;
+  const _Preview({required this.bgIndex});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        child: Row(
+    return Container(
+      width: 128,
+      height: 128,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.neonYellow.withValues(alpha: 0.55)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.glowOrange.withValues(alpha: 0.3),
+            blurRadius: 36,
+            spreadRadius: 4,
+          ),
+        ],
+      ),
+      child: ClipOval(
+        child: Stack(
+          fit: StackFit.expand,
           children: [
-            Image.asset(iconAsset, width: 24, height: 24),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.neonYellow,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.cardSurface,
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  reverse: true,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (var i = 0; i < options.length; i++) ...[
-                        if (i != 0) const SizedBox(width: 6),
-                        options[i],
-                      ],
-                    ],
-                  ),
-                ),
-              ),
+            Image.asset(AvatarCustomizePage._bg(bgIndex), fit: BoxFit.cover),
+            Image.asset(
+              'assets/images/avatars/fig_avatar_hero.png',
+              fit: BoxFit.contain,
             ),
           ],
         ),
@@ -174,14 +132,78 @@ class _CategoryRow extends StatelessWidget {
   }
 }
 
+class _PartRow extends ConsumerWidget {
+  final _RowCfg cfg;
+  const _PartRow({required this.cfg});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      child: Row(
+        children: [
+          Image.asset(AvatarCustomizePage._icon(cfg.slug),
+              width: 24, height: 24),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 62,
+            child: Text(
+              ref.tr(cfg.labelKey),
+              maxLines: 2,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.neonYellow,
+                fontWeight: FontWeight.w700,
+                height: 1.1,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: AppColors.cardSurface,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (var i = 0; i < cfg.count; i++) ...[
+                      if (i != 0) const SizedBox(width: 6),
+                      _OptionBox(
+                        selected: cfg.value == i,
+                        asset: AvatarCustomizePage._opt(cfg.slug, i),
+                        onTap: () => cfg.onSelect(i),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Colour wheel — cycles the row to the next option.
+          GestureDetector(
+            onTap: () => cfg.onSelect((cfg.value + 1) % cfg.count),
+            child: Image.asset(AvatarCustomizePage._wheel,
+                width: 26, height: 26),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _OptionBox extends StatelessWidget {
   final bool selected;
-  final Widget child;
+  final String asset;
   final VoidCallback onTap;
 
   const _OptionBox({
     required this.selected,
-    required this.child,
+    required this.asset,
     required this.onTap,
   });
 
@@ -191,11 +213,11 @@ class _OptionBox extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 36,
-        height: 36,
+        width: 34,
+        height: 34,
         padding: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: selected ? AppColors.neonGreen : Colors.transparent,
             width: 1.4,
@@ -204,82 +226,8 @@ class _OptionBox extends StatelessWidget {
               ? AppColors.neonGreen.withValues(alpha: 0.12)
               : Colors.transparent,
         ),
-        child: child,
+        child: Image.asset(asset, fit: BoxFit.contain),
       ),
-    );
-  }
-}
-
-class _PartRow extends StatelessWidget {
-  final String title;
-  final String slug;
-  final int count;
-  final int value;
-  final ValueChanged<int> onTap;
-
-  const _PartRow({
-    required this.title,
-    required this.slug,
-    required this.count,
-    required this.value,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return _CategoryRow(
-      title: title,
-      iconAsset: AvatarCustomizePage._part(slug, -1),
-      options: [
-        for (var i = 0; i < count; i++)
-          _OptionBox(
-            selected: value == i,
-            onTap: () => onTap(i),
-            child: Image.asset(
-              AvatarCustomizePage._part(slug, i),
-              fit: BoxFit.contain,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _ColorRow extends StatelessWidget {
-  final String title;
-  final String iconAsset;
-  final int value;
-  final ValueChanged<int> onTap;
-
-  const _ColorRow({
-    required this.title,
-    required this.iconAsset,
-    required this.value,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return _CategoryRow(
-      title: title,
-      iconAsset: iconAsset,
-      options: [
-        for (var i = 0; i < VirtualAvatarView.palettes.length; i++)
-          _OptionBox(
-            selected: value == i,
-            onTap: () => onTap(i),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                gradient: LinearGradient(
-                  colors: VirtualAvatarView.palettes[i],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-            ),
-          ),
-      ],
     );
   }
 }

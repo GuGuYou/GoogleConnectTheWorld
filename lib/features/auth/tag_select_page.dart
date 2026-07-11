@@ -178,15 +178,16 @@ class _HoneycombSelector extends StatelessWidget {
     required this.maxSize,
   });
 
-  /// Packed honeycomb offsets around the center cell, in tile-size units
-  /// (from the Figma frame: ±105 x, ±57/±117 y on a 125 tile).
+  /// Tight flat-top honeycomb flower: 6 edge-sharing neighbours around the
+  /// centre (top, 4 diagonals, bottom), in tile-size units. Distance R√3 =
+  /// 0.866·tile so the hexagons touch with no gaps.
   static const _offsets = [
-    Offset(0, -0.936),
-    Offset(-0.845, -0.46),
-    Offset(0.845, -0.46),
-    Offset(-0.845, 0.48),
-    Offset(0.845, 0.48),
-    Offset(0, 0.936),
+    Offset(0, -0.866), // top
+    Offset(-0.75, -0.433), // upper-left
+    Offset(0.75, -0.433), // upper-right
+    Offset(-0.75, 0.433), // lower-left
+    Offset(0.75, 0.433), // lower-right
+    Offset(0, 0.866), // bottom
   ];
 
   @override
@@ -195,7 +196,7 @@ class _HoneycombSelector extends StatelessWidget {
     final height = maxSize.height;
     final center = Offset(width / 2, height / 2);
     final tileSize =
-        math.min(math.min(width / 2.75, height / 2.95), 132.0);
+        math.min(math.min(width / 2.55, height / 2.75), 148.0);
 
     final positions = [
       for (var i = 0; i < tags.length; i++)
@@ -259,92 +260,120 @@ class _HoneyTagCell extends StatelessWidget {
       child: AnimatedScale(
         duration: const Duration(milliseconds: 160),
         scale: selected ? 1.04 : 1,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          decoration: BoxDecoration(
-            boxShadow: [
-              if (selected)
-                BoxShadow(
-                  color: AppColors.neonPink.withValues(alpha: 0.35),
-                  blurRadius: 22,
-                  spreadRadius: 1,
-                ),
-            ],
-          ),
-          child: ClipPath(
-            clipper: const HexagonClipper(),
-            child: Container(
-              color: AppColors.hexFill,
-              child: Stack(
-                children: [
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ShaderMask(
-                            blendMode: BlendMode.srcIn,
-                            shaderCallback: (b) => AppColors.hexIcon
-                                .createShader(
-                                    Rect.fromLTWH(0, 0, b.width, b.height)),
-                            child: Icon(tag.icon, size: 30),
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            ClipPath(
+              clipper: const HexagonClipper(pointy: false),
+              child: Container(
+                color: selected ? const Color(0xFF2A1E08) : AppColors.hexFill,
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ShaderMask(
+                          blendMode: BlendMode.srcIn,
+                          shaderCallback: (b) => AppColors.hexIcon.createShader(
+                              Rect.fromLTWH(0, 0, b.width, b.height)),
+                          child: Icon(tag.icon, size: 30),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          tag.name(lang),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.neonYellow,
+                            fontWeight: FontWeight.w700,
                           ),
-                          const SizedBox(height: 5),
+                        ),
+                        if (example.isNotEmpty) ...[
+                          const SizedBox(height: 2),
                           Text(
-                            tag.name(lang),
+                            example,
                             textAlign: TextAlign.center,
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppTextStyles.caption.copyWith(
-                              color: AppColors.neonYellow,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 9,
+                              height: 1.25,
+                              color: AppColors.textMuted,
                             ),
                           ),
-                          if (example.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              example,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.caption.copyWith(
-                                fontSize: 9,
-                                height: 1.25,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                          ],
                         ],
-                      ),
+                      ],
                     ),
                   ),
-                  Positioned(
-                    right: 16,
-                    top: 12,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 160),
-                      opacity: selected ? 1 : 0,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: const BoxDecoration(
-                          color: AppColors.divider,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.check,
-                            size: 13, color: AppColors.neonYellow),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
+            // Selected: gold hexagon rim + glow (hexagon-shaped, not square).
+            if (selected)
+              const Positioned.fill(
+                child: CustomPaint(painter: _HexBorderPainter()),
+              ),
+            // Check badge (outside the clip so it sits on the corner).
+            Positioned(
+              right: 10,
+              top: 4,
+              child: AnimatedScale(
+                duration: const Duration(milliseconds: 160),
+                scale: selected ? 1 : 0,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.cyanPurple,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                          color: AppColors.neonGreen.withValues(alpha: 0.6),
+                          blurRadius: 8),
+                    ],
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      size: 16, color: AppColors.ctaText),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// Gold hexagon rim + soft glow drawn for a selected honeycomb tile.
+class _HexBorderPainter extends CustomPainter {
+  const _HexBorderPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = const HexagonClipper(pointy: false).getClip(size);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..color = AppColors.neonGreen.withValues(alpha: 0.35)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+        ..shader = AppColors.cyanPurple
+            .createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _CenterCounter extends StatelessWidget {
@@ -356,7 +385,7 @@ class _CenterCounter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipPath(
-      clipper: const HexagonClipper(),
+      clipper: const HexagonClipper(pointy: false),
       child: Container(
         decoration: const BoxDecoration(gradient: AppColors.cyanPurple),
         child: Center(

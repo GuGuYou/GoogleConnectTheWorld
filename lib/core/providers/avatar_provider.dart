@@ -22,6 +22,10 @@ class AvatarDraftNotifier extends Notifier<VirtualAvatar> {
     state = state.copyWith(faceIndex: index, source: AvatarSource.local);
   }
 
+  void setHair(int index) {
+    state = state.copyWith(hairIndex: index, source: AvatarSource.local);
+  }
+
   void setEyes(int index) {
     state = state.copyWith(eyeIndex: index, source: AvatarSource.local);
   }
@@ -32,6 +36,16 @@ class AvatarDraftNotifier extends Notifier<VirtualAvatar> {
 
   void setAccessory(int index) {
     state = state.copyWith(accessoryIndex: index, source: AvatarSource.local);
+  }
+
+  /// Background selection also drives the avatar's theme color so the
+  /// procedural avatar (shown elsewhere) matches the chosen backdrop.
+  void setBackground(int index) {
+    state = state.copyWith(
+      backgroundIndex: index,
+      colorIndex: index,
+      source: AvatarSource.local,
+    );
   }
 
   void applyGenerated(VirtualAvatar avatar) {

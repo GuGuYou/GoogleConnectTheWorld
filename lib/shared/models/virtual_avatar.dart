@@ -22,9 +22,11 @@ class VirtualAvatar {
   final String seed;
   final int colorIndex;
   final int faceIndex;
+  final int hairIndex;
   final int eyeIndex;
   final int mouthIndex;
   final int accessoryIndex;
+  final int backgroundIndex;
   final String? generatedImageUrl;
   final String? generatedPrompt;
 
@@ -35,9 +37,11 @@ class VirtualAvatar {
     required this.seed,
     required this.colorIndex,
     required this.faceIndex,
+    this.hairIndex = 0,
     required this.eyeIndex,
     required this.mouthIndex,
     required this.accessoryIndex,
+    this.backgroundIndex = 0,
     this.generatedImageUrl,
     this.generatedPrompt,
   });
@@ -50,10 +54,12 @@ class VirtualAvatar {
       bodyForm: bodyForm,
       seed: seed,
       colorIndex: hash % 6,
-      faceIndex: hash % 3,
-      eyeIndex: hash % 4,
-      mouthIndex: hash % 4,
+      faceIndex: hash % 5,
+      hairIndex: hash % 4,
+      eyeIndex: hash % 5,
+      mouthIndex: hash % 5,
       accessoryIndex: hash % 5,
+      backgroundIndex: hash % 5,
     );
   }
 
@@ -64,9 +70,11 @@ class VirtualAvatar {
     String? seed,
     int? colorIndex,
     int? faceIndex,
+    int? hairIndex,
     int? eyeIndex,
     int? mouthIndex,
     int? accessoryIndex,
+    int? backgroundIndex,
     String? generatedImageUrl,
     String? generatedPrompt,
   }) {
@@ -77,9 +85,11 @@ class VirtualAvatar {
       seed: seed ?? this.seed,
       colorIndex: colorIndex ?? this.colorIndex,
       faceIndex: faceIndex ?? this.faceIndex,
+      hairIndex: hairIndex ?? this.hairIndex,
       eyeIndex: eyeIndex ?? this.eyeIndex,
       mouthIndex: mouthIndex ?? this.mouthIndex,
       accessoryIndex: accessoryIndex ?? this.accessoryIndex,
+      backgroundIndex: backgroundIndex ?? this.backgroundIndex,
       generatedImageUrl: generatedImageUrl ?? this.generatedImageUrl,
       generatedPrompt: generatedPrompt ?? this.generatedPrompt,
     );
