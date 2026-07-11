@@ -83,11 +83,39 @@ class ProfilePage extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        me.bio,
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.body
-                            .copyWith(color: AppColors.textSecondary),
+                      // 简介可就地点击编辑
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _showBioEditor(context, ref, me.bio),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  me.bio.isEmpty
+                                      ? ref.tr('profile_bio_empty')
+                                      : me.bio,
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.body.copyWith(
+                                    color: me.bio.isEmpty
+                                        ? AppColors.textMuted
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Padding(
+                                padding: EdgeInsets.only(top: 3),
+                                child: Icon(Icons.edit_outlined,
+                                    size: 14, color: AppColors.textMuted),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -168,6 +196,24 @@ class ProfilePage extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 就地编辑个性签名（底部弹层，直接写回 currentUserProvider）。
+  void _showBioEditor(BuildContext context, WidgetRef ref, String current) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _BioEditorSheet(
+        initial: current,
+        title: ref.tr('edit_bio'),
+        hint: ref.tr('profile_bio_hint'),
+        saveLabel: ref.tr('save'),
+        cancelLabel: ref.tr('cancel'),
+        onSave: (text) =>
+            ref.read(currentUserProvider.notifier).updateProfile(bio: text),
       ),
     );
   }
@@ -277,6 +323,125 @@ class _Entry extends StatelessWidget {
               ),
             const Icon(Icons.chevron_right,
                 size: 18, color: AppColors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 底部弹层的个性签名编辑器。
+class _BioEditorSheet extends StatefulWidget {
+  final String initial;
+  final String title;
+  final String hint;
+  final String saveLabel;
+  final String cancelLabel;
+  final ValueChanged<String> onSave;
+
+  const _BioEditorSheet({
+    required this.initial,
+    required this.title,
+    required this.hint,
+    required this.saveLabel,
+    required this.cancelLabel,
+    required this.onSave,
+  });
+
+  @override
+  State<_BioEditorSheet> createState() => _BioEditorSheetState();
+}
+
+class _BioEditorSheetState extends State<_BioEditorSheet> {
+  late final TextEditingController _c =
+      TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        decoration: const BoxDecoration(
+          color: AppColors.bg1,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          border: Border(top: BorderSide(color: AppColors.glassBorder)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text(widget.title, style: AppTextStyles.title),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _c,
+              autofocus: true,
+              maxLines: 3,
+              maxLength: 60,
+              style: AppTextStyles.body.copyWith(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: widget.hint,
+                hintStyle: AppTextStyles.caption,
+                filled: true,
+                fillColor: AppColors.inputFill,
+                counterStyle: AppTextStyles.caption,
+                contentPadding: const EdgeInsets.all(14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(widget.cancelLabel,
+                        style: AppTextStyles.button
+                            .copyWith(color: AppColors.textSecondary)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      widget.onSave(_c.text.trim());
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      height: 46,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.pinkPurple,
+                        borderRadius: BorderRadius.circular(200),
+                      ),
+                      child: Text(widget.saveLabel,
+                          style: AppTextStyles.button
+                              .copyWith(color: AppColors.ctaText)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

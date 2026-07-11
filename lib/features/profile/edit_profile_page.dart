@@ -11,6 +11,7 @@ import '../../shared/widgets/avatar_placeholder.dart';
 import '../../shared/widgets/ip_tag_chip.dart';
 import '../../shared/widgets/neon_background.dart';
 import '../../shared/widgets/neon_button.dart';
+import '../avatar/widgets/virtual_avatar_view.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -68,7 +69,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Center(child: AvatarPlaceholder(seed: me.avatarSeed, label: _nickname.text, size: 90, glow: true)),
+            Center(
+              child: me.virtualAvatar != null
+                  ? VirtualAvatarView(
+                      avatar: me.virtualAvatar!, size: 90, glow: true)
+                  : AvatarPlaceholder(
+                      seed: me.avatarSeed,
+                      label: _nickname.text,
+                      size: 90,
+                      glow: true),
+            ),
             const SizedBox(height: 24),
             _label(ref.tr('edit_nickname')),
             _input(_nickname),

@@ -210,6 +210,8 @@ class AppText {
       'edit_nickname': '昵称',
       'edit_bio': '个性签名',
       'edit_tags': '兴趣标签',
+      'profile_bio_empty': '点击添加个性签名',
+      'profile_bio_hint': '写点什么介绍你自己…',
       // 分类名
       'cat_game': '游戏',
       'cat_anime': '动漫',
@@ -409,6 +411,8 @@ class AppText {
       'edit_nickname': 'Nickname',
       'edit_bio': 'Bio',
       'edit_tags': 'Interest Tags',
+      'profile_bio_empty': 'Tap to add a bio',
+      'profile_bio_hint': 'Say something about yourself…',
       'cat_game': 'Game',
       'cat_anime': 'Anime',
       'cat_drama': 'Drama',
