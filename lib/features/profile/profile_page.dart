@@ -60,8 +60,7 @@ class ProfilePage extends ConsumerWidget {
                               avatar: me.virtualAvatar!,
                               size: 96,
                               glow: true,
-                              online: true,
-                              heroPlaceholder: true)
+                              online: true)
                           : AvatarPlaceholder(
                               seed: me.avatarSeed,
                               label: me.nickname,

@@ -7,28 +7,20 @@ import '../../core/providers/avatar_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
+import '../../shared/models/virtual_avatar.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/gradient_text.dart';
 import '../../shared/widgets/neon_background.dart';
 import '../../shared/widgets/neon_button.dart';
+import 'widgets/minimal_avatar.dart';
+import 'widgets/virtual_avatar_view.dart';
 
-/// Avatar customizer matching the Figma "Customize Avatar" frame: six part
-/// rows (Face Shape / Hairstyle / Eyes / Mouth / Accessory / Background),
-/// each a thumbnail strip + colour wheel. All selections persist to
-/// [avatarDraftProvider]; the background choice composites live behind the
-/// 3D hero. (Face/hair/eyes/mouth/accessory persist but aren't composited on
-/// the static hero — that needs layered art or the AI-generated avatar.)
+/// Avatar customizer (Figma "Customize Avatar"): six part rows over a live,
+/// procedurally-composed minimal avatar. Every choice updates the preview and
+/// each thumbnail instantly, and persists to [avatarDraftProvider].
 class AvatarCustomizePage extends ConsumerWidget {
   final String returnLocation;
   const AvatarCustomizePage({super.key, this.returnLocation = '/tag-select'});
-
-  static const _dir = 'assets/images/avatars/parts';
-  static const _wheel = '$_dir/fig_face_07.png';
-
-  static String _icon(String slug) => '$_dir/fig_${slug}_01.png';
-  static String _opt(String slug, int i) =>
-      '$_dir/fig_${slug}_${(i + 2).toString().padLeft(2, '0')}.png';
-  static String _bg(int i) => _opt('bg', i);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,14 +28,18 @@ class AvatarCustomizePage extends ConsumerWidget {
     final n = ref.read(avatarDraftProvider.notifier);
 
     final rows = <_RowCfg>[
-      _RowCfg('avatar_face', 'face', 5, avatar.faceIndex, n.setFace),
-      _RowCfg('avatar_hair', 'hair', 4, avatar.hairIndex, n.setHair),
-      _RowCfg('avatar_eyes', 'eyes', 5, avatar.eyeIndex, n.setEyes),
-      _RowCfg('avatar_mouth', 'mouth', 5, avatar.mouthIndex, n.setMouth),
-      _RowCfg('avatar_accessory', 'acc', 5, avatar.accessoryIndex,
-          n.setAccessory),
-      _RowCfg('avatar_background', 'bg', 5, avatar.backgroundIndex,
-          n.setBackground),
+      _RowCfg('avatar_face', Icons.face, 5, avatar.faceIndex, n.setFace,
+          (i) => avatar.copyWith(faceIndex: i)),
+      _RowCfg('avatar_hair', Icons.content_cut, 4, avatar.hairIndex, n.setHair,
+          (i) => avatar.copyWith(hairIndex: i)),
+      _RowCfg('avatar_eyes', Icons.visibility, 5, avatar.eyeIndex, n.setEyes,
+          (i) => avatar.copyWith(eyeIndex: i)),
+      _RowCfg('avatar_mouth', Icons.sentiment_satisfied, 5, avatar.mouthIndex,
+          n.setMouth, (i) => avatar.copyWith(mouthIndex: i)),
+      _RowCfg('avatar_accessory', Icons.auto_awesome, 5, avatar.accessoryIndex,
+          n.setAccessory, (i) => avatar.copyWith(accessoryIndex: i)),
+      _RowCfg('avatar_background', Icons.gradient, 5, avatar.backgroundIndex,
+          n.setBackground, (i) => avatar.copyWith(backgroundIndex: i)),
     ];
 
     return Scaffold(
@@ -59,7 +55,24 @@ class AvatarCustomizePage extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             children: [
-              Center(child: _Preview(bgIndex: avatar.backgroundIndex)),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: AppColors.neonYellow.withValues(alpha: 0.5)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.glowOrange.withValues(alpha: 0.28),
+                        blurRadius: 34,
+                        spreadRadius: 3,
+                      ),
+                    ],
+                  ),
+                  child: VirtualAvatarView(avatar: avatar, size: 124),
+                ),
+              ),
               const SizedBox(height: 22),
               for (final r in rows) ...[
                 _PartRow(cfg: r),
@@ -86,50 +99,13 @@ class AvatarCustomizePage extends ConsumerWidget {
 
 class _RowCfg {
   final String labelKey;
-  final String slug;
+  final IconData icon;
   final int count;
   final int value;
   final ValueChanged<int> onSelect;
-  const _RowCfg(
-      this.labelKey, this.slug, this.count, this.value, this.onSelect);
-}
-
-/// 3D hero avatar composited over the selected background orb (live).
-class _Preview extends StatelessWidget {
-  final int bgIndex;
-  const _Preview({required this.bgIndex});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 128,
-      height: 128,
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: AppColors.neonYellow.withValues(alpha: 0.55)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.glowOrange.withValues(alpha: 0.3),
-            blurRadius: 36,
-            spreadRadius: 4,
-          ),
-        ],
-      ),
-      child: ClipOval(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(AvatarCustomizePage._bg(bgIndex), fit: BoxFit.cover),
-            Image.asset(
-              'assets/images/avatars/fig_avatar_hero.png',
-              fit: BoxFit.contain,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  final VirtualAvatar Function(int) preview;
+  const _RowCfg(this.labelKey, this.icon, this.count, this.value,
+      this.onSelect, this.preview);
 }
 
 class _PartRow extends ConsumerWidget {
@@ -142,11 +118,10 @@ class _PartRow extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       child: Row(
         children: [
-          Image.asset(AvatarCustomizePage._icon(cfg.slug),
-              width: 24, height: 24),
+          Icon(cfg.icon, size: 22, color: AppColors.neonYellow),
           const SizedBox(width: 8),
           SizedBox(
-            width: 62,
+            width: 58,
             child: Text(
               ref.tr(cfg.labelKey),
               maxLines: 2,
@@ -160,7 +135,7 @@ class _PartRow extends ConsumerWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Container(
-              height: 44,
+              height: 48,
               padding: const EdgeInsets.symmetric(horizontal: 6),
               decoration: BoxDecoration(
                 color: AppColors.cardSurface,
@@ -172,9 +147,9 @@ class _PartRow extends ConsumerWidget {
                   children: [
                     for (var i = 0; i < cfg.count; i++) ...[
                       if (i != 0) const SizedBox(width: 6),
-                      _OptionBox(
+                      _OptionAvatar(
                         selected: cfg.value == i,
-                        asset: AvatarCustomizePage._opt(cfg.slug, i),
+                        avatar: cfg.preview(i),
                         onTap: () => cfg.onSelect(i),
                       ),
                     ],
@@ -187,8 +162,8 @@ class _PartRow extends ConsumerWidget {
           // Colour wheel — cycles the row to the next option.
           GestureDetector(
             onTap: () => cfg.onSelect((cfg.value + 1) % cfg.count),
-            child: Image.asset(AvatarCustomizePage._wheel,
-                width: 26, height: 26),
+            child: CustomPaint(
+                size: const Size(26, 26), painter: _ColorWheelPainter()),
           ),
         ],
       ),
@@ -196,14 +171,14 @@ class _PartRow extends ConsumerWidget {
   }
 }
 
-class _OptionBox extends StatelessWidget {
+class _OptionAvatar extends StatelessWidget {
   final bool selected;
-  final String asset;
+  final VirtualAvatar avatar;
   final VoidCallback onTap;
 
-  const _OptionBox({
+  const _OptionAvatar({
     required this.selected,
-    required this.asset,
+    required this.avatar,
     required this.onTap,
   });
 
@@ -213,21 +188,57 @@ class _OptionBox extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 34,
-        height: 34,
-        padding: const EdgeInsets.all(3),
+        width: 38,
+        height: 38,
+        padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
+          shape: BoxShape.circle,
           border: Border.all(
             color: selected ? AppColors.neonGreen : Colors.transparent,
-            width: 1.4,
+            width: 2,
           ),
-          color: selected
-              ? AppColors.neonGreen.withValues(alpha: 0.12)
-              : Colors.transparent,
         ),
-        child: Image.asset(asset, fit: BoxFit.contain),
+        child: ClipOval(
+          child: CustomPaint(painter: MinimalAvatarPainter(avatar)),
+        ),
       ),
     );
   }
+}
+
+/// Small rainbow colour wheel (matches the Figma per-row swatch).
+class _ColorWheelPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2;
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..shader = const SweepGradient(colors: [
+          Color(0xFFFF5B6E),
+          Color(0xFFFFC65B),
+          Color(0xFF5BE07A),
+          Color(0xFF5BC8FF),
+          Color(0xFFB37BFF),
+          Color(0xFFFF5B6E),
+        ]).createShader(Rect.fromCircle(center: c, radius: r)),
+    );
+    canvas.drawCircle(c, r * 0.34, Paint()..color = const Color(0xFF141212));
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.4
+        ..color = const Color(0xFF141212),
+    );
+    // little handle dot (Figma detail)
+    canvas.drawCircle(Offset(c.dx + r * 0.62, c.dy + r * 0.62), r * 0.18,
+        Paint()..color = const Color(0xFFFFC65B));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
