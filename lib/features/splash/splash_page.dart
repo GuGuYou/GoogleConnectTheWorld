@@ -71,12 +71,13 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                   Container(
                     width: 120,
                     height: 120,
+                    padding: const EdgeInsets.all(22),
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.bg0,
+                      color: Colors.white,
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.hub, size: 56, color: AppColors.neonCyan),
+                    child: Image.asset('assets/images/branding/bee.png'),
                   ),
                 ],
               ),
