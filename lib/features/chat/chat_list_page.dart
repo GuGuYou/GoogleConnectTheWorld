@@ -55,7 +55,9 @@ class ChatListPage extends ConsumerWidget {
                           ),
                         ),
                       )
-                    : ListView.separated(
+                    : Material(
+                        type: MaterialType.transparency,
+                        child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: convs.length,
                   separatorBuilder: (_, __) =>
@@ -93,16 +95,18 @@ class ChatListPage extends ConsumerWidget {
                           const SizedBox(height: 6),
                           if (conv.unread > 0)
                             Container(
+                              // 注意：不能用 alignment —— ListTile.trailing 的
+                              // intrinsic 测量下会撑满整行宽度并触发断言崩溃。
                               constraints:
-                                  const BoxConstraints(minWidth: 18, minHeight: 18),
-                              alignment: Alignment.center,
+                                  const BoxConstraints(minWidth: 18),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 5, vertical: 2),
+                                  horizontal: 6, vertical: 2),
                               decoration: const BoxDecoration(
                                   gradient: AppColors.pinkPurple,
                                   borderRadius:
                                       BorderRadius.all(Radius.circular(20))),
                               child: Text('${conv.unread}',
+                                  textAlign: TextAlign.center,
                                   style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w800,
@@ -113,6 +117,7 @@ class ChatListPage extends ConsumerWidget {
                     );
                   },
                 ),
+                      ),
               ),
             ],
           ),

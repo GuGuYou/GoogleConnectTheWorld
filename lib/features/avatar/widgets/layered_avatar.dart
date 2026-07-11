@@ -90,7 +90,13 @@ class LayeredAvatar extends StatelessWidget {
       width: l.w * size,
       child: FractionalTranslation(
         translation: const Offset(-0.5, -0.5),
-        child: Image.asset(asset, filterQuality: FilterQuality.medium),
+        child: Image.asset(
+          asset,
+          filterQuality: FilterQuality.medium,
+          // 资产缺失（如陈旧的 web AssetManifest）时静默跳过该图层，
+          // 避免异常刷屏或红块。
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        ),
       ),
     );
   }
@@ -109,8 +115,12 @@ class LayeredAvatar extends StatelessWidget {
           children: [
             if (drawBackground)
               Positioned.fill(
-                child: Image.asset(AvatarParts.bg(a.backgroundIndex),
-                    fit: BoxFit.cover),
+                child: Image.asset(
+                  AvatarParts.bg(a.backgroundIndex),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      const ColoredBox(color: Color(0xFF2A1D06)),
+                ),
               ),
             _part(AvatarParts.face(a.faceIndex), AvatarLayouts.face),
             // 发型带头皮补丁，垫在五官下面：刘海压前额，眼嘴浮在最上层
@@ -143,10 +153,15 @@ class AvatarPartCache {
     try {
       for (final asset in AvatarParts.all()) {
         if (_images.containsKey(asset)) continue;
-        final data = await rootBundle.load(asset);
-        final codec =
-            await ui.instantiateImageCodec(data.buffer.asUint8List());
-        _images[asset] = (await codec.getNextFrame()).image;
+        try {
+          final data = await rootBundle.load(asset);
+          final codec =
+              await ui.instantiateImageCodec(data.buffer.asUint8List());
+          _images[asset] = (await codec.getNextFrame()).image;
+        } catch (_) {
+          // 单个资产失败（热重载后的陈旧 manifest 等）不致命：
+          // 跳过即可，markers 会继续使用几何头像兜底。
+        }
       }
     } finally {
       _loading = false;
