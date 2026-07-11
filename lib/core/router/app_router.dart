@@ -15,6 +15,7 @@ import '../../features/chat/chat_page.dart';
 import '../../features/onboarding/onboarding_page.dart';
 import '../../features/profile/about_page.dart';
 import '../../features/profile/edit_profile_page.dart';
+import '../../features/profile/friends_page.dart';
 import '../../features/profile/profile_page.dart';
 import '../../features/profile/settings_page.dart';
 import '../../features/profile/user_detail_page.dart';
@@ -68,6 +69,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/activity/create', builder: (c, s) => const ActivityCreatePage()),
       GoRoute(path: '/activity/:id', builder: (c, s) => ActivityDetailPage(activityId: s.pathParameters['id']!)),
+      GoRoute(path: '/friends', builder: (c, s) => const FriendsPage()),
       GoRoute(path: '/profile/edit', builder: (c, s) => const EditProfilePage()),
       GoRoute(path: '/profile/settings', builder: (c, s) => const SettingsPage()),
       GoRoute(path: '/profile/about', builder: (c, s) => const AboutPage()),

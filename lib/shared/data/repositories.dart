@@ -77,6 +77,22 @@ class CurrentUserNotifier extends Notifier<UserProfile> {
   }
 }
 
+/// 好友：存储好友用户 id 集合（内存态 + 少量初始好友用于演示）。
+final friendsProvider =
+    NotifierProvider<FriendsNotifier, Set<String>>(FriendsNotifier.new);
+
+class FriendsNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() {
+    final users = ref.read(mockProvider).users;
+    return users.take(2).map((u) => u.id).toSet();
+  }
+
+  void add(String id) => state = {...state, id};
+  void remove(String id) => state = ({...state}..remove(id));
+  void toggle(String id) => state.contains(id) ? remove(id) : add(id);
+}
+
 /// 带距离信息的附近用户
 class UserWithDistance {
   final UserProfile user;

@@ -21,6 +21,7 @@ class UserDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final me = ref.watch(currentUserProvider);
     final user = ref.read(mockProvider).userById(userId);
+    final isFriend = ref.watch(friendsProvider).contains(user.id);
     final dist = haversineKm(me.lat, me.lng, user.lat, user.lng);
     final common = user.commonTags(me.tags);
     final rate = user.matchRate(me.tags);
@@ -133,10 +134,49 @@ class UserDetailPage extends ConsumerWidget {
         color: AppColors.bg1,
         child: SafeArea(
           top: false,
-          child: NeonButton(
-            label: ref.tr('say_hi'),
-            icon: Icons.waving_hand,
-            onPressed: () => context.push('/chat/conv_${user.id}'),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () =>
+                      ref.read(friendsProvider.notifier).toggle(user.id),
+                  child: Container(
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isFriend
+                          ? AppColors.neonGreen.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(200),
+                      border: Border.all(
+                          color: AppColors.neonYellow.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(isFriend ? Icons.check : Icons.person_add_alt_1,
+                            size: 18, color: AppColors.neonYellow),
+                        const SizedBox(width: 6),
+                        Text(
+                          ref.tr(isFriend ? 'friends_added' : 'friends_add'),
+                          style: AppTextStyles.button
+                              .copyWith(color: AppColors.neonYellow),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: NeonButton(
+                  label: ref.tr('say_hi'),
+                  icon: Icons.waving_hand,
+                  onPressed: () => context.push('/chat/conv_${user.id}'),
+                ),
+              ),
+            ],
           ),
         ),
       ),

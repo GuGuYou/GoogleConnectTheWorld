@@ -21,6 +21,7 @@ class ProfilePage extends ConsumerWidget {
     final me = ref.watch(currentUserProvider);
     final myActivities =
         ref.watch(activitiesProvider).where((a) => a.joined).length;
+    final friendCount = ref.watch(friendsProvider).length;
 
     return NeonBackground(
       child: Stack(
@@ -114,6 +115,13 @@ class ProfilePage extends ConsumerWidget {
                       horizontal: 12, vertical: 8),
                   child: Column(
                     children: [
+                      _Entry(
+                        icon: Icons.group_outlined,
+                        label: ref.tr('profile_friends'),
+                        sublabel:
+                            '$friendCount · ${ref.tr('profile_friends_sub')}',
+                        onTap: () => context.push('/friends'),
+                      ),
                       _Entry(
                         icon: Icons.edit_outlined,
                         label: ref.tr('profile_edit'),
