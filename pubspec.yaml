@@ -54,6 +54,20 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
   flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.4
+
+# Native launch screen — dark honeycomb bg + white-disc bee, matching the
+# Flutter SplashPage so the hand-off doesn't flash. Regenerate with:
+#   dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#100E0C"
+  image: assets/icon/splash_bee.png
+  android_12:
+    image: assets/icon/splash_bee.png
+    color: "#100E0C"
+  android: true
+  ios: true
+  web: false
 
 # App launcher icon — GoBuzz bee (assets/icon/*). Regenerate with:
 #   dart run flutter_launcher_icons
