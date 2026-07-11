@@ -9,7 +9,12 @@ import '../../../shared/models/message.dart';
 class MessageBubble extends StatelessWidget {
   final ChatMessage message;
   final String imageMsgLabel;
-  const MessageBubble({super.key, required this.message, required this.imageMsgLabel});
+  final String? matchedLabel;
+  const MessageBubble(
+      {super.key,
+      required this.message,
+      required this.imageMsgLabel,
+      this.matchedLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +27,8 @@ class MessageBubble extends StatelessWidget {
             color: AppColors.bg2.withValues(alpha: 0.7),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text('✨ ${AppText.get('zh', 'matched_tip')}', style: AppTextStyles.caption),
+          child: Text('✨ ${matchedLabel ?? AppText.get('zh', 'matched_tip')}',
+              style: AppTextStyles.caption),
         ),
       );
     }

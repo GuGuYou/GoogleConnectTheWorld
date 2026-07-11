@@ -22,6 +22,7 @@ class ProfilePage extends ConsumerWidget {
     final myActivities =
         ref.watch(activitiesProvider).where((a) => a.joined).length;
     final friendCount = ref.watch(friendsProvider).length;
+    final unread = ref.watch(unreadTotalProvider);
 
     return NeonBackground(
       child: Stack(
@@ -115,6 +116,13 @@ class ProfilePage extends ConsumerWidget {
                       horizontal: 12, vertical: 8),
                   child: Column(
                     children: [
+                      _Entry(
+                        icon: Icons.chat_bubble_outline,
+                        label: ref.tr('profile_messages'),
+                        sublabel: ref.tr('profile_messages_sub'),
+                        badge: unread,
+                        onTap: () => context.push('/chat'),
+                      ),
                       _Entry(
                         icon: Icons.group_outlined,
                         label: ref.tr('profile_friends'),
@@ -217,12 +225,14 @@ class _Entry extends StatelessWidget {
   final String label;
   final String sublabel;
   final VoidCallback onTap;
+  final int badge;
 
   const _Entry({
     required this.icon,
     required this.label,
     required this.sublabel,
     required this.onTap,
+    this.badge = 0,
   });
 
   @override
@@ -246,6 +256,25 @@ class _Entry extends StatelessWidget {
                 ],
               ),
             ),
+            if (badge > 0)
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                constraints: const BoxConstraints(minWidth: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: const BoxDecoration(
+                  gradient: AppColors.pinkPurple,
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                ),
+                child: Text(
+                  badge > 99 ? '99+' : '$badge',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.caption.copyWith(
+                      color: AppColors.ctaText,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11),
+                ),
+              ),
             const Icon(Icons.chevron_right,
                 size: 18, color: AppColors.textMuted),
           ],

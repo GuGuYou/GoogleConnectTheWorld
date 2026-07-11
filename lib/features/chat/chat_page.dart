@@ -25,6 +25,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   final _scroll = ScrollController();
 
   @override
+  void initState() {
+    super.initState();
+    // 进入会话即清空未读
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(conversationsProvider.notifier)
+          .markRead(widget.conversationId);
+    });
+  }
+
+  @override
   void dispose() {
     _input.dispose();
     _scroll.dispose();
@@ -52,6 +63,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final peerId = widget.conversationId.replaceFirst('conv_', '');
     final peer = mock.userById(peerId);
     final messages = ref.watch(chatProvider(widget.conversationId));
+
+    // 停留在会话里时对方回复也直接标记已读，并滚到底部
+    ref.listen(chatProvider(widget.conversationId), (_, __) {
+      ref.read(conversationsProvider.notifier).markRead(widget.conversationId);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scroll.hasClients) {
+          _scroll.animateTo(_scroll.position.maxScrollExtent + 200,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut);
+        }
+      });
+    });
 
     return Scaffold(
       body: NeonBackground(
@@ -95,14 +118,33 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               const Divider(height: 1, color: AppColors.divider),
               // 消息区
               Expanded(
-                child: ListView.builder(
-                  controller: _scroll,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  itemCount: messages.length,
-                  itemBuilder: (c, i) => MessageBubble(
-                      message: messages[i], imageMsgLabel: ref.tr('image_msg')),
-                ),
+                child: messages.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.waving_hand_outlined,
+                                  size: 40, color: AppColors.neonYellow),
+                              const SizedBox(height: 12),
+                              Text(ref.tr('chat_empty_hint'),
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.caption),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: _scroll,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
+                        itemCount: messages.length,
+                        itemBuilder: (c, i) => MessageBubble(
+                            message: messages[i],
+                            imageMsgLabel: ref.tr('image_msg'),
+                            matchedLabel: ref.tr('matched_tip')),
+                      ),
               ),
               // 输入栏
               Container(

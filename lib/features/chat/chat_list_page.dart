@@ -38,7 +38,24 @@ class ChatListPage extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: ListView.separated(
+                child: convs.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.forum_outlined,
+                                  size: 40, color: AppColors.neonYellow),
+                              const SizedBox(height: 12),
+                              Text(ref.tr('chat_list_empty'),
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.caption),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: convs.length,
                   separatorBuilder: (_, __) =>
@@ -76,13 +93,20 @@ class ChatListPage extends ConsumerWidget {
                           const SizedBox(height: 6),
                           if (conv.unread > 0)
                             Container(
-                              padding: const EdgeInsets.all(6),
+                              constraints:
+                                  const BoxConstraints(minWidth: 18, minHeight: 18),
+                              alignment: Alignment.center,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 2),
                               decoration: const BoxDecoration(
                                   gradient: AppColors.pinkPurple,
-                                  shape: BoxShape.circle),
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(20))),
                               child: Text('${conv.unread}',
                                   style: const TextStyle(
-                                      fontSize: 10, color: Colors.white)),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.ctaText)),
                             ),
                         ],
                       ),

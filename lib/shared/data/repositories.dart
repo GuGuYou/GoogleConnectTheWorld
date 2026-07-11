@@ -157,8 +157,68 @@ class ActivitiesNotifier extends Notifier<List<ActivityItem>> {
   ActivityItem byId(String id) => state.firstWhere((a) => a.id == id);
 }
 
-/// 会话列表
-final conversationsProvider = Provider((ref) => ref.watch(mockProvider).conversations);
+/// 会话列表（动态：随发送/回复更新预览、置顶、未读）
+final conversationsProvider =
+    NotifierProvider<ConversationsNotifier, List<Conversation>>(
+        ConversationsNotifier.new);
+
+/// 会话列表未读总数（用于入口角标）
+final unreadTotalProvider = Provider<int>(
+    (ref) => ref.watch(conversationsProvider).fold(0, (s, c) => s + c.unread));
+
+class ConversationsNotifier extends Notifier<List<Conversation>> {
+  @override
+  List<Conversation> build() {
+    final seeded = [...ref.read(mockProvider).conversations];
+    seeded.sort((a, b) => b.lastTime.compareTo(a.lastTime));
+    return seeded;
+  }
+
+  /// 收/发消息后更新会话预览并置顶；[incUnread] 用于对方来消息时累加未读。
+  void bump(String convId, String peerId, String preview,
+      {bool incUnread = false}) {
+    final now = DateTime.now();
+    final idx = state.indexWhere((c) => c.id == convId);
+    if (idx == -1) {
+      state = [
+        Conversation(
+          id: convId,
+          peerId: peerId,
+          lastMessage: preview,
+          lastTime: now,
+          unread: incUnread ? 1 : 0,
+        ),
+        ...state,
+      ];
+      return;
+    }
+    final old = state[idx];
+    final updated = Conversation(
+      id: old.id,
+      peerId: old.peerId,
+      lastMessage: preview,
+      lastTime: now,
+      unread: incUnread ? old.unread + 1 : old.unread,
+    );
+    state = [updated, ...[...state]..removeAt(idx)];
+  }
+
+  /// 打开会话时清空未读。
+  void markRead(String convId) {
+    final idx = state.indexWhere((c) => c.id == convId);
+    if (idx == -1 || state[idx].unread == 0) return;
+    final old = state[idx];
+    final copy = [...state];
+    copy[idx] = Conversation(
+      id: old.id,
+      peerId: old.peerId,
+      lastMessage: old.lastMessage,
+      lastTime: old.lastTime,
+      unread: 0,
+    );
+    state = copy;
+  }
+}
 
 /// 单个会话消息流（支持发送 + 自动回复）
 final chatProvider =
@@ -171,6 +231,8 @@ class ChatNotifier extends FamilyNotifier<List<ChatMessage>, String> {
     return [...?ref.read(mockProvider).messages[convId]];
   }
 
+  String get _peerId => arg.replaceFirst('conv_', '');
+
   void send(String text, {bool isImage = false}) {
     final msg = ChatMessage(
       id: '${arg}_${DateTime.now().millisecondsSinceEpoch}',
@@ -181,10 +243,19 @@ class ChatNotifier extends FamilyNotifier<List<ChatMessage>, String> {
       time: DateTime.now(),
     );
     state = [...state, msg];
+    ref
+        .read(conversationsProvider.notifier)
+        .bump(arg, _peerId, isImage ? '[图片]' : text);
     // 模拟对方 1-2s 后回复
     Future.delayed(const Duration(milliseconds: 1400), () {
       final reply = ref.read(mockProvider).autoReply(arg);
       state = [...state, reply];
+      ref.read(conversationsProvider.notifier).bump(
+            arg,
+            _peerId,
+            reply.type == MessageType.image ? '[图片]' : reply.content,
+            incUnread: true,
+          );
     });
   }
 }
