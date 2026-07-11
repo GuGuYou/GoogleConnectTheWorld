@@ -7,8 +7,21 @@ final avatarDraftProvider = NotifierProvider<AvatarDraftNotifier, VirtualAvatar>
 );
 
 class AvatarDraftNotifier extends Notifier<VirtualAvatar> {
+  /// 默认草稿：内置小男孩预设图。进入定制器改任意部件会切回 local
+  /// 分层头像；AI 生成 / 导入照片会替换 generatedImageUrl。
   @override
-  VirtualAvatar build() => VirtualAvatar.seeded('me_avatar_seed');
+  VirtualAvatar build() => VirtualAvatar.seeded('me_avatar_seed').copyWith(
+        source: AvatarSource.photo,
+        generatedImageUrl: kDefaultAvatarAsset,
+      );
+
+  /// 用户导入的照片（data URI）直接作为头像。
+  void setPhoto(String dataUri) {
+    state = state.copyWith(
+      source: AvatarSource.photo,
+      generatedImageUrl: dataUri,
+    );
+  }
 
   void setStyle(AvatarVisualStyle style) {
     state = state.copyWith(style: style, source: AvatarSource.local);

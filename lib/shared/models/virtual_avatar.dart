@@ -1,7 +1,12 @@
 enum AvatarSource {
   local,
   gemini,
+  /// 用户导入的照片或内置预设图（generatedImageUrl 为 data:/asset: URI）。
+  photo,
 }
+
+/// 默认预设头像（Frame 2 主视觉小男孩）。
+const kDefaultAvatarAsset = 'asset:assets/images/avatars/default_boy.png';
 
 enum AvatarVisualStyle {
   cute,

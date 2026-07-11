@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/l10n/app_text.dart';
 import '../../core/providers/avatar_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../shared/data/repositories.dart';
 import '../../shared/models/virtual_avatar.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/gradient_text.dart';
@@ -19,6 +23,22 @@ class AvatarSetupPage extends ConsumerWidget {
 
   String _next(String path) =>
       '$path?return=${Uri.encodeComponent(returnLocation)}';
+
+  /// 从相册选照片，转 data URI 后直接作为头像预览。
+  Future<void> _pickPhoto(WidgetRef ref) async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 768,
+      maxHeight: 768,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+    final bytes = await file.readAsBytes();
+    final mime = file.mimeType ?? 'image/jpeg';
+    ref
+        .read(avatarDraftProvider.notifier)
+        .setPhoto('data:$mime;base64,${base64Encode(bytes)}');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -87,6 +107,13 @@ class AvatarSetupPage extends ConsumerWidget {
                             desc: ref.tr('avatar_ai_desc'),
                             onTap: () => context.push(_next('/avatar-ai')),
                           ),
+                          const SizedBox(height: 14),
+                          _OptionCard(
+                            icon: Icons.photo_library_outlined,
+                            title: ref.tr('avatar_photo_title'),
+                            desc: ref.tr('avatar_photo_desc'),
+                            onTap: () => _pickPhoto(ref),
+                          ),
 
                           const Spacer(),
                           const SizedBox(height: 24),
@@ -94,9 +121,11 @@ class AvatarSetupPage extends ConsumerWidget {
                             label: ref.tr('avatar_skip_mock'),
                             icon: Icons.arrow_forward,
                             onPressed: () {
+                              // 保存当前草稿（默认=预设小男孩；导入照片后=照片）
                               ref
-                                  .read(avatarDraftProvider.notifier)
-                                  .setStyle(AvatarVisualStyle.cute);
+                                  .read(currentUserProvider.notifier)
+                                  .updateVirtualAvatar(
+                                      ref.read(avatarDraftProvider));
                               context.go(returnLocation);
                             },
                           ),

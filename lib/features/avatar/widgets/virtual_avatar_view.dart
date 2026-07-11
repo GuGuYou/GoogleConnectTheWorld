@@ -40,12 +40,17 @@ class VirtualAvatarView extends StatelessWidget {
     canvas.restore();
   }
 
-  /// If the AI has generated a real image (data URI or URL), resolve it;
-  /// otherwise null → the procedural avatar is drawn.
+  /// If an AI-generated / user-imported image is present (data:, asset: or
+  /// network URI), resolve it; otherwise null → the layered avatar is drawn.
   static ImageProvider? _resolveGeneratedImage(VirtualAvatar avatar) {
     final url = avatar.generatedImageUrl;
-    if (avatar.source != AvatarSource.gemini || url == null || url.isEmpty) {
+    if (url == null || url.isEmpty) return null;
+    if (avatar.source != AvatarSource.gemini &&
+        avatar.source != AvatarSource.photo) {
       return null;
+    }
+    if (url.startsWith('asset:')) {
+      return AssetImage(url.substring('asset:'.length));
     }
     if (url.startsWith('data:')) {
       final commaIdx = url.indexOf(',');
