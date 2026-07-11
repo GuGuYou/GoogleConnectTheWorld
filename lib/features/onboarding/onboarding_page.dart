@@ -136,10 +136,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         pages[_index].desc,
                         textAlign: TextAlign.left,
                         style: AppTextStyles.tt(
-                          size: 13.5,
-                          weight: FontWeight.w600,
-                          color: creamWhite.withValues(alpha: 0.65),
-                          height: 1.55,
+                          size: 15,
+                          weight: FontWeight.w500,
+                          color: creamWhite.withValues(alpha: 0.62),
+                          height: 1.5,
                         ),
                       )
                           .animate(key: ValueKey(_index))
@@ -174,29 +174,22 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     );
   }
 
-  /// Build rich title with italic emphasis word (split by '|')
+  /// Build rich title with a gold emphasis word (split by '|').
   Widget _buildTitle(_ObData data) {
     final parts = data.title.split('|');
+    final base = AppTextStyles.tt(
+      size: 33,
+      weight: FontWeight.w800,
+      color: creamWhite,
+      letterSpacing: -0.5,
+    );
     if (parts.length == 1) {
-      return Text(
-        data.title,
-        style: AppTextStyles.tt(
-          size: 26,
-          weight: FontWeight.w800,
-          color: creamWhite,
-          letterSpacing: -0.3,
-        ),
-      );
+      return Text(data.title, style: base);
     }
     return RichText(
       textAlign: TextAlign.left,
       text: TextSpan(
-        style: AppTextStyles.tt(
-          size: 26,
-          weight: FontWeight.w800,
-          color: creamWhite,
-          letterSpacing: -0.3,
-        ),
+        style: base,
         children: [
           if (parts.isNotEmpty) TextSpan(text: parts[0]),
           if (parts.length > 1)
@@ -205,15 +198,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               child: ShaderMask(
                 shaderCallback: (bounds) =>
                     onboardingGradient.createShader(bounds),
-                child: Text(
-                  ' ${parts[1]} ',
-                  style: AppTextStyles.tt(
-                    size: 26,
-                    weight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.3,
-                  ).copyWith(fontStyle: FontStyle.italic),
-                ),
+                child: Text(' ${parts[1]}', style: base.copyWith(color: Colors.white)),
               ),
             ),
         ],
@@ -326,127 +311,18 @@ class _CtaButtonState extends State<_CtaButton> {
 // ══════════════════════════════════════════════════════════════════
 
 class _MapIllustration extends StatelessWidget {
+  const _MapIllustration();
+
   @override
   Widget build(BuildContext context) {
+    // Real Figma 3D illustration (glossy pin + orbit + chat/person badges).
     return Center(
-      child: SizedBox(
-        width: 280,
-        height: 280,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Outer orbital glow
-            Container(
-              width: 240,
-              height: 240,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.06),
-                  width: 1,
-                ),
-              ),
-            ),
-
-            // Orbital rings
-            ...List.generate(3, (i) {
-              final size = 160.0 + (i * 35);
-              return AnimatedContainer(
-                duration: Duration(seconds: 8 + i * 3),
-                transform: Matrix4.rotationZ(i * 0.3),
-                child: CustomPaint(
-                  size: Size(size, size),
-                  painter: _OrbitPainter(opacity: 0.12 - i * 0.03),
-                ),
-              ).animate(onPlay: (c) => c.repeat(reverse: true)).rotate(
-                  begin: -0.05, end: 0.05, duration: (3000 + i * 1500).ms);
-            }),
-
-            // Cloud base under map pin
-            Positioned(
-              bottom: 85,
-              child: const _CloudShape(size: 90)
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .scaleXY(begin: 0.97, end: 1.03, duration: 2200.ms),
-            ),
-
-            // Map pin
-            Positioned(
-              top: 65,
-              child: Column(
-                children: [
-                  (const Icon(Icons.location_on_rounded,
-                          size: 56, color: Color(0xFFFF6B35)))
-                      .animate(onPlay: (c) => c.repeat(reverse: true))
-                      .scaleXY(begin: 0.95, end: 1.06, duration: 1400.ms)
-                      .then(delay: 200.ms),
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFFF6B35).withValues(alpha: 0.4),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Floating envelope (message hint)
-            Positioned(
-              left: 25,
-              top: 100,
-              child: Container(
-                width: 44,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFCC66),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.mail_outline,
-                    size: 20, color: Color(0xFF8B5A00)),
-              )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .moveY(begin: -8, end: 8, duration: 2500.ms)
-                  .rotate(begin: -0.1, end: 0.1, duration: 2800.ms),
-            ),
-
-            // User avatar circle
-            Positioned(
-              right: 30,
-              bottom: 75,
-              child: const CircleAvatar(
-                radius: 22,
-                backgroundColor: Color(0xFF3D2E23),
-                backgroundImage: NetworkImage(
-                    'https://api.dicebear.com/7.x/avataaars/svg?seed=buzz1'),
-              )
-                  .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .moveY(begin: -6, end: 6, duration: 2100.ms),
-            ),
-
-            // Small decorative dots
-            ...[
-              const Offset(-70, -40),
-              const Offset(80, -60),
-              const Offset(-50, 90),
-              const Offset(85, 55),
-            ].asMap().entries.map((e) => Positioned(
-                  left: e.value.dx + 140,
-                  top: e.value.dy + 140,
-                  child: Container(
-                    width: 6 + (e.key % 2) * 3,
-                    height: 6 + (e.key % 2) * 3,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFFFCC66)
-                          .withValues(alpha: 0.4 - e.key * 0.07),
-                    ),
-                  ),
-                )),
-          ],
-        ),
-      ),
+      child: Image.asset(
+        'assets/images/decorations/fig_buzz_orbit.png',
+        fit: BoxFit.contain,
+      )
+          .animate(onPlay: (c) => c.repeat(reverse: true))
+          .moveY(begin: -6, end: 6, duration: 3200.ms),
     );
   }
 }
@@ -456,15 +332,6 @@ class _MapIllustration extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════
 
 class _NetworkIllustration extends StatelessWidget {
-  static const _avatarSeeds = [
-    'buzz2',
-    'buzz3',
-    'buzz4',
-    'buzz5',
-    'buzz6',
-    'buzz7',
-    'buzz8'
-  ];
   static const _positions = [
     Offset(0, -95), // top
     Offset(82, -45), // top-right
@@ -511,15 +378,13 @@ class _NetworkIllustration extends StatelessWidget {
                 shaderCallback: (bounds) => const LinearGradient(
                   colors: [Color(0xFFFFCC66), Color(0xFFFF9A3C)],
                 ).createShader(bounds),
-                child: const Text(
+                child: Text(
                   'buzz',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    fontFamily: 'serif',
-                    fontStyle: FontStyle.italic,
+                  style: AppTextStyles.tt(
+                    size: 18,
+                    weight: FontWeight.w800,
                     color: Colors.white,
-                  ),
+                  ).copyWith(fontStyle: FontStyle.italic),
                 ),
               ),
             )
@@ -532,22 +397,36 @@ class _NetworkIllustration extends StatelessWidget {
               painter: _ConnectionLinePainter(),
             ),
 
-            // Avatar nodes
+            // Interest orbs (glossy 3D bubbles)
             ..._positions.asMap().entries.map((entry) {
               final idx = entry.key;
               final pos = entry.value;
               final delayMs = idx * 120;
+              final color = _avatarColors[idx % _avatarColors.length];
 
               return Positioned(
                 left: pos.dx + 145 - 26,
                 top: pos.dy + 145 - 26,
-                child: (CircleAvatar(
-                  radius: 26,
-                  backgroundColor: _avatarColors[idx % _avatarColors.length],
-                  backgroundImage: NetworkImage(
-                    'https://api.dicebear.com/7.x/avataaars/svg?seed=${_avatarSeeds[idx % _avatarSeeds.length]}',
+                child: Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      center: const Alignment(-0.4, -0.4),
+                      colors: [
+                        Color.lerp(color, Colors.white, 0.55)!,
+                        color,
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                          color: color.withValues(alpha: 0.45),
+                          blurRadius: 14,
+                          spreadRadius: 1),
+                    ],
                   ),
-                ))
+                )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .scaleXY(
                         begin: 0.85, end: 1.0, duration: (1800 + delayMs).ms)
@@ -646,9 +525,9 @@ class _ChatIllustration extends StatelessWidget {
                               color: Colors.white.withValues(alpha: 0.4)),
                           const SizedBox(width: 8),
                           Text('GoBuzz',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
+                              style: AppTextStyles.tt(
+                                  size: 11,
+                                  weight: FontWeight.w700,
                                   color: Colors.white.withValues(alpha: 0.7))),
                         ],
                       ),
@@ -732,19 +611,16 @@ class _ChatIllustration extends StatelessWidget {
                         blurRadius: 8)
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircleAvatar(
-                        radius: 10,
-                        backgroundImage: NetworkImage(
-                            'https://api.dicebear.com/7.x/avataaars/svg?seed=notify')),
-                    SizedBox(width: 6),
+                    _orb(20, color: const Color(0xFFF0A83A)),
+                    const SizedBox(width: 6),
                     Text('Sofia',
-                        style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF333333))),
+                        style: AppTextStyles.tt(
+                            size: 10,
+                            weight: FontWeight.w700,
+                            color: const Color(0xFF333333))),
                   ],
                 ),
               )
@@ -766,10 +642,7 @@ class _ChatIllustration extends StatelessWidget {
       mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: [
         if (!isMe) ...[
-          CircleAvatar(
-              radius: 11,
-              backgroundImage: NetworkImage(
-                  'https://api.dicebear.com/7.x/avataaars/svg?seed=$name')),
+          _orb(22, color: const Color(0xFFE0A62E)),
           const SizedBox(width: 5),
         ],
         Flexible(
@@ -785,80 +658,47 @@ class _ChatIllustration extends StatelessWidget {
               ),
             ),
             child: Text(text,
-                style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
+                style: AppTextStyles.tt(
+                    size: 10,
+                    weight: FontWeight.w600,
                     color: Colors.white)),
           ),
         ),
         if (isMe) ...[
           const SizedBox(width: 5),
-          const CircleAvatar(
-              radius: 11,
-              backgroundImage: NetworkImage(
-                  'https://api.dicebear.com/7.x/avataaars/svg?seed=me')),
+          _orb(22, color: const Color(0xFFF0A83A)),
         ],
       ],
     );
   }
 
   Widget _floatingAvatar(String seed, {double size = 32, int delay = 0}) {
-    return (CircleAvatar(
-      radius: size / 2,
-      backgroundColor: const Color(0xFF3D2E23),
-      backgroundImage:
-          NetworkImage('https://api.dicebear.com/7.x/avataaars/svg?seed=$seed'),
-    ))
+    return _orb(size, color: const Color(0xFF6B4A18))
         .animate(onPlay: (c) => c.repeat(reverse: true))
         .moveY(begin: -5, end: 5, duration: (2200 + delay).ms)
         .then(delay: Duration(milliseconds: delay));
+  }
+
+  /// Local glossy avatar orb (replaces broken dicebear SVG network images).
+  static Widget _orb(double d, {Color color = const Color(0xFFE0A62E)}) {
+    return Container(
+      width: d,
+      height: d,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          center: const Alignment(-0.4, -0.4),
+          colors: [Color.lerp(color, Colors.white, 0.5)!, color],
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+      ),
+    );
   }
 }
 
 // ══════════════════════════════════════════════════════════════════
 // HELPERS & PAINTERS
 // ══════════════════════════════════════════════════════════════════
-
-/// Simple cloud shape container for map illustration
-class _CloudShape extends StatelessWidget {
-  final double size;
-  const _CloudShape({this.size = 80});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size * 0.52,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.13),
-        borderRadius: BorderRadius.circular(size * 0.26),
-      ),
-    );
-  }
-}
-
-/// Elliptical orbit painter for map page
-class _OrbitPainter extends CustomPainter {
-  final double opacity;
-  _OrbitPainter({this.opacity = 0.1});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFFFCC66).withValues(alpha: opacity)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    canvas.drawOval(
-        Rect.fromCenter(
-            center: Offset(size.width / 2, size.height / 2),
-            width: size.width,
-            height: size.height),
-        paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _OrbitPainter old) => old.opacity != opacity;
-}
 
 /// Connection line painter between avatar positions
 class _ConnectionLinePainter extends CustomPainter {
