@@ -69,7 +69,8 @@ class MockDataSource {
       nickname: 'NeonDrifter',
       avatarSeed: 'me_seed_42',
       virtualAvatar: VirtualAvatar.seeded('me_seed_42'),
-      bio: '夜猫子 / 主机党 / 二次元浓度过高，找搭子开黑看番！',
+      // 留空 → 展示随语言切换的默认签名（default_bio）；用户编辑后写入自定义文本。
+      bio: '',
       tags: [tags[0], tags[3], tags[5], tags[9]],
       lat: meFuzzed.lat,
       lng: meFuzzed.lng,

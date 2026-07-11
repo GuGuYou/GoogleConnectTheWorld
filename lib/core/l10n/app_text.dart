@@ -232,6 +232,7 @@ class AppText {
       'edit_tags': '兴趣标签',
       'profile_bio_empty': '点击添加个性签名',
       'profile_bio_hint': '写点什么介绍你自己…',
+      'default_bio': '夜猫子 / 主机党 / 二次元浓度过高，找搭子开黑看番！',
       // 分类名
       'cat_game': '游戏',
       'cat_anime': '动漫',
@@ -453,6 +454,7 @@ class AppText {
       'edit_tags': 'Interest Tags',
       'profile_bio_empty': 'Tap to add a bio',
       'profile_bio_hint': 'Say something about yourself…',
+      'default_bio': 'Night owl · console gamer · dangerously high anime levels — looking for people to game & binge anime with!',
       'cat_game': 'Game',
       'cat_anime': 'Anime',
       'cat_drama': 'Drama',

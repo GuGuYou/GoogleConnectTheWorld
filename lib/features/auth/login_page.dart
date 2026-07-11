@@ -69,12 +69,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Container(
                   width: 96,
                   height: 96,
+                  padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: AppColors.neonGradient,
-                    boxShadow: [BoxShadow(color: AppColors.neonPink.withValues(alpha: 0.5), blurRadius: 30)],
+                    boxShadow: [BoxShadow(color: AppColors.glowOrange.withValues(alpha: 0.5), blurRadius: 34)],
                   ),
-                  child: const Icon(Icons.hub, size: 48, color: Colors.white),
+                  child: Image.asset('assets/images/branding/bee.png'),
                 ).animate().scale(duration: 500.ms),
                 const SizedBox(height: 24),
                 GradientText(ref.tr('app_name'), style: AppTextStyles.h1),

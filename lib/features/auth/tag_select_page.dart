@@ -195,8 +195,12 @@ class _HoneycombSelector extends StatelessWidget {
     final width = maxSize.width;
     final height = maxSize.height;
     final center = Offset(width / 2, height / 2);
+    // 蜂窝簇的几何自然尺寸为 2.5×tile 宽、2.732×tile 高。手机上宽度为
+    // 绑定项，故把宽度除数压到接近几何下限(2.32)、上限抬到 184，让六边形
+    // 用满可用宽度（略微探入两侧 22px 内边距，Clip.none 不裁剪、不溢出屏幕），
+    // 明显放大整簇；height/2.75 作为竖向安全阀，避免压到上方进度条/下方标题。
     final tileSize =
-        math.min(math.min(width / 2.55, height / 2.75), 148.0);
+        math.min(math.min(width / 2.32, height / 2.75), 184.0);
 
     final positions = [
       for (var i = 0; i < tags.length; i++)

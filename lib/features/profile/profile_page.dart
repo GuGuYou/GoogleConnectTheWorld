@@ -23,6 +23,7 @@ class ProfilePage extends ConsumerWidget {
         ref.watch(activitiesProvider).where((a) => a.joined).length;
     final friendCount = ref.watch(friendsProvider).length;
     final unread = ref.watch(unreadTotalProvider);
+    final bio = ref.watch(myBioProvider);
 
     return NeonBackground(
       child: Stack(
@@ -86,7 +87,7 @@ class ProfilePage extends ConsumerWidget {
                       // 简介可就地点击编辑
                       GestureDetector(
                         behavior: HitTestBehavior.opaque,
-                        onTap: () => _showBioEditor(context, ref, me.bio),
+                        onTap: () => _showBioEditor(context, ref, bio),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Row(
@@ -96,14 +97,10 @@ class ProfilePage extends ConsumerWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  me.bio.isEmpty
-                                      ? ref.tr('profile_bio_empty')
-                                      : me.bio,
+                                  bio,
                                   textAlign: TextAlign.center,
                                   style: AppTextStyles.body.copyWith(
-                                    color: me.bio.isEmpty
-                                        ? AppColors.textMuted
-                                        : AppColors.textSecondary,
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ),

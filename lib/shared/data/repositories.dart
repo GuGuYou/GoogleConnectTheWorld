@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/api_config.dart';
 import '../../core/config/map_config.dart';
+import '../../core/l10n/app_text.dart';
 import '../../core/providers/locale_provider.dart';
 import '../../core/providers/location_provider.dart';
 import '../../core/services/content_filter.dart';
@@ -76,6 +77,14 @@ class CurrentUserNotifier extends Notifier<UserProfile> {
     ref.read(mockProvider).me = state;
   }
 }
+
+/// 当前用户展示用的简介：自定义过则用自定义文本，否则回退到随语言切换的
+/// 默认签名（default_bio）。编辑保存非空文本即固定为自定义。
+final myBioProvider = Provider<String>((ref) {
+  final bio = ref.watch(currentUserProvider).bio;
+  if (bio.trim().isNotEmpty) return bio;
+  return AppText.get(ref.watch(localeProvider).languageCode, 'default_bio');
+});
 
 /// 好友：存储好友用户 id 集合（内存态 + 少量初始好友用于演示）。
 final friendsProvider =

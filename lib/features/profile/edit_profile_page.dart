@@ -30,7 +30,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     super.initState();
     final me = ref.read(currentUserProvider);
     _nickname = TextEditingController(text: me.nickname);
-    _bio = TextEditingController(text: me.bio);
+    // 未自定义时用随语言切换的默认签名预填，避免出现空白输入框。
+    _bio = TextEditingController(text: ref.read(myBioProvider));
     _selectedTags = me.tags.map((e) => e.id).toSet();
   }
 
