@@ -10,9 +10,9 @@ import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/models/activity.dart';
 import '../../shared/widgets/gradient_text.dart';
+import '../../shared/widgets/gold_glow.dart';
 import '../../shared/widgets/neon_background.dart';
 import 'widgets/activity_card.dart';
-import 'widgets/gold_glow.dart';
 
 class ActivityListPage extends ConsumerWidget {
   const ActivityListPage({super.key});

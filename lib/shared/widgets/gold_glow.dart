@@ -46,10 +46,15 @@ class GoldCardBorderPainter extends CustomPainter {
 
 /// Pointy-top hexagon with the Figma treatment: dark #141212 fill, crisp
 /// #FFC000 outline and a blurred outer gold glow. [child] is centered.
+/// [fillOpacity]/[strokeOpacity]/[glowOpacity] allow the dimmed 30%
+/// variant used for list-row icon containers (Frame 25 spec).
 class GlowHexagon extends StatelessWidget {
   final double width;
   final double height;
   final double strokeWidth;
+  final double fillOpacity;
+  final double strokeOpacity;
+  final double glowOpacity;
   final Widget? child;
 
   const GlowHexagon({
@@ -57,6 +62,9 @@ class GlowHexagon extends StatelessWidget {
     required this.width,
     required this.height,
     this.strokeWidth = 1.0,
+    this.fillOpacity = 1.0,
+    this.strokeOpacity = 0.95,
+    this.glowOpacity = 0.5,
     this.child,
   });
 
@@ -66,7 +74,8 @@ class GlowHexagon extends StatelessWidget {
       width: width,
       height: height,
       child: CustomPaint(
-        painter: _GlowHexPainter(strokeWidth),
+        painter: _GlowHexPainter(
+            strokeWidth, fillOpacity, strokeOpacity, glowOpacity),
         child: child == null ? null : Center(child: child),
       ),
     );
@@ -75,7 +84,11 @@ class GlowHexagon extends StatelessWidget {
 
 class _GlowHexPainter extends CustomPainter {
   final double strokeWidth;
-  const _GlowHexPainter(this.strokeWidth);
+  final double fillOpacity;
+  final double strokeOpacity;
+  final double glowOpacity;
+  const _GlowHexPainter(
+      this.strokeWidth, this.fillOpacity, this.strokeOpacity, this.glowOpacity);
 
   static const _gold = Color(0xFFFFC000);
 
@@ -94,14 +107,17 @@ class _GlowHexPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final path = _hex(size);
-    canvas.drawPath(path, Paint()..color = const Color(0xFF141212));
+    canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xFF141212).withValues(alpha: fillOpacity));
     // Outer gold glow.
     canvas.drawPath(
       path,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth * 3
-        ..color = _gold.withValues(alpha: 0.5)
+        ..color = _gold.withValues(alpha: glowOpacity)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
     // Warm inner wash (approximates the Figma inner shadow #D68D1F).
@@ -112,7 +128,7 @@ class _GlowHexPainter extends CustomPainter {
           center: const Alignment(0, 0.9),
           radius: 1.1,
           colors: [
-            const Color(0xFFD68D1F).withValues(alpha: 0.28),
+            const Color(0xFFD68D1F).withValues(alpha: 0.28 * fillOpacity),
             Colors.transparent,
           ],
         ).createShader(Offset.zero & size),
@@ -123,11 +139,14 @@ class _GlowHexPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..color = _gold.withValues(alpha: 0.95),
+        ..color = _gold.withValues(alpha: strokeOpacity),
     );
   }
 
   @override
   bool shouldRepaint(covariant _GlowHexPainter old) =>
-      old.strokeWidth != strokeWidth;
+      old.strokeWidth != strokeWidth ||
+      old.fillOpacity != fillOpacity ||
+      old.strokeOpacity != strokeOpacity ||
+      old.glowOpacity != glowOpacity;
 }

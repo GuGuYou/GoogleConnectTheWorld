@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/models/activity.dart';
-import 'gold_glow.dart';
+import '../../../shared/widgets/gold_glow.dart';
 
 /// Event list card per the Frame 4 Figma spec: info column on the left
 /// (bordered tag chip, title, meta rows), glowing outlined hexagon icon
