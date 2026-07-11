@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/models/virtual_avatar.dart';
+import 'layered_avatar.dart';
 import 'minimal_avatar.dart';
 
-/// Renders a [VirtualAvatar] as the minimal, procedurally-composed avatar
-/// (see [MinimalAvatarPainter]). An AI-generated image, if present, takes
-/// precedence.
+/// Renders a [VirtualAvatar] as the layered watercolor avatar composed from
+/// the Frame 2 part sprites (see [LayeredAvatar]). An AI-generated image,
+/// if present, takes precedence.
 class VirtualAvatarView extends StatelessWidget {
   final VirtualAvatar avatar;
   final double size;
@@ -24,7 +25,13 @@ class VirtualAvatarView extends StatelessWidget {
   });
 
   /// Paint the avatar into [rect] on an offscreen canvas (map markers, etc.).
+  /// Uses the layered sprites when [AvatarPartCache] is warmed up, otherwise
+  /// falls back to the procedural minimal avatar.
   static void paintAvatar(Canvas canvas, Rect rect, VirtualAvatar avatar) {
+    if (AvatarPartCache.ready) {
+      AvatarPartCache.drawAvatar(canvas, rect, avatar);
+      return;
+    }
     canvas.save();
     canvas.clipRRect(
         RRect.fromRectAndRadius(rect, Radius.circular(rect.width / 2)));
@@ -57,10 +64,7 @@ class VirtualAvatarView extends StatelessWidget {
     final generatedImage = _resolveGeneratedImage(avatar);
     final bg = MinimalAvatarPainter.backgrounds[
         avatar.backgroundIndex % MinimalAvatarPainter.backgrounds.length];
-    final procedural = CustomPaint(
-      size: Size(size, size),
-      painter: MinimalAvatarPainter(avatar),
-    );
+    final procedural = LayeredAvatar(avatar: avatar, size: size);
     return Stack(
       clipBehavior: Clip.none,
       children: [

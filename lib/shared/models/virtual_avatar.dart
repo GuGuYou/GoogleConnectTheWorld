@@ -55,10 +55,11 @@ class VirtualAvatar {
       seed: seed,
       colorIndex: hash % 6,
       faceIndex: hash % 5,
-      hairIndex: hash % 4,
+      // 1..5 —— 随机形象总是带发型（0 表示光头，仅手动可选）
+      hairIndex: 1 + hash % 5,
       eyeIndex: hash % 5,
       mouthIndex: hash % 5,
-      accessoryIndex: hash % 5,
+      accessoryIndex: hash % 7,
       backgroundIndex: hash % 5,
     );
   }

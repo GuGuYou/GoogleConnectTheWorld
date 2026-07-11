@@ -7,17 +7,17 @@ import '../../core/providers/avatar_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
-import '../../shared/models/virtual_avatar.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/gradient_text.dart';
 import '../../shared/widgets/neon_background.dart';
 import '../../shared/widgets/neon_button.dart';
-import 'widgets/minimal_avatar.dart';
+import 'widgets/layered_avatar.dart';
 import 'widgets/virtual_avatar_view.dart';
 
-/// Avatar customizer (Figma "Customize Avatar"): six part rows over a live,
-/// procedurally-composed minimal avatar. Every choice updates the preview and
-/// each thumbnail instantly, and persists to [avatarDraftProvider].
+/// Avatar customizer (Figma "Customize Avatar"): part rows over a live,
+/// layer-composed watercolor avatar. Option chips show the part sprites
+/// themselves (like the Figma comp); every choice updates the preview and
+/// persists to [avatarDraftProvider].
 class AvatarCustomizePage extends ConsumerWidget {
   final String returnLocation;
   const AvatarCustomizePage({super.key, this.returnLocation = '/tag-select'});
@@ -28,16 +28,20 @@ class AvatarCustomizePage extends ConsumerWidget {
     final n = ref.read(avatarDraftProvider.notifier);
 
     final rows = <_RowCfg>[
-      _RowCfg('avatar_face', Icons.face, 5, avatar.faceIndex, n.setFace,
-          (i) => avatar.copyWith(faceIndex: i)),
-      _RowCfg('avatar_eyes', Icons.visibility, 5, avatar.eyeIndex, n.setEyes,
-          (i) => avatar.copyWith(eyeIndex: i)),
-      _RowCfg('avatar_mouth', Icons.sentiment_satisfied, 5, avatar.mouthIndex,
-          n.setMouth, (i) => avatar.copyWith(mouthIndex: i)),
-      _RowCfg('avatar_accessory', Icons.auto_awesome, 5, avatar.accessoryIndex,
-          n.setAccessory, (i) => avatar.copyWith(accessoryIndex: i)),
-      _RowCfg('avatar_background', Icons.gradient, 5, avatar.backgroundIndex,
-          n.setBackground, (i) => avatar.copyWith(backgroundIndex: i)),
+      _RowCfg('avatar_face', Icons.face, AvatarParts.faceCount,
+          avatar.faceIndex, n.setFace, AvatarParts.face),
+      _RowCfg('avatar_hair', Icons.content_cut, AvatarParts.hairCount,
+          avatar.hairIndex, n.setHair, (i) => i == 0 ? null : AvatarParts.hair(i)),
+      _RowCfg('avatar_eyes', Icons.visibility, AvatarParts.eyeCount,
+          avatar.eyeIndex, n.setEyes, AvatarParts.eyes),
+      _RowCfg('avatar_mouth', Icons.sentiment_satisfied, AvatarParts.mouthCount,
+          avatar.mouthIndex, n.setMouth, AvatarParts.mouth),
+      _RowCfg('avatar_accessory', Icons.auto_awesome, AvatarParts.accCount,
+          avatar.accessoryIndex, n.setAccessory,
+          (i) => i == 0 ? null : AvatarParts.acc(i)),
+      _RowCfg('avatar_background', Icons.gradient, AvatarParts.bgCount,
+          avatar.backgroundIndex, n.setBackground, AvatarParts.bg,
+          cover: true),
     ];
 
     return Scaffold(
@@ -101,9 +105,16 @@ class _RowCfg {
   final int count;
   final int value;
   final ValueChanged<int> onSelect;
-  final VirtualAvatar Function(int) preview;
+
+  /// Part sprite for option [i]; null renders the "none" chip.
+  final String? Function(int) asset;
+
+  /// Fill the chip (backgrounds) instead of containing with padding.
+  final bool cover;
+
   const _RowCfg(this.labelKey, this.icon, this.count, this.value,
-      this.onSelect, this.preview);
+      this.onSelect, this.asset,
+      {this.cover = false});
 }
 
 class _PartRow extends ConsumerWidget {
@@ -119,14 +130,16 @@ class _PartRow extends ConsumerWidget {
           Icon(cfg.icon, size: 22, color: AppColors.neonYellow),
           const SizedBox(width: 8),
           SizedBox(
-            width: 58,
+            width: 64,
             child: Text(
               ref.tr(cfg.labelKey),
               maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: AppTextStyles.caption.copyWith(
+                fontSize: 11,
                 color: AppColors.neonYellow,
                 fontWeight: FontWeight.w700,
-                height: 1.1,
+                height: 1.15,
               ),
             ),
           ),
@@ -145,9 +158,10 @@ class _PartRow extends ConsumerWidget {
                   children: [
                     for (var i = 0; i < cfg.count; i++) ...[
                       if (i != 0) const SizedBox(width: 6),
-                      _OptionAvatar(
-                        selected: cfg.value == i,
-                        avatar: cfg.preview(i),
+                      _OptionChip(
+                        selected: cfg.value % cfg.count == i,
+                        asset: cfg.asset(i),
+                        cover: cfg.cover,
                         onTap: () => cfg.onSelect(i),
                       ),
                     ],
@@ -162,14 +176,18 @@ class _PartRow extends ConsumerWidget {
   }
 }
 
-class _OptionAvatar extends StatelessWidget {
+/// Option chip showing the part sprite itself (Figma comp style); a slashed
+/// circle for the "none" option; gold ring when selected.
+class _OptionChip extends StatelessWidget {
   final bool selected;
-  final VirtualAvatar avatar;
+  final String? asset;
+  final bool cover;
   final VoidCallback onTap;
 
-  const _OptionAvatar({
+  const _OptionChip({
     required this.selected,
-    required this.avatar,
+    required this.asset,
+    required this.cover,
     required this.onTap,
   });
 
@@ -189,8 +207,23 @@ class _OptionAvatar extends StatelessWidget {
             width: 2,
           ),
         ),
-        child: ClipOval(
-          child: CustomPaint(painter: MinimalAvatarPainter(avatar)),
+        child: Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(0xFF17130A),
+          ),
+          clipBehavior: Clip.antiAlias,
+          padding: cover || asset == null
+              ? EdgeInsets.zero
+              : const EdgeInsets.all(5),
+          child: asset == null
+              ? const Icon(Icons.block,
+                  size: 16, color: AppColors.textMuted)
+              : Image.asset(
+                  asset!,
+                  fit: cover ? BoxFit.cover : BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
+                ),
         ),
       ),
     );
