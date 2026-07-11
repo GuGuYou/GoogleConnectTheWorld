@@ -24,12 +24,12 @@ class HiveRenderScene extends StatelessWidget {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
         Offset px(double x, double y) =>
             Offset(x * size.width, y * size.height);
-        final r = 0.2 * size.width;
+        final r = 0.185 * size.width;
 
-        final game = px(0.27, 0.2);
-        final movie = px(0.73, 0.2);
-        final music = px(0.5, 0.45);
-        final chat = px(0.5, 0.74);
+        final game = px(0.27, 0.18);
+        final movie = px(0.73, 0.18);
+        final music = px(0.5, 0.42);
+        final chat = px(0.5, 0.79);
 
         return Stack(
           clipBehavior: Clip.none,
@@ -53,7 +53,7 @@ class HiveRenderScene extends StatelessWidget {
             _label(game, r, 'GAME CORNER', _count(0, 4)),
             _label(movie, r, 'MOVIE THEATER', _count(1, 4)),
             _label(music, r, 'MUSIC BAR', _count(3, 4)),
-            _label(chat, 0.30 * size.width, 'GLOBAL CHAT', 12),
+            _label(chat, 0.24 * size.width, 'GLOBAL CHAT', 12),
           ],
         );
       },
@@ -142,7 +142,7 @@ class _GlobalChat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cr = 0.3 * width; // cluster radius
+    final cr = 0.27 * width; // cluster radius
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -379,8 +379,8 @@ class _ScenePainter extends CustomPainter {
               Radius.circular(0.08 * k)),
           line);
     }
-    // music note (upper-right)
-    final nc = c.translate(0.5 * k, -0.35 * k);
+    // music note (upper-right, kept inside the octagon)
+    final nc = c.translate(0.38 * k, -0.24 * k);
     canvas.drawOval(
         Rect.fromCenter(
             center: nc.translate(-0.12 * k, 0.34 * k),
