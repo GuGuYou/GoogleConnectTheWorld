@@ -39,13 +39,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         ref.tr('ob1_title'),
         ref.tr('ob1_desc'),
         ref.tr('ob1_emphasis'),
-        _MapIllustration(),
+        const _MapIllustration(),
       ),
       _ObData(
         ref.tr('ob2_title'),
         ref.tr('ob2_desc'),
         ref.tr('ob2_emphasis'),
-        _NetworkIllustration(),
+        const _HiveIllustration(),
       ),
       _ObData(
         ref.tr('ob3_title'),
@@ -328,145 +328,216 @@ class _MapIllustration extends StatelessWidget {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// ILLUSTRATION 2 — Social network / tag match scene
+// ILLUSTRATION 2 — Honeycomb "buzz" hive (per the reference comp),
+// kept in the onboarding's warm amber tone.
 // ══════════════════════════════════════════════════════════════════
 
-class _NetworkIllustration extends StatelessWidget {
-  static const _positions = [
-    Offset(0, -95), // top
-    Offset(82, -45), // top-right
-    Offset(92, 42), // bottom-right
-    Offset(30, 88), // bottom
-    Offset(-62, 58), // bottom-left
-    Offset(-88, -22), // top-left
-    Offset(-38, -72), // mid-left
-    Offset(48, -78), // mid-right
-  ];
+class _HiveIllustration extends StatelessWidget {
+  const _HiveIllustration();
+
+  static const double _box = 330;
+
+  /// Bees perched on cells: (unit offset from grid center in cell-radius
+  /// units — matches painter geometry, computed for a = _box / 9.2).
+  static List<Offset> _beeSpots(double a) {
+    final d = math.sqrt(3) * a; // ring-1 distance
+    Offset at(double deg, double dist) => Offset(
+        dist * math.cos(deg * math.pi / 180),
+        dist * math.sin(deg * math.pi / 180));
+    return [
+      at(210, d), // upper-left ring-1
+      at(330, d), // upper-right ring-1
+      at(90, d), // below center
+      at(150, 2 * d), // left ring-2
+      at(30, 2 * d), // right ring-2
+      at(262, 2.55 * d), // free bee above the grid
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    const a = _box / 9.2;
+    final bees = _beeSpots(a);
     return Center(
       child: SizedBox(
-        width: 290,
-        height: 290,
+        width: _box,
+        height: _box,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Background glow ring
-            Container(
-              width: 190,
-              height: 190,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(colors: [
-                  const Color(0xFFFFCC66).withValues(alpha: 0.12),
-                  Colors.transparent,
-                ]),
-              ),
+            // Hex grid + dashed bee lines
+            const Positioned.fill(
+              child: CustomPaint(painter: _HiveGridPainter()),
             ),
 
-            // "buzz" center text
-            Container(
-              width: 86,
-              height: 36,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                color: Colors.black.withValues(alpha: 0.3),
-              ),
-              alignment: Alignment.center,
-              child: ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [Color(0xFFFFCC66), Color(0xFFFF9A3C)],
-                ).createShader(bounds),
-                child: Text(
-                  'buzz',
-                  style: AppTextStyles.tt(
-                    size: 18,
-                    weight: FontWeight.w800,
-                    color: Colors.white,
-                  ).copyWith(fontStyle: FontStyle.italic),
-                ),
+            // "buzz" center label (over the amber-filled center cell)
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [Color(0xFFFFE3A0), Color(0xFFFF9A3C)],
+              ).createShader(bounds),
+              child: Text(
+                'buzz',
+                style: AppTextStyles.tt(
+                  size: 24,
+                  weight: FontWeight.w800,
+                  color: Colors.white,
+                ).copyWith(fontStyle: FontStyle.italic),
               ),
             )
                 .animate(onPlay: (c) => c.repeat(reverse: true))
-                .scaleXY(begin: 0.96, end: 1.04, duration: 1800.ms),
+                .scaleXY(begin: 0.95, end: 1.05, duration: 1800.ms),
 
-            // Connection lines (drawn behind avatars)
-            CustomPaint(
-              size: const Size(290, 290),
-              painter: _ConnectionLinePainter(),
-            ),
-
-            // Interest orbs (glossy 3D bubbles)
-            ..._positions.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final pos = entry.value;
-              final delayMs = idx * 120;
-              final color = _avatarColors[idx % _avatarColors.length];
-
-              return Positioned(
-                left: pos.dx + 145 - 26,
-                top: pos.dy + 145 - 26,
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      center: const Alignment(-0.4, -0.4),
-                      colors: [
-                        Color.lerp(color, Colors.white, 0.55)!,
-                        color,
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                          color: color.withValues(alpha: 0.45),
-                          blurRadius: 14,
-                          spreadRadius: 1),
-                    ],
+            // Bees (brand asset) gently hovering on cells
+            for (var i = 0; i < bees.length; i++)
+              Positioned(
+                left: _box / 2 + bees[i].dx - 11,
+                top: _box / 2 + bees[i].dy - 11,
+                child: Transform.rotate(
+                  angle: (i.isEven ? 1 : -1) * 0.28,
+                  child: Image.asset(
+                    'assets/images/branding/bee.png',
+                    width: 22,
+                    height: 22,
+                    errorBuilder: (_, __, ___) =>
+                        const Text('🐝', style: TextStyle(fontSize: 14)),
                   ),
                 )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scaleXY(
-                        begin: 0.85, end: 1.0, duration: (1800 + delayMs).ms)
-                    .then(delay: Duration(milliseconds: delayMs)),
-              );
-            }),
-
-            // Floating sparkles
-            ...[
-              const Offset(-100, -80),
-              const Offset(105, -20),
-              const Offset(-90, 70),
-              const Offset(95, 85)
-            ].map(
-              (pos) => Positioned(
-                left: pos.dx + 145,
-                top: pos.dy + 145,
-                child: Icon(Icons.auto_awesome,
-                        size: 14,
-                        color: const Color(0xFFFFCC66).withValues(alpha: 0.5))
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .fade(begin: 0.3, end: 1.0, duration: 1200.ms),
+                    .moveY(
+                        begin: -3,
+                        end: 3,
+                        duration: (2000 + i * 260).ms,
+                        curve: Curves.easeInOut),
               ),
-            ),
           ],
         ),
       ),
     );
   }
+}
 
-  static const _avatarColors = [
-    Color(0xFF4ECDC4),
-    Color(0xFF9B59B6),
-    Color(0xFFE67E22),
-    Color(0xFF3498DB),
-    Color(0xFFE74C3C),
-    Color(0xFFF39C12),
-    Color(0xFF1ABC9C),
-    Color(0xFF8E44AD),
-  ];
+/// Paints the honeycomb: two rings of beveled gold hex outlines around an
+/// amber-glowing center cell, plus dashed lines from the center to the
+/// ring-1 bee cells (mirrors the reference comp).
+class _HiveGridPainter extends CustomPainter {
+  const _HiveGridPainter();
+
+  static const _goldHi = Color(0xFFF5CA4B);
+  static const _goldLo = Color(0xFFB8791A);
+
+  Path _hex(Offset c, double r) {
+    final p = Path();
+    for (var i = 0; i < 6; i++) {
+      final ang = math.pi / 6 + i * math.pi / 3; // pointy-top
+      final v = Offset(c.dx + r * math.cos(ang), c.dy + r * math.sin(ang));
+      i == 0 ? p.moveTo(v.dx, v.dy) : p.lineTo(v.dx, v.dy);
+    }
+    return p..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final a = size.width / 9.2;
+    final d = math.sqrt(3) * a;
+
+    Offset cellAt(double deg, double dist) => Offset(
+        center.dx + dist * math.cos(deg * math.pi / 180),
+        center.dy + dist * math.sin(deg * math.pi / 180));
+
+    // Ring-1 (6) + ring-2 (12) cell centers.
+    final cells = <(Offset, double)>[]; // (center, fade)
+    for (var i = 0; i < 6; i++) {
+      cells.add((cellAt(30.0 + 60 * i, d), 1.0));
+    }
+    for (var i = 0; i < 6; i++) {
+      cells.add((cellAt(30.0 + 60 * i, 2 * d), 0.55)); // ring-2 corners
+      cells.add((cellAt(60.0 + 60 * i, math.sqrt(3) * d), 0.4)); // edges
+    }
+
+    // Dashed lines center -> the three ring-1 bee cells (210/330/90 deg).
+    final dashPaint = Paint()
+      ..color = _goldHi.withValues(alpha: 0.45)
+      ..strokeWidth = 1.2;
+    for (final deg in [210.0, 330.0, 90.0]) {
+      final end = cellAt(deg, d);
+      final delta = end - center;
+      const dashes = 6;
+      for (var k = 2; k < dashes; k++) {
+        final t0 = k / (dashes * 1.6), t1 = (k + 0.5) / (dashes * 1.6);
+        canvas.drawLine(
+            center + delta * t0, center + delta * t1, dashPaint);
+      }
+    }
+
+    void drawCell(Offset c, double r, double fade) {
+      final path = _hex(c, r);
+      canvas.drawPath(
+          path, Paint()..color = const Color(0xFF16100A).withValues(alpha: 0.8 * fade));
+      // Soft glow
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 7
+          ..color = _goldHi.withValues(alpha: 0.18 * fade)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+      );
+      // Beveled gradient rim
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4
+          ..strokeJoin = StrokeJoin.round
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              _goldHi.withValues(alpha: fade),
+              _goldLo.withValues(alpha: 0.85 * fade),
+            ],
+          ).createShader(Rect.fromCircle(center: c, radius: r)),
+      );
+    }
+
+    for (final (c, fade) in cells) {
+      drawCell(c, a * 0.88, fade);
+    }
+
+    // Center cell: amber-glow fill + bright rim.
+    final centerPath = _hex(center, a * 0.94);
+    canvas.drawPath(
+      centerPath,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0xFF9A5E10), Color(0xFF3A2405)],
+        ).createShader(Rect.fromCircle(center: center, radius: a)),
+    );
+    canvas.drawPath(
+      centerPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 8
+        ..color = const Color(0xFFFFC966).withValues(alpha: 0.45)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 7),
+    );
+    canvas.drawPath(
+      centerPath,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4.5
+        ..strokeJoin = StrokeJoin.round
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFFE3A0), Color(0xFFD98E1F)],
+        ).createShader(Rect.fromCircle(center: center, radius: a)),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _HiveGridPainter old) => false;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -696,49 +767,3 @@ class _ChatIllustration extends StatelessWidget {
   }
 }
 
-// ══════════════════════════════════════════════════════════════════
-// HELPERS & PAINTERS
-// ══════════════════════════════════════════════════════════════════
-
-/// Connection line painter between avatar positions
-class _ConnectionLinePainter extends CustomPainter {
-  static const _positions = [
-    Offset(0, -95),
-    Offset(82, -45),
-    Offset(92, 42),
-    Offset(30, 88),
-    Offset(-62, 58),
-    Offset(-88, -22),
-    Offset(-38, -72),
-    Offset(48, -78),
-  ];
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFFFCC66).withValues(alpha: 0.15)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    final center = Offset(size.width / 2, size.height / 2);
-
-    for (final pos in _positions) {
-      final p = pos + const Offset(145, 145);
-      final path = Path()
-        ..moveTo(center.dx, center.dy)
-        ..quadraticBezierTo(
-          center.dx +
-              (p.dx - center.dx) * 0.5 +
-              (math.Random().nextDouble() - 0.5) * 20,
-          center.dy +
-              (p.dy - center.dy) * 0.5 +
-              (math.Random().nextDouble() - 0.5) * 20,
-          p.dx,
-          p.dy,
-        );
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ConnectionLinePainter old) => false;
-}
