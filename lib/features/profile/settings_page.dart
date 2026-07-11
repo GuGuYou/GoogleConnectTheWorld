@@ -16,6 +16,7 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lang = ref.watch(localeProvider).languageCode;
+    final followsSystem = ref.read(localeProvider.notifier).followsSystem;
 
     return Scaffold(
       appBar: AppBar(title: Text(ref.tr('settings_title'))),
@@ -44,8 +45,12 @@ class SettingsPage extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        _langSeg(ref, ref.tr('setting_lang_zh'), 'zh', lang == 'zh'),
-                        _langSeg(ref, ref.tr('setting_lang_en'), 'en', lang == 'en'),
+                        _langSeg(ref, ref.tr('setting_lang_system'), null,
+                            followsSystem),
+                        _langSeg(ref, ref.tr('setting_lang_zh'), 'zh',
+                            !followsSystem && lang == 'zh'),
+                        _langSeg(ref, ref.tr('setting_lang_en'), 'en',
+                            !followsSystem && lang == 'en'),
                       ],
                     ),
                   ),
@@ -81,10 +86,13 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  Widget _langSeg(WidgetRef ref, String label, String code, bool active) {
+  /// [code] 为 null 表示"跟随系统"。
+  Widget _langSeg(WidgetRef ref, String label, String? code, bool active) {
     return Expanded(
       child: GestureDetector(
-        onTap: () => ref.read(localeProvider.notifier).setLocale(code),
+        onTap: () => code == null
+            ? ref.read(localeProvider.notifier).followSystem()
+            : ref.read(localeProvider.notifier).setLocale(code),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),

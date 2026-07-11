@@ -6,11 +6,35 @@ import 'core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
-class NicheTribeApp extends ConsumerWidget {
+class NicheTribeApp extends ConsumerStatefulWidget {
   const NicheTribeApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NicheTribeApp> createState() => _NicheTribeAppState();
+}
+
+class _NicheTribeAppState extends ConsumerState<NicheTribeApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// 系统语言变化 → 跟随系统模式下即时切换应用语言。
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    ref.read(localeProvider.notifier).syncWithSystem();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
 

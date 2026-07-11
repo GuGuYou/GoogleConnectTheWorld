@@ -182,9 +182,17 @@ class HiveSceneNotifier extends StateNotifier<HiveSceneState> {
     });
   }
 
+  /// 世界频道的特殊房间 id（不对应 rooms 列表下标）
+  static const globalChatRoomId = 'global_chat';
+
   /// 进入房间
   void enterRoom(int roomIndex) {
     state = state.copyWith(enteredRoomId: 'room_$roomIndex');
+  }
+
+  /// 进入世界频道
+  void enterGlobalChat() {
+    state = state.copyWith(enteredRoomId: globalChatRoomId);
   }
 
   /// 退出房间

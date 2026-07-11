@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/app_text.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../shared/data/repositories.dart';
 import 'hive_render_scene.dart';
 import 'scene_models.dart';
 import 'scene_provider.dart';
@@ -18,6 +20,13 @@ class HiveIsometricPage extends ConsumerWidget {
     final sceneState = ref.watch(hiveSceneProvider);
     final enteredRoomId = sceneState.enteredRoomId;
 
+    // 世界频道（特殊房间，无 rooms 下标）
+    if (enteredRoomId == HiveSceneNotifier.globalChatRoomId) {
+      return _GlobalChatRoom(
+        onBack: () => ref.read(hiveSceneProvider.notifier).exitRoom(),
+      );
+    }
+
     // 如果已进入房间，显示房间内部
     if (enteredRoomId != null) {
       final roomIndex = int.tryParse(enteredRoomId.replaceAll('room_', '')) ?? 0;
@@ -32,22 +41,42 @@ class HiveIsometricPage extends ConsumerWidget {
       }
     }
 
-    return HiveRenderScene(rooms: sceneState.rooms);
+    final notifier = ref.read(hiveSceneProvider.notifier);
+    return HiveRenderScene(
+      rooms: sceneState.rooms,
+      onRoomTap: notifier.enterRoom,
+      onGlobalChatTap: notifier.enterGlobalChat,
+    );
   }
 }
+
+/// 房间类型 → 场景/内饰共用的 i18n 标题 key。
+String _roomTitleKey(RoomType t) => switch (t) {
+      RoomType.game => 'space_room_game',
+      RoomType.cinema => 'space_room_movie',
+      RoomType.drawGuess => 'space_room_draw',
+      RoomType.music => 'space_room_music',
+    };
+
+const _roomEmoji = <RoomType, String>{
+  RoomType.game: '🎮',
+  RoomType.cinema: '🎬',
+  RoomType.drawGuess: '🎨',
+  RoomType.music: '🎵',
+};
 
 // =====================================================================
 // 房间内部页面（外壳）
 // =====================================================================
 
-class _RoomInteriorShell extends StatelessWidget {
+class _RoomInteriorShell extends ConsumerWidget {
   final SceneRoom room;
   final VoidCallback onBack;
 
   const _RoomInteriorShell({required this.room, required this.onBack});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       color: const Color(0xFF0D0700),
       child: SafeArea(
@@ -64,7 +93,7 @@ class _RoomInteriorShell extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    room.type.label,
+                    '${_roomEmoji[room.type]} ${ref.tr(_roomTitleKey(room.type))}',
                     style: AppTextStyles.h2.copyWith(color: room.color),
                   ),
                   const Spacer(),
@@ -74,7 +103,8 @@ class _RoomInteriorShell extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                       color: room.color.withOpacity(0.15),
                     ),
-                    child: Text('${room.onlineCount}人在线',
+                    child: Text(
+                      '${room.onlineCount} ${ref.tr('space_online_suffix')}',
                       style: TextStyle(color: room.color, fontSize: 11)),
                   ),
                 ],
@@ -109,11 +139,11 @@ class _RoomInteriorShell extends StatelessWidget {
 // 🎮 游戏房
 // =====================================================================
 
-class _GameRoomContent extends StatelessWidget {
+class _GameRoomContent extends ConsumerWidget {
   const _GameRoomContent();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -122,9 +152,9 @@ class _GameRoomContent extends StatelessWidget {
           children: [
             const Text('🎮', style: TextStyle(fontSize: 64)),
             const SizedBox(height: 16),
-            const Text('网吧 / 游戏房', style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
+            Text(ref.tr('space_room_game'), style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            Text('4 个游戏工位 · 3 个已占', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+            Text(ref.tr('room_game_stations'), style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
             const SizedBox(height: 24),
             // 游戏工位
             Wrap(
@@ -149,7 +179,9 @@ class _GameRoomContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        occupied ? '玩家${i+1}' : '空位',
+                        occupied
+                            ? '${ref.tr('room_game_player')}${i + 1}'
+                            : ref.tr('room_game_empty'),
                         style: TextStyle(color: occupied ? AppColors.textPrimary : AppColors.textMuted, fontSize: 12),
                       ),
                     ],
@@ -164,7 +196,7 @@ class _GameRoomContent extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () {},
                 icon: const Text('⚡'),
-                label: const Text('快速匹配'),
+                label: Text(ref.tr('room_game_match')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xAAFFD84A),
                   foregroundColor: Colors.black87,
@@ -184,11 +216,11 @@ class _GameRoomContent extends StatelessWidget {
 // 🎬 电影院
 // =====================================================================
 
-class _CinemaRoomContent extends StatelessWidget {
+class _CinemaRoomContent extends ConsumerWidget {
   const _CinemaRoomContent();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -208,20 +240,20 @@ class _CinemaRoomContent extends StatelessWidget {
                 ),
                 border: Border.all(color: const Color(0x40FFFFFF)),
               ),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('🎬', style: TextStyle(fontSize: 32)),
-                    SizedBox(height: 4),
-                    Text('正在播放：进击的巨人 最终季',
-                      style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    const Text('🎬', style: TextStyle(fontSize: 32)),
+                    const SizedBox(height: 4),
+                    Text(ref.tr('room_cinema_playing'),
+                      style: const TextStyle(color: Colors.white70, fontSize: 12)),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            const Text('在线观众：7 人', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            Text(ref.tr('room_cinema_viewers'), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
             const SizedBox(height: 12),
             // 座位排
             ...List.generate(2, (row) => Padding(
@@ -254,7 +286,8 @@ class _CinemaRoomContent extends StatelessWidget {
             TextButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.play_circle, color: AppColors.neonCyan),
-              label: const Text('加入观看', style: TextStyle(color: AppColors.neonCyan)),
+              label: Text(ref.tr('room_cinema_join'),
+                  style: const TextStyle(color: AppColors.neonCyan)),
             ),
           ],
         ),
@@ -267,11 +300,11 @@ class _CinemaRoomContent extends StatelessWidget {
 // 🎨 你画我猜
 // =====================================================================
 
-class _DrawGuessRoomContent extends StatelessWidget {
+class _DrawGuessRoomContent extends ConsumerWidget {
   const _DrawGuessRoomContent();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -291,7 +324,7 @@ class _DrawGuessRoomContent extends StatelessWidget {
                   children: [
                     Text('🖌️', style: TextStyle(fontSize: 36, color: Colors.grey[400])),
                     const SizedBox(height: 4),
-                    Text('当前画题：动物', style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                    Text(ref.tr('room_draw_topic'), style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                   ],
                 ),
               ),
@@ -311,7 +344,7 @@ class _DrawGuessRoomContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('猜词聊天', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                  Text(ref.tr('room_draw_chat'), style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                   const SizedBox(height: 6),
                   ..._mockChats.map((c) => Padding(
                     padding: const EdgeInsets.only(bottom: 4),
@@ -335,11 +368,11 @@ class _DrawGuessRoomContent extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                             color: const Color(0x20FFFFFF),
                           ),
-                          child: const TextField(
-                            style: TextStyle(color: Colors.white, fontSize: 12),
+                          child: TextField(
+                            style: const TextStyle(color: Colors.white, fontSize: 12),
                             decoration: InputDecoration(
-                              hintText: '输入你的猜测...',
-                              hintStyle: TextStyle(color: Colors.white38, fontSize: 12),
+                              hintText: ref.tr('room_draw_hint'),
+                              hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
                             ),
@@ -376,11 +409,11 @@ class _Chat {
 // 🎵 音乐吧
 // =====================================================================
 
-class _MusicBarRoomContent extends StatelessWidget {
+class _MusicBarRoomContent extends ConsumerWidget {
   const _MusicBarRoomContent();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -389,9 +422,9 @@ class _MusicBarRoomContent extends StatelessWidget {
           children: [
             const Text('🎵', style: TextStyle(fontSize: 64)),
             const SizedBox(height: 16),
-            const Text('音乐吧', style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
+            Text(ref.tr('space_room_music'), style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            const Text('正在播放 · 7人在听', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            Text(ref.tr('room_music_listening'), style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
             const SizedBox(height: 20),
             // 当前曲目
             Container(
@@ -448,7 +481,7 @@ class _MusicBarRoomContent extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () {},
                 icon: const Text('🎶'),
-                label: const Text('点歌'),
+                label: Text(ref.tr('room_music_request')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xAAF59E0B),
                   foregroundColor: Colors.black87,
@@ -470,3 +503,236 @@ const _mockPlaylist = [
   'Dance Monkey - Tones and I',
   'Shape of You - Ed Sheeran',
 ];
+
+// =====================================================================
+// 🌍 世界频道（Global Chat）
+// =====================================================================
+
+class _GlobalChatRoom extends ConsumerStatefulWidget {
+  final VoidCallback onBack;
+  const _GlobalChatRoom({required this.onBack});
+
+  @override
+  ConsumerState<_GlobalChatRoom> createState() => _GlobalChatRoomState();
+}
+
+class _GlobalChatRoomState extends ConsumerState<_GlobalChatRoom> {
+  final _input = TextEditingController();
+  final _scroll = ScrollController();
+
+  /// (昵称, 内容, 是否自己)
+  final List<(String, String, bool)> _messages = [];
+
+  static const _greetings = [
+    '你好呀！有人一起开黑吗？',
+    'Bonjour! 🥖',
+    'Hola, ¿qué tal?',
+    'Konnichiwa 🌸',
+    'Hello from the hive!',
+    'Privet! ❄️',
+    'Ciao a tutti ✨',
+  ];
+
+  static const _replies = [
+    'Welcome! 🐝',
+    '哈喽，欢迎来到蜂巢～',
+    'Hola! 🎉',
+    'Hi there 👋',
+    '来啦来啦！',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    final users = ref.read(mockProvider).users;
+    for (var i = 0; i < _greetings.length; i++) {
+      _messages.add((users[i % users.length].nickname, _greetings[i], false));
+    }
+  }
+
+  @override
+  void dispose() {
+    _input.dispose();
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scroll.hasClients) {
+        _scroll.animateTo(_scroll.position.maxScrollExtent + 120,
+            duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
+      }
+    });
+  }
+
+  void _send() {
+    final text = _input.text.trim();
+    if (text.isEmpty) return;
+    final me = ref.read(mockProvider).me;
+    setState(() => _messages.add((me.nickname, text, true)));
+    _input.clear();
+    _scrollToBottom();
+    // 模拟世界频道里有人回应
+    final users = ref.read(mockProvider).users;
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (!mounted) return;
+      final i = _messages.length;
+      setState(() => _messages.add((
+            users[i % users.length].nickname,
+            _replies[i % _replies.length],
+            false,
+          )));
+      _scrollToBottom();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rooms = ref.watch(hiveSceneProvider).rooms;
+    final online = rooms.fold<int>(0, (s, r) => s + r.onlineCount);
+
+    return Container(
+      color: const Color(0xFF0D0700),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // 顶栏
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new,
+                        color: AppColors.textSecondary, size: 18),
+                    onPressed: widget.onBack,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '🌍 ${ref.tr('space_global_chat')}',
+                    style:
+                        AppTextStyles.h2.copyWith(color: AppColors.neonYellow),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.neonYellow.withValues(alpha: 0.15),
+                    ),
+                    child: Text(
+                      '$online ${ref.tr('space_online_suffix')}',
+                      style: const TextStyle(
+                          color: AppColors.neonYellow, fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Divider(height: 1, color: AppColors.divider),
+            // 消息流
+            Expanded(
+              child: ListView.builder(
+                controller: _scroll,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                itemCount: _messages.length,
+                itemBuilder: (c, i) {
+                  final (name, text, isMe) = _messages[i];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Column(
+                      crossAxisAlignment: isMe
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 3),
+                          child: Text(name,
+                              style: AppTextStyles.tt(
+                                  size: 10,
+                                  weight: FontWeight.w600,
+                                  color: AppColors.textMuted)),
+                        ),
+                        Container(
+                          constraints: const BoxConstraints(maxWidth: 260),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isMe
+                                ? const Color(0xFFE7A83A)
+                                : const Color(0xFF161206),
+                            borderRadius: BorderRadius.circular(14),
+                            border: isMe
+                                ? null
+                                : Border.all(
+                                    color: AppColors.neonYellow
+                                        .withValues(alpha: 0.35)),
+                          ),
+                          child: Text(
+                            text,
+                            style: AppTextStyles.tt(
+                              size: 13,
+                              weight: FontWeight.w500,
+                              color: isMe
+                                  ? AppColors.ctaText
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            // 输入栏
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+              decoration: const BoxDecoration(
+                color: Color(0xFF100C02),
+                border: Border(top: BorderSide(color: AppColors.divider)),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _input,
+                      style: AppTextStyles.body.copyWith(color: Colors.white),
+                      onSubmitted: (_) => _send(),
+                      decoration: InputDecoration(
+                        hintText: ref.tr('chat_input_hint'),
+                        hintStyle: AppTextStyles.caption,
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.05),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 10),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _send,
+                    child: Container(
+                      padding: const EdgeInsets.all(11),
+                      decoration: const BoxDecoration(
+                          gradient: AppColors.pinkPurple,
+                          shape: BoxShape.circle),
+                      child: const Icon(Icons.send,
+                          size: 20, color: AppColors.ctaText),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

@@ -1,21 +1,31 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/app_text.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import 'scene_models.dart';
 
 /// Clean "hive" home: thin gold-outline octagon rooms holding an icon (game /
 /// movie / music) and a global-chat bubble cluster, over a dark starfield.
-/// Static / visual only — tapping does not navigate.
+/// Each region is tappable — [onRoomTap] receives the rooms-list index
+/// (game 0 / movie 1 / music 3) and [onGlobalChatTap] fires for the cluster.
 ///
-/// Room icons use image assets (drop transparent PNGs at the paths in
-/// [_iconAsset]); until a file exists the hand-drawn line-art is shown.
-class HiveRenderScene extends StatelessWidget {
+/// Room icons use image assets (transparent PNGs at the paths in
+/// [_iconAsset]); if a file is missing the hand-drawn line-art is shown.
+class HiveRenderScene extends ConsumerWidget {
   final List<SceneRoom> rooms;
+  final void Function(int roomIndex)? onRoomTap;
+  final VoidCallback? onGlobalChatTap;
 
-  const HiveRenderScene({super.key, required this.rooms});
+  const HiveRenderScene({
+    super.key,
+    required this.rooms,
+    this.onRoomTap,
+    this.onGlobalChatTap,
+  });
 
   static const _iconAsset = <int, String>{
     0: 'assets/images/decorations/hive_game.png',
@@ -27,18 +37,24 @@ class HiveRenderScene extends StatelessWidget {
       (i >= 0 && i < rooms.length) ? rooms[i].onlineCount : fallback;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
         Offset px(double x, double y) =>
             Offset(x * size.width, y * size.height);
         final r = 0.185 * size.width;
+        final cr = 0.27 * size.width;
 
         final game = px(0.27, 0.18);
         final movie = px(0.73, 0.18);
         final music = px(0.5, 0.42);
         final chat = px(0.5, 0.79);
+
+        // 世界频道人数 = 各房间在线人数之和（无房间数据时兜底 12）
+        final globalCount = rooms.isEmpty
+            ? 12
+            : rooms.fold<int>(0, (s, room) => s + room.onlineCount);
 
         return Stack(
           clipBehavior: Clip.none,
@@ -59,14 +75,72 @@ class HiveRenderScene extends StatelessWidget {
             _GlobalChat(center: chat, width: size.width),
 
             // Labels + count badges
-            _label(game, r, 'GAME CORNER', _count(0, 4)),
-            _label(movie, r, 'MOVIE THEATER', _count(1, 4)),
-            _label(music, r, 'MUSIC BAR', _count(3, 4)),
-            _label(chat, 0.24 * size.width, 'GLOBAL CHAT', 12),
+            _label(game, r, ref.tr('space_room_game'), _count(0, 4)),
+            _label(movie, r, ref.tr('space_room_movie'), _count(1, 4)),
+            _label(music, r, ref.tr('space_room_music'), _count(3, 4)),
+            _label(chat, 0.24 * size.width, ref.tr('space_global_chat'),
+                globalCount),
+
+            // Single tap layer with point-in-region resolution. Rooms win
+            // over the chat cluster and the nearest octagon wins among
+            // rooms, so overlapping rectangles (landscape / short windows)
+            // can never steal each other's taps.
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapUp: (d) => _resolveTap(
+                  d.localPosition,
+                  rooms: [(0, game), (1, movie), (3, music)],
+                  r: r,
+                  chat: chat,
+                  cr: cr,
+                ),
+              ),
+            ),
           ],
         );
       },
     );
+  }
+
+  /// Maps a tap point to a region. Room indices follow the seeded rooms
+  /// list: 0 game, 1 cinema, 3 music — matching the label counts.
+  void _resolveTap(
+    Offset p, {
+    required List<(int, Offset)> rooms,
+    required double r,
+    required Offset chat,
+    required double cr,
+  }) {
+    // 1) Octagon bodies — nearest center within the octagon's radius wins.
+    int? best;
+    var bestDist = double.infinity;
+    for (final (index, c) in rooms) {
+      final d = (p - c).distance;
+      if (d <= r * 1.05 && d < bestDist) {
+        best = index;
+        bestDist = d;
+      }
+    }
+    if (best != null) {
+      onRoomTap?.call(best);
+      return;
+    }
+    // 2) Label rows (200px wide, 34px tall, right under each octagon).
+    for (final (index, c) in rooms) {
+      if ((p.dx - c.dx).abs() <= 100 &&
+          p.dy >= c.dy + r &&
+          p.dy <= c.dy + r + 34) {
+        onRoomTap?.call(index);
+        return;
+      }
+    }
+    // 3) Global chat cluster + its label.
+    if ((p.dx - chat.dx).abs() <= 1.1 * cr &&
+        p.dy >= chat.dy - 0.9 * cr &&
+        p.dy <= chat.dy + cr + 40) {
+      onGlobalChatTap?.call();
+    }
   }
 
   Widget _icon(Offset c, double r, int kind) {
