@@ -45,6 +45,8 @@ class HiveRenderScene extends ConsumerWidget {
             Offset(x * size.width, y * size.height);
         final r = 0.185 * size.width;
         final cr = 0.27 * size.width;
+        // 聊天区外框八边形半径（略大于气泡簇）
+        final chatR = 0.29 * size.width;
 
         final game = px(0.27, 0.18);
         final movie = px(0.73, 0.18);
@@ -62,7 +64,12 @@ class HiveRenderScene extends ConsumerWidget {
             Positioned.fill(
               child: CustomPaint(
                 painter: _ScenePainter(
-                    size: size, centers: [game, movie, music], r: r),
+                  size: size,
+                  centers: [game, movie, music],
+                  r: r,
+                  chatCenter: chat,
+                  chatR: chatR,
+                ),
               ),
             ),
 
@@ -78,8 +85,7 @@ class HiveRenderScene extends ConsumerWidget {
             _label(game, r, ref.tr('space_room_game'), _count(0, 4)),
             _label(movie, r, ref.tr('space_room_movie'), _count(1, 4)),
             _label(music, r, ref.tr('space_room_music'), _count(3, 4)),
-            _label(chat, 0.24 * size.width, ref.tr('space_global_chat'),
-                globalCount),
+            _label(chat, chatR, ref.tr('space_local_chat'), globalCount),
 
             // Single tap layer with point-in-region resolution. Rooms win
             // over the chat cluster and the nearest octagon wins among
@@ -135,10 +141,10 @@ class HiveRenderScene extends ConsumerWidget {
         return;
       }
     }
-    // 3) Global chat cluster + its label.
-    if ((p.dx - chat.dx).abs() <= 1.1 * cr &&
-        p.dy >= chat.dy - 0.9 * cr &&
-        p.dy <= chat.dy + cr + 40) {
+    // 3) Local chat cluster (octagon frame) + its label.
+    if ((p.dx - chat.dx).abs() <= 1.15 * cr &&
+        p.dy >= chat.dy - 1.1 * cr &&
+        p.dy <= chat.dy + 1.1 * cr + 40) {
       onGlobalChatTap?.call();
     }
   }
@@ -297,8 +303,16 @@ class _ScenePainter extends CustomPainter {
   final Size size;
   final List<Offset> centers;
   final double r;
+  final Offset chatCenter;
+  final double chatR;
 
-  _ScenePainter({required this.size, required this.centers, required this.r});
+  _ScenePainter({
+    required this.size,
+    required this.centers,
+    required this.r,
+    required this.chatCenter,
+    required this.chatR,
+  });
 
   static const _gold = Color(0xFFD9A63A);
   static const _goldBright = Color(0xFFF0C56A);
@@ -317,8 +331,10 @@ class _ScenePainter extends CustomPainter {
     );
     _stars(canvas, s);
     for (final c in centers) {
-      _octagonRoom(canvas, c);
+      _octagonRoom(canvas, c, r);
     }
+    // 附近聊天区外框（同款八边形描边）
+    _octagonRoom(canvas, chatCenter, chatR);
   }
 
   void _stars(Canvas canvas, Size s) {
@@ -331,11 +347,11 @@ class _ScenePainter extends CustomPainter {
     }
   }
 
-  void _octagonRoom(Canvas canvas, Offset c) {
+  void _octagonRoom(Canvas canvas, Offset c, double radius) {
     final path = Path();
     for (var i = 0; i < 8; i++) {
       final a = math.pi / 8 + i * math.pi / 4;
-      final p = Offset(c.dx + r * math.cos(a), c.dy + r * math.sin(a));
+      final p = Offset(c.dx + radius * math.cos(a), c.dy + radius * math.sin(a));
       i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
     }
     path.close();

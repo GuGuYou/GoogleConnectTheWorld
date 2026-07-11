@@ -92,20 +92,26 @@ class _RoomInteriorShell extends ConsumerWidget {
                     onPressed: onBack,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    '${_roomEmoji[room.type]} ${ref.tr(_roomTitleKey(room.type))}',
-                    style: AppTextStyles.h2.copyWith(color: room.color),
+                  Flexible(
+                    child: Text(
+                      '${_roomEmoji[room.type]} ${ref.tr(_roomTitleKey(room.type))}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.h2
+                          .copyWith(color: AppColors.neonYellow),
+                    ),
                   ),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      color: room.color.withOpacity(0.15),
+                      color: AppColors.neonYellow.withValues(alpha: 0.15),
                     ),
                     child: Text(
                       '${room.onlineCount} ${ref.tr('space_online_suffix')}',
-                      style: TextStyle(color: room.color, fontSize: 11)),
+                      style: const TextStyle(
+                          color: AppColors.neonYellow, fontSize: 11)),
                   ),
                 ],
               ),
@@ -150,7 +156,8 @@ class _GameRoomContent extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🎮', style: TextStyle(fontSize: 64)),
+            const _RoomHeroIcon(
+                asset: 'assets/images/decorations/hive_game.png', emoji: '🎮'),
             const SizedBox(height: 16),
             Text(ref.tr('space_room_game'), style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
@@ -167,14 +174,26 @@ class _GameRoomContent extends ConsumerWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    color: const Color(0x20FFD84A),
-                    border: Border.all(color: occupied ? const Color(0x60FFD84A) : const Color(0x30FFFFFF)),
+                    color: AppColors.cardSurface,
+                    border: Border.all(
+                        color: occupied
+                            ? const Color(0xFFFFC000).withValues(alpha: 0.55)
+                            : Colors.white.withValues(alpha: 0.14)),
+                    boxShadow: occupied
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFFFFC000)
+                                  .withValues(alpha: 0.12),
+                              blurRadius: 12,
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Column(
                     children: [
                       Icon(
                         occupied ? Icons.sports_esports : Icons.add_circle_outline,
-                        color: occupied ? const Color(0xFFFFD84A) : Colors.white38,
+                        color: occupied ? AppColors.neonYellow : Colors.white38,
                         size: 28,
                       ),
                       const SizedBox(height: 6),
@@ -191,20 +210,7 @@ class _GameRoomContent extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             // 快速匹配按钮
-            SizedBox(
-              width: 200,
-              child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Text('⚡'),
-                label: Text(ref.tr('room_game_match')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xAAFFD84A),
-                  foregroundColor: Colors.black87,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ),
+            _GoldPillButton(emoji: '⚡', label: ref.tr('room_game_match')),
           ],
         ),
       ),
@@ -232,22 +238,33 @@ class _CinemaRoomContent extends ConsumerWidget {
               width: double.infinity,
               height: 120,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                gradient: LinearGradient(
-                  colors: [const Color(0xFF1A237E).withOpacity(0.6), const Color(0xFF303F9F).withOpacity(0.3)],
+                borderRadius: BorderRadius.circular(10),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF2A1D06), Color(0xFF171006)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),
-                border: Border.all(color: const Color(0x40FFFFFF)),
+                border: Border.all(
+                    color: const Color(0xFFFFC000).withValues(alpha: 0.35)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFFC000).withValues(alpha: 0.10),
+                    blurRadius: 18,
+                  ),
+                ],
               ),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🎬', style: TextStyle(fontSize: 32)),
-                    const SizedBox(height: 4),
+                    const _RoomHeroIcon(
+                        asset: 'assets/images/decorations/hive_movie.png',
+                        emoji: '🎬',
+                        size: 44),
+                    const SizedBox(height: 6),
                     Text(ref.tr('room_cinema_playing'),
-                      style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12)),
                   ],
                 ),
               ),
@@ -269,12 +286,18 @@ class _CinemaRoomContent extends ConsumerWidget {
                       height: 44,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        color: occupied ? const Color(0x30FFD84A) : const Color(0x15FFFFFF),
-                        border: Border.all(color: occupied ? const Color(0x60FFD84A) : const Color(0x20FFFFFF)),
+                        color: occupied
+                            ? const Color(0xFFFFC000).withValues(alpha: 0.16)
+                            : Colors.white.withValues(alpha: 0.06),
+                        border: Border.all(
+                            color: occupied
+                                ? const Color(0xFFFFC000)
+                                    .withValues(alpha: 0.5)
+                                : Colors.white.withValues(alpha: 0.12)),
                       ),
                       child: Icon(
                         occupied ? Icons.person : Icons.event_seat,
-                        color: occupied ? const Color(0xFFFFD84A) : Colors.white38,
+                        color: occupied ? AppColors.neonYellow : Colors.white38,
                         size: 20,
                       ),
                     ),
@@ -283,12 +306,7 @@ class _CinemaRoomContent extends ConsumerWidget {
               ),
             )),
             const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.play_circle, color: AppColors.neonCyan),
-              label: Text(ref.tr('room_cinema_join'),
-                  style: const TextStyle(color: AppColors.neonCyan)),
-            ),
+            _GoldPillButton(emoji: '▶', label: ref.tr('room_cinema_join')),
           ],
         ),
       ),
@@ -420,7 +438,8 @@ class _MusicBarRoomContent extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🎵', style: TextStyle(fontSize: 64)),
+            const _RoomHeroIcon(
+                asset: 'assets/images/decorations/hive_music.png', emoji: '🎵'),
             const SizedBox(height: 16),
             Text(ref.tr('space_room_music'), style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
@@ -433,9 +452,16 @@ class _MusicBarRoomContent extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 gradient: const LinearGradient(
-                  colors: [Color(0x30F59E0B), Color(0x10F59E0B)],
+                  colors: [Color(0x33FFC000), Color(0x11FFC000)],
                 ),
-                border: Border.all(color: const Color(0x40F59E0B)),
+                border: Border.all(
+                    color: const Color(0xFFFFC000).withValues(alpha: 0.4)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFFC000).withValues(alpha: 0.10),
+                    blurRadius: 16,
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -444,22 +470,29 @@ class _MusicBarRoomContent extends ConsumerWidget {
                     height: 52,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
-                      gradient: const LinearGradient(colors: [Color(0xFFF59E0B), Color(0xFFEF4444)]),
+                      gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFFFFD48F), Color(0xFFFF7017)]),
                     ),
-                    child: const Icon(Icons.music_note, color: Colors.white, size: 28),
+                    child: const Icon(Icons.music_note,
+                        color: Colors.white, size: 28),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Blinding Lights', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                        SizedBox(height: 2),
-                        Text('The Weeknd · 添加者：DJ小王', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                        const Text('Blinding Lights', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 2),
+                        Text('The Weeknd · ${ref.tr('room_music_addedby')}',
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 11)),
                       ],
                     ),
                   ),
-                  Icon(Icons.favorite, color: const Color(0xFFF43F5E).withOpacity(0.8), size: 18),
+                  const Icon(Icons.favorite,
+                      color: AppColors.neonYellow, size: 18),
                 ],
               ),
             ),
@@ -469,27 +502,19 @@ class _MusicBarRoomContent extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
-                  Icon(Icons.music_note, color: Colors.white38, size: 16),
+                  Icon(Icons.music_note,
+                      color: AppColors.iconGold.withValues(alpha: 0.7),
+                      size: 16),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(t, style: const TextStyle(color: Colors.white60, fontSize: 12))),
+                  Expanded(
+                      child: Text(t,
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 12))),
                 ],
               ),
             )),
             const SizedBox(height: 16),
-            SizedBox(
-              width: 200,
-              child: ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Text('🎶'),
-                label: Text(ref.tr('room_music_request')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xAAF59E0B),
-                  foregroundColor: Colors.black87,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ),
+            _GoldPillButton(emoji: '🎶', label: ref.tr('room_music_request')),
           ],
         ),
       ),
@@ -503,6 +528,73 @@ const _mockPlaylist = [
   'Dance Monkey - Tones and I',
   'Shape of You - Ed Sheeran',
 ];
+
+/// 房间主视觉图标：优先用打磨过的 hive 金色图标，缺资源时回退 emoji。
+class _RoomHeroIcon extends StatelessWidget {
+  final String asset;
+  final String emoji;
+  final double size;
+  const _RoomHeroIcon(
+      {required this.asset, required this.emoji, this.size = 72});
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      asset,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) =>
+          Text(emoji, style: TextStyle(fontSize: size * 0.8)),
+    );
+  }
+}
+
+/// 闪亮金药丸按钮（与 Host Event 同款光效配方）。演示按钮，无动作。
+class _GoldPillButton extends StatelessWidget {
+  final String emoji;
+  final String label;
+  const _GoldPillButton({required this.emoji, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 34, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFFC94D), Color(0xFFFFAF3A), Color(0xFFFF8C1F)],
+          ),
+          borderRadius: BorderRadius.circular(200),
+          border: Border.all(
+              color: const Color(0xFFFFFED6).withValues(alpha: 0.8),
+              width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFEA000).withValues(alpha: 0.45),
+              blurRadius: 14,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 15)),
+            const SizedBox(width: 7),
+            Text(label,
+                style: AppTextStyles.tt(
+                    size: 15,
+                    weight: FontWeight.w700,
+                    color: AppColors.ctaText)),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 // =====================================================================
 // 🌍 世界频道（Global Chat）
@@ -608,10 +700,14 @@ class _GlobalChatRoomState extends ConsumerState<_GlobalChatRoom> {
                     onPressed: widget.onBack,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    '🌍 ${ref.tr('space_global_chat')}',
-                    style:
-                        AppTextStyles.h2.copyWith(color: AppColors.neonYellow),
+                  Flexible(
+                    child: Text(
+                      '📍 ${ref.tr('space_local_chat')}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.h2
+                          .copyWith(color: AppColors.neonYellow),
+                    ),
                   ),
                   const Spacer(),
                   Container(
