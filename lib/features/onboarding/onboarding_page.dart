@@ -198,7 +198,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
               child: ShaderMask(
                 shaderCallback: (bounds) =>
                     onboardingGradient.createShader(bounds),
-                child: Text(' ${parts[1]}', style: base.copyWith(color: Colors.white)),
+                child: Text(' ${parts[1]}',
+                    style: base.copyWith(color: Colors.white)),
               ),
             ),
         ],
@@ -233,7 +234,8 @@ class _ObView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      // 窄边距 + FittedBox 缩放的插画，尽量填满插画区，避免屏幕显空。
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: data.illustration,
     )
         .animate(key: ValueKey(data.title))
@@ -356,60 +358,62 @@ class _HiveIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const a = _box / 9.2;
+    const a = _box / 8.6;
     final bees = _beeSpots(a);
     return Center(
-      child: SizedBox(
-        width: _box,
-        height: _box,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Hex grid + dashed bee lines
-            const Positioned.fill(
-              child: CustomPaint(painter: _HiveGridPainter()),
-            ),
-
-            // "buzz" center label (over the amber-filled center cell)
-            ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [Color(0xFFFFE3A0), Color(0xFFFF9A3C)],
-              ).createShader(bounds),
-              child: Text(
-                'buzz',
-                style: AppTextStyles.tt(
-                  size: 24,
-                  weight: FontWeight.w800,
-                  color: Colors.white,
-                ).copyWith(fontStyle: FontStyle.italic),
+      // FittedBox 让整幅蜂巢随可用空间放大（内部仍按 _box 布局）。
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: _box,
+          height: _box,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Hex grid + dashed bee lines
+              const Positioned.fill(
+                child: CustomPaint(painter: _HiveGridPainter()),
               ),
-            )
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .scaleXY(begin: 0.95, end: 1.05, duration: 1800.ms),
 
-            // Bees (brand asset) gently hovering on cells
-            for (var i = 0; i < bees.length; i++)
-              Positioned(
-                left: _box / 2 + bees[i].dx - 11,
-                top: _box / 2 + bees[i].dy - 11,
-                child: Transform.rotate(
-                  angle: (i.isEven ? 1 : -1) * 0.28,
-                  child: Image.asset(
-                    'assets/images/branding/bee.png',
-                    width: 22,
-                    height: 22,
-                    errorBuilder: (_, __, ___) =>
-                        const Text('🐝', style: TextStyle(fontSize: 14)),
-                  ),
-                )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .moveY(
-                        begin: -3,
-                        end: 3,
-                        duration: (2000 + i * 260).ms,
-                        curve: Curves.easeInOut),
-              ),
-          ],
+              // "buzz" center label (over the amber-filled center cell)
+              ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [Color(0xFFFFE3A0), Color(0xFFFF9A3C)],
+                ).createShader(bounds),
+                child: Text(
+                  'buzz',
+                  style: AppTextStyles.tt(
+                    size: 24,
+                    weight: FontWeight.w800,
+                    color: Colors.white,
+                  ).copyWith(fontStyle: FontStyle.italic),
+                ),
+              )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scaleXY(begin: 0.95, end: 1.05, duration: 1800.ms),
+
+              // Bees (brand asset) gently hovering on cells
+              for (var i = 0; i < bees.length; i++)
+                Positioned(
+                  left: _box / 2 + bees[i].dx - 11,
+                  top: _box / 2 + bees[i].dy - 11,
+                  child: Transform.rotate(
+                    angle: (i.isEven ? 1 : -1) * 0.28,
+                    child: Image.asset(
+                      'assets/images/branding/bee.png',
+                      width: 22,
+                      height: 22,
+                      errorBuilder: (_, __, ___) =>
+                          const Text('🐝', style: TextStyle(fontSize: 14)),
+                    ),
+                  ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(
+                      begin: -3,
+                      end: 3,
+                      duration: (2000 + i * 260).ms,
+                      curve: Curves.easeInOut),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -438,7 +442,7 @@ class _HiveGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final a = size.width / 9.2;
+    final a = size.width / 8.6;
     final d = math.sqrt(3) * a;
 
     Offset cellAt(double deg, double dist) => Offset(
@@ -465,15 +469,16 @@ class _HiveGridPainter extends CustomPainter {
       const dashes = 6;
       for (var k = 2; k < dashes; k++) {
         final t0 = k / (dashes * 1.6), t1 = (k + 0.5) / (dashes * 1.6);
-        canvas.drawLine(
-            center + delta * t0, center + delta * t1, dashPaint);
+        canvas.drawLine(center + delta * t0, center + delta * t1, dashPaint);
       }
     }
 
     void drawCell(Offset c, double r, double fade) {
       final path = _hex(c, r);
       canvas.drawPath(
-          path, Paint()..color = const Color(0xFF16100A).withValues(alpha: 0.8 * fade));
+          path,
+          Paint()
+            ..color = const Color(0xFF16100A).withValues(alpha: 0.8 * fade));
       // Soft glow
       canvas.drawPath(
         path,
@@ -548,157 +553,162 @@ class _ChatIllustration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SizedBox(
-        width: 260,
-        height: 280,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // Phone frame
-            Container(
-              width: 145,
-              height: 270,
-              decoration: BoxDecoration(
-                color: const Color(0xFF2A2018),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  width: 1.5,
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x00000000),
-                    blurRadius: 30,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(27),
-                child: Column(
-                  children: [
-                    // Status bar mock
-                    Container(
-                      height: 38,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.white.withValues(alpha: 0.04),
-                            Colors.white.withValues(alpha: 0.01)
-                          ],
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.arrow_back,
-                              size: 16,
-                              color: Colors.white.withValues(alpha: 0.4)),
-                          const SizedBox(width: 8),
-                          Text('GoBuzz',
-                              style: AppTextStyles.tt(
-                                  size: 11,
-                                  weight: FontWeight.w700,
-                                  color: Colors.white.withValues(alpha: 0.7))),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 0.5, color: Color(0x15FFFFFF)),
-
-                    // Chat bubbles area
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            // Incoming bubble
-                            _chatBubble(
-                              isMe: false,
-                              name: 'Maya',
-                              text: 'Where you at?',
-                              color: const Color(0xFF3D2E23),
-                            ),
-                            const SizedBox(height: 6),
-                            // Outgoing bubble
-                            _chatBubble(
-                              isMe: true,
-                              name: 'You',
-                              text: 'Almost there! 🚀',
-                              color: const Color(0xFFE67E22),
-                            ),
-                            const SizedBox(height: 6),
-                            // Another incoming
-                            _chatBubble(
-                              isMe: false,
-                              name: 'Alex',
-                              text: 'See you soon!',
-                              color: const Color(0xFF3D2E23),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .scaleXY(begin: 0.98, end: 1.01, duration: 3000.ms),
-
-            // Surrounding avatars
-            Positioned(
-                left: 0,
-                top: 30,
-                child: _floatingAvatar('buzz9', size: 34, delay: 0)),
-            Positioned(
-                right: 0,
-                top: 60,
-                child: _floatingAvatar('buzz10', size: 30, delay: 400)),
-            Positioned(
-                left: 5,
-                bottom: 60,
-                child: _floatingAvatar('buzz11', size: 28, delay: 800)),
-            Positioned(
-                right: 8,
-                bottom: 30,
-                child: _floatingAvatar('buzz12', size: 32, delay: 300)),
-
-            // Notification badge
-            Positioned(
-              right: 20,
-              top: 110,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      // FittedBox 放大整个手机 mock 场景以填满插画区。
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: SizedBox(
+          width: 260,
+          height: 280,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Phone frame
+              Container(
+                width: 145,
+                height: 270,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFFFFF),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
+                  color: const Color(0xFF2A2018),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.12),
+                    width: 1.5,
+                  ),
+                  boxShadow: const [
                     BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 8)
+                      color: Color(0x00000000),
+                      blurRadius: 30,
+                      spreadRadius: 2,
+                    ),
                   ],
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _orb(20, color: const Color(0xFFF0A83A)),
-                    const SizedBox(width: 6),
-                    Text('Sofia',
-                        style: AppTextStyles.tt(
-                            size: 10,
-                            weight: FontWeight.w700,
-                            color: const Color(0xFF333333))),
-                  ],
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(27),
+                  child: Column(
+                    children: [
+                      // Status bar mock
+                      Container(
+                        height: 38,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.04),
+                              Colors.white.withValues(alpha: 0.01)
+                            ],
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.arrow_back,
+                                size: 16,
+                                color: Colors.white.withValues(alpha: 0.4)),
+                            const SizedBox(width: 8),
+                            Text('GoBuzz',
+                                style: AppTextStyles.tt(
+                                    size: 11,
+                                    weight: FontWeight.w700,
+                                    color:
+                                        Colors.white.withValues(alpha: 0.7))),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 0.5, color: Color(0x15FFFFFF)),
+
+                      // Chat bubbles area
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              // Incoming bubble
+                              _chatBubble(
+                                isMe: false,
+                                name: 'Maya',
+                                text: 'Where you at?',
+                                color: const Color(0xFF3D2E23),
+                              ),
+                              const SizedBox(height: 6),
+                              // Outgoing bubble
+                              _chatBubble(
+                                isMe: true,
+                                name: 'You',
+                                text: 'Almost there! 🚀',
+                                color: const Color(0xFFE67E22),
+                              ),
+                              const SizedBox(height: 6),
+                              // Another incoming
+                              _chatBubble(
+                                isMe: false,
+                                name: 'Alex',
+                                text: 'See you soon!',
+                                color: const Color(0xFF3D2E23),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
                   .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .moveX(begin: -4, end: 4, duration: 2200.ms),
-            ),
-          ],
+                  .scaleXY(begin: 0.98, end: 1.01, duration: 3000.ms),
+
+              // Surrounding avatars
+              Positioned(
+                  left: 0,
+                  top: 30,
+                  child: _floatingAvatar('buzz9', size: 34, delay: 0)),
+              Positioned(
+                  right: 0,
+                  top: 60,
+                  child: _floatingAvatar('buzz10', size: 30, delay: 400)),
+              Positioned(
+                  left: 5,
+                  bottom: 60,
+                  child: _floatingAvatar('buzz11', size: 28, delay: 800)),
+              Positioned(
+                  right: 8,
+                  bottom: 30,
+                  child: _floatingAvatar('buzz12', size: 32, delay: 300)),
+
+              // Notification badge
+              Positioned(
+                right: 20,
+                top: 110,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFFFF),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8)
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _orb(20, color: const Color(0xFFF0A83A)),
+                      const SizedBox(width: 6),
+                      Text('Sofia',
+                          style: AppTextStyles.tt(
+                              size: 10,
+                              weight: FontWeight.w700,
+                              color: const Color(0xFF333333))),
+                    ],
+                  ),
+                )
+                    .animate(onPlay: (c) => c.repeat(reverse: true))
+                    .moveX(begin: -4, end: 4, duration: 2200.ms),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -730,9 +740,7 @@ class _ChatIllustration extends StatelessWidget {
             ),
             child: Text(text,
                 style: AppTextStyles.tt(
-                    size: 10,
-                    weight: FontWeight.w600,
-                    color: Colors.white)),
+                    size: 10, weight: FontWeight.w600, color: Colors.white)),
           ),
         ),
         if (isMe) ...[
@@ -766,4 +774,3 @@ class _ChatIllustration extends StatelessWidget {
     );
   }
 }
-
