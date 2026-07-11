@@ -22,14 +22,15 @@ class AboutPage extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 96,
-                  height: 96,
+                  width: 104,
+                  height: 104,
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: AppColors.neonGradient,
-                    boxShadow: [BoxShadow(color: AppColors.neonPurple.withValues(alpha: 0.5), blurRadius: 30)],
+                    boxShadow: [BoxShadow(color: AppColors.glowOrange.withValues(alpha: 0.5), blurRadius: 34)],
                   ),
-                  child: const Icon(Icons.hub, size: 48, color: Colors.white),
+                  child: Image.asset('assets/images/branding/bee.png'),
                 ),
                 const SizedBox(height: 24),
                 GradientText(ref.tr('about_title'), style: AppTextStyles.h1),
