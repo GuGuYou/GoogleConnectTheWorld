@@ -22,10 +22,6 @@ class AvatarDraftNotifier extends Notifier<VirtualAvatar> {
     state = state.copyWith(faceIndex: index, source: AvatarSource.local);
   }
 
-  void setHair(int index) {
-    state = state.copyWith(hairIndex: index, source: AvatarSource.local);
-  }
-
   void setEyes(int index) {
     state = state.copyWith(eyeIndex: index, source: AvatarSource.local);
   }

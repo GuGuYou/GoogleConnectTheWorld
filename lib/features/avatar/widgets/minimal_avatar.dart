@@ -5,16 +5,15 @@ import 'package:flutter/material.dart';
 import '../../../shared/models/virtual_avatar.dart';
 
 /// Minimalist, Monument-Valley-inspired procedural avatar: flat geometric
-/// shapes, soft gradients, warm palette. Fully composed from the avatar's
-/// part indices, so every customization choice is reflected live.
+/// faces, soft gradients, warm palette. Composed from the avatar's part
+/// indices so every customization choice is reflected live.
 ///
-/// Option counts (indices are taken modulo these): face 5, hair 4, eyes 5,
-/// mouth 5, accessory 5, background 5.
+/// Option counts (indices taken modulo these): face 5, eyes 5, mouth 5,
+/// accessory 5, background 5. (Hairstyle was removed.)
 class MinimalAvatarPainter extends CustomPainter {
   final VirtualAvatar avatar;
 
-  /// When false, the background gradient is skipped (transparent) — used for
-  /// compositing over an existing backdrop.
+  /// When false the background gradient is skipped (for compositing).
   final bool drawBackground;
 
   const MinimalAvatarPainter(this.avatar, {this.drawBackground = true});
@@ -36,13 +35,10 @@ class MinimalAvatarPainter extends CustomPainter {
     [Color(0xFFA97247), Color(0xFF8A5730)], // deep
   ];
 
-  static const _hairColor = Color(0xFF3E2A1E);
-  static const _hairHi = Color(0xFF5A3E2C);
   static const _ink = Color(0xFF2C2420);
   static const _garment = Color(0xFF322C3A);
 
   int get _face => avatar.faceIndex % _skins.length;
-  int get _hair => avatar.hairIndex % 4;
   int get _eyes => avatar.eyeIndex % 5;
   int get _mouth => avatar.mouthIndex % 5;
   int get _acc => avatar.accessoryIndex % 5;
@@ -54,7 +50,6 @@ class MinimalAvatarPainter extends CustomPainter {
     Offset p(double x, double y) => Offset(x * s, y * s);
     double u(double v) => v * s;
 
-    // Background
     if (drawBackground) {
       final bg = backgrounds[_bg];
       canvas.drawRect(
@@ -68,168 +63,99 @@ class MinimalAvatarPainter extends CustomPainter {
       );
     }
 
-    // Shoulders / collar (simple portrait base)
+    // Shoulders / collar (geometric base)
     canvas.drawPath(
       Path()
-        ..addOval(Rect.fromCenter(
-            center: p(0.5, 1.18), width: u(1.15), height: u(0.9))),
+        ..moveTo(u(0.12), u(1.05))
+        ..lineTo(u(0.3), u(0.86))
+        ..lineTo(u(0.7), u(0.86))
+        ..lineTo(u(0.88), u(1.05))
+        ..close(),
       Paint()..color = _garment,
     );
 
-    // Hair volume behind the head (bob), then head, then front hair.
-    if (_hair == 3) {
-      canvas.drawPath(
-        Path()
-          ..addOval(Rect.fromCenter(
-              center: p(0.5, 0.46), width: u(0.8), height: u(0.76))),
-        Paint()..color = _hairColor,
-      );
-    }
     _drawHead(canvas, s, p, u);
-    _drawHair(canvas, s, p, u);
     _drawEyes(canvas, s, p, u);
     _drawMouth(canvas, s, p, u);
     _drawAccessory(canvas, s, p, u);
   }
 
-  // ── head ──────────────────────────────────────────────────────────────
+  // ── head (geometric) ────────────────────────────────────────────────────
   void _drawHead(Canvas canvas, double s, Offset Function(double, double) p,
       double Function(double) u) {
     final skin = _skins[_face];
-    final center = p(0.5, 0.5);
-    // shape by face index
-    late final Path path;
-    switch (_face) {
-      case 1: // oval tall
-        path = Path()
-          ..addOval(Rect.fromCenter(
-              center: center, width: u(0.56), height: u(0.66)));
-        break;
-      case 2: // oval wide
-        path = Path()
-          ..addOval(Rect.fromCenter(
-              center: center, width: u(0.66), height: u(0.56)));
-        break;
-      case 3: // squircle
-        path = Path()
-          ..addRRect(RRect.fromRectAndRadius(
-              Rect.fromCenter(center: center, width: u(0.6), height: u(0.62)),
-              Radius.circular(u(0.22))));
-        break;
-      case 4: // tapered chin
-        path = _taperedFace(center, u(0.62), u(0.66));
-        break;
-      default: // round
-        path = Path()
-          ..addOval(Rect.fromCenter(
-              center: center, width: u(0.6), height: u(0.6)));
-    }
+    final c = p(0.5, 0.5);
+    final path = _headPath(c, u);
 
     canvas.drawPath(
       path,
       Paint()
         ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [skin[0], skin[1]],
         ).createShader(path.getBounds()),
     );
-    // ears
-    final earPaint = Paint()..color = skin[1];
-    canvas.drawCircle(p(0.22, 0.52), u(0.055), earPaint);
-    canvas.drawCircle(p(0.78, 0.52), u(0.055), earPaint);
+    // Soft directional facet shading (lit from upper-left) for MV volume.
+    canvas.save();
+    canvas.clipPath(path);
+    canvas.drawRect(
+      Offset.zero & Size(s, s),
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.12),
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.14),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ).createShader(Offset.zero & Size(s, s)),
+    );
+    canvas.restore();
   }
 
-  Path _taperedFace(Offset c, double w, double h) {
-    final hw = w / 2, hh = h / 2;
-    return Path()
-      ..moveTo(c.dx - hw * 0.92, c.dy - hh * 0.35)
-      ..cubicTo(c.dx - hw, c.dy - hh, c.dx + hw, c.dy - hh,
-          c.dx + hw * 0.92, c.dy - hh * 0.35)
-      ..cubicTo(c.dx + hw * 0.8, c.dy + hh * 0.5, c.dx + hw * 0.35,
-          c.dy + hh, c.dx, c.dy + hh)
-      ..cubicTo(c.dx - hw * 0.35, c.dy + hh, c.dx - hw * 0.8,
-          c.dy + hh * 0.5, c.dx - hw * 0.92, c.dy - hh * 0.35)
-      ..close();
+  Path _headPath(Offset c, double Function(double) u) {
+    switch (_face) {
+      case 1: // rounded square
+        return Path()
+          ..addRRect(RRect.fromRectAndRadius(
+              Rect.fromCenter(center: c, width: u(0.6), height: u(0.62)),
+              Radius.circular(u(0.14))));
+      case 2: // shield (flat top, chin point)
+        final w = u(0.62), h = u(0.66);
+        return Path()
+          ..moveTo(c.dx - w * 0.5, c.dy - h * 0.42)
+          ..lineTo(c.dx + w * 0.5, c.dy - h * 0.42)
+          ..lineTo(c.dx + w * 0.5, c.dy + h * 0.05)
+          ..lineTo(c.dx, c.dy + h * 0.55)
+          ..lineTo(c.dx - w * 0.5, c.dy + h * 0.05)
+          ..close();
+      case 3: // octagon
+        return _poly(c, 8, u(0.32), u(0.34), math.pi / 8);
+      case 4: // diamond (soft, tall)
+        return _poly(c, 4, u(0.31), u(0.38), 0);
+      default: // hexagon (flat-top)
+        return _poly(c, 6, u(0.31), u(0.34), 0);
+    }
   }
 
-  // ── hair ──────────────────────────────────────────────────────────────
-  void _drawHair(Canvas canvas, double s, Offset Function(double, double) p,
-      double Function(double) u) {
-    final paint = Paint()..color = _hairColor;
-    final hi = Paint()..color = _hairHi;
-    switch (_hair) {
-      case 1: // side-swept fringe
-        canvas.drawPath(
-          Path()
-            ..moveTo(u(0.24), u(0.44))
-            ..cubicTo(u(0.24), u(0.18), u(0.78), u(0.14), u(0.78), u(0.42))
-            ..cubicTo(u(0.66), u(0.3), u(0.5), u(0.34), u(0.42), u(0.42))
-            ..cubicTo(u(0.4), u(0.34), u(0.32), u(0.34), u(0.24), u(0.44))
-            ..close(),
-          paint,
-        );
-        break;
-      case 2: // short spiky
-        canvas.drawPath(
-          Path()
-            ..moveTo(u(0.24), u(0.47))
-            ..cubicTo(u(0.2), u(0.22), u(0.8), u(0.22), u(0.76), u(0.47))
-            ..cubicTo(u(0.68), u(0.35), u(0.32), u(0.35), u(0.24), u(0.47))
-            ..close(),
-          paint,
-        );
-        for (var i = 0; i < 6; i++) {
-          final x = 0.3 + i * 0.08;
-          canvas.drawPath(
-            Path()
-              ..moveTo(u(x), u(0.25))
-              ..lineTo(u(x + 0.028), u(0.16))
-              ..lineTo(u(x + 0.056), u(0.25))
-              ..close(),
-            paint,
-          );
-        }
-        break;
-      case 3: // rounded bob — front cap over the forehead (volume drawn behind)
-        canvas.drawPath(
-          Path()
-            ..moveTo(u(0.22), u(0.5))
-            ..cubicTo(u(0.18), u(0.16), u(0.82), u(0.16), u(0.78), u(0.5))
-            ..cubicTo(u(0.7), u(0.34), u(0.3), u(0.34), u(0.22), u(0.5))
-            ..close(),
-          paint,
-        );
-        break;
-      default: // 0: smooth cap
-        canvas.drawPath(
-          Path()
-            ..moveTo(u(0.2), u(0.5))
-            ..cubicTo(u(0.16), u(0.14), u(0.84), u(0.14), u(0.8), u(0.5))
-            ..cubicTo(u(0.72), u(0.32), u(0.28), u(0.32), u(0.2), u(0.5))
-            ..close(),
-          paint,
-        );
+  Path _poly(Offset c, int sides, double rx, double ry, double rot) {
+    final path = Path();
+    for (var i = 0; i < sides; i++) {
+      final a = rot + i * 2 * math.pi / sides;
+      final pt = Offset(c.dx + rx * math.cos(a), c.dy + ry * math.sin(a));
+      i == 0 ? path.moveTo(pt.dx, pt.dy) : path.lineTo(pt.dx, pt.dy);
     }
-    // soft highlight strand
-    if (_hair != 3) {
-      canvas.drawPath(
-        Path()
-          ..moveTo(u(0.4), u(0.24))
-          ..quadraticBezierTo(u(0.52), u(0.19), u(0.64), u(0.25)),
-        hi
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = u(0.02)
-          ..strokeCap = StrokeCap.round,
-      );
-    }
+    return path..close();
   }
 
   // ── eyes ──────────────────────────────────────────────────────────────
   void _drawEyes(Canvas canvas, double s, Offset Function(double, double) p,
       double Function(double) u) {
     final ink = Paint()..color = _ink;
-    final lx = 0.385, rx = 0.615, y = 0.54;
+    const lx = 0.385, rx = 0.615, y = 0.5;
     switch (_eyes) {
       case 1: // happy closed ^ ^
         final stroke = Paint()
@@ -287,7 +213,7 @@ class MinimalAvatarPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = u(0.024)
       ..strokeCap = StrokeCap.round;
-    const y = 0.7;
+    const y = 0.67;
     switch (_mouth) {
       case 1: // neutral line
         canvas.drawLine(p(0.46, y), p(0.54, y), stroke);
@@ -334,27 +260,27 @@ class MinimalAvatarPainter extends CustomPainter {
           ..color = _ink
           ..style = PaintingStyle.stroke
           ..strokeWidth = u(0.016);
-        canvas.drawCircle(p(0.385, 0.54), u(0.075), g);
-        canvas.drawCircle(p(0.615, 0.54), u(0.075), g);
-        canvas.drawLine(p(0.46, 0.54), p(0.54, 0.54), g);
+        canvas.drawCircle(p(0.385, 0.5), u(0.075), g);
+        canvas.drawCircle(p(0.615, 0.5), u(0.075), g);
+        canvas.drawLine(p(0.46, 0.5), p(0.54, 0.5), g);
         break;
       case 2: // sunglasses (filled)
         final g = Paint()..color = _ink;
         canvas.drawRRect(
             RRect.fromRectAndRadius(
                 Rect.fromCenter(
-                    center: p(0.385, 0.54), width: u(0.16), height: u(0.11)),
+                    center: p(0.385, 0.5), width: u(0.16), height: u(0.11)),
                 Radius.circular(u(0.05))),
             g);
         canvas.drawRRect(
             RRect.fromRectAndRadius(
                 Rect.fromCenter(
-                    center: p(0.615, 0.54), width: u(0.16), height: u(0.11)),
+                    center: p(0.615, 0.5), width: u(0.16), height: u(0.11)),
                 Radius.circular(u(0.05))),
             g);
         canvas.drawLine(
-            p(0.465, 0.53),
-            p(0.535, 0.53),
+            p(0.465, 0.49),
+            p(0.535, 0.49),
             Paint()
               ..color = _ink
               ..strokeWidth = u(0.02));
@@ -366,24 +292,24 @@ class MinimalAvatarPainter extends CustomPainter {
           ..strokeWidth = u(0.03)
           ..strokeCap = StrokeCap.round;
         canvas.drawArc(
-            Rect.fromCenter(center: p(0.5, 0.42), width: u(0.7), height: u(0.6)),
+            Rect.fromCenter(center: p(0.5, 0.4), width: u(0.72), height: u(0.62)),
             math.pi, math.pi, false, band);
         final cup = Paint()..color = _ink;
         canvas.drawRRect(
             RRect.fromRectAndRadius(
                 Rect.fromCenter(
-                    center: p(0.19, 0.52), width: u(0.1), height: u(0.16)),
+                    center: p(0.17, 0.5), width: u(0.1), height: u(0.16)),
                 Radius.circular(u(0.04))),
             cup);
         canvas.drawRRect(
             RRect.fromRectAndRadius(
                 Rect.fromCenter(
-                    center: p(0.81, 0.52), width: u(0.1), height: u(0.16)),
+                    center: p(0.83, 0.5), width: u(0.1), height: u(0.16)),
                 Radius.circular(u(0.04))),
             cup);
         break;
       case 4: // gold star mark
-        _drawStar(canvas, p(0.74, 0.36), u(0.05),
+        _drawStar(canvas, p(0.72, 0.3), u(0.05),
             Paint()..color = const Color(0xFFFFD86B));
         break;
       default:
@@ -406,7 +332,6 @@ class MinimalAvatarPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant MinimalAvatarPainter old) =>
       old.avatar.faceIndex != avatar.faceIndex ||
-      old.avatar.hairIndex != avatar.hairIndex ||
       old.avatar.eyeIndex != avatar.eyeIndex ||
       old.avatar.mouthIndex != avatar.mouthIndex ||
       old.avatar.accessoryIndex != avatar.accessoryIndex ||

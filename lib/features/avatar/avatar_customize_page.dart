@@ -30,8 +30,6 @@ class AvatarCustomizePage extends ConsumerWidget {
     final rows = <_RowCfg>[
       _RowCfg('avatar_face', Icons.face, 5, avatar.faceIndex, n.setFace,
           (i) => avatar.copyWith(faceIndex: i)),
-      _RowCfg('avatar_hair', Icons.content_cut, 4, avatar.hairIndex, n.setHair,
-          (i) => avatar.copyWith(hairIndex: i)),
       _RowCfg('avatar_eyes', Icons.visibility, 5, avatar.eyeIndex, n.setEyes,
           (i) => avatar.copyWith(eyeIndex: i)),
       _RowCfg('avatar_mouth', Icons.sentiment_satisfied, 5, avatar.mouthIndex,
@@ -158,13 +156,6 @@ class _PartRow extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          // Colour wheel — cycles the row to the next option.
-          GestureDetector(
-            onTap: () => cfg.onSelect((cfg.value + 1) % cfg.count),
-            child: CustomPaint(
-                size: const Size(26, 26), painter: _ColorWheelPainter()),
-          ),
         ],
       ),
     );
@@ -204,41 +195,4 @@ class _OptionAvatar extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Small rainbow colour wheel (matches the Figma per-row swatch).
-class _ColorWheelPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final r = size.width / 2;
-    canvas.drawCircle(
-      c,
-      r,
-      Paint()
-        ..shader = const SweepGradient(colors: [
-          Color(0xFFFF5B6E),
-          Color(0xFFFFC65B),
-          Color(0xFF5BE07A),
-          Color(0xFF5BC8FF),
-          Color(0xFFB37BFF),
-          Color(0xFFFF5B6E),
-        ]).createShader(Rect.fromCircle(center: c, radius: r)),
-    );
-    canvas.drawCircle(c, r * 0.34, Paint()..color = const Color(0xFF141212));
-    canvas.drawCircle(
-      c,
-      r,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.4
-        ..color = const Color(0xFF141212),
-    );
-    // little handle dot (Figma detail)
-    canvas.drawCircle(Offset(c.dx + r * 0.62, c.dy + r * 0.62), r * 0.18,
-        Paint()..color = const Color(0xFFFFC65B));
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
