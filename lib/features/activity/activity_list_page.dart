@@ -10,9 +10,9 @@ import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
 import '../../shared/models/activity.dart';
 import '../../shared/widgets/gradient_text.dart';
-import '../../shared/widgets/hexagon.dart';
 import '../../shared/widgets/neon_background.dart';
 import 'widgets/activity_card.dart';
+import 'widgets/gold_glow.dart';
 
 class ActivityListPage extends ConsumerWidget {
   const ActivityListPage({super.key});
@@ -33,7 +33,10 @@ class ActivityListPage extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 children: [
-                  GradientText(ref.tr('activity_title'), style: AppTextStyles.h1),
+                  Flexible(
+                    child: GradientText(ref.tr('activity_title'),
+                        style: AppTextStyles.h1),
+                  ),
                   const SizedBox(width: 4),
                   const Icon(Icons.auto_awesome,
                       size: 14, color: Color(0xFFFFE523)),
@@ -43,8 +46,28 @@ class ActivityListPage extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
-                          color: AppColors.neonGreen,
-                          borderRadius: BorderRadius.circular(200)),
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFFFC94D),
+                            Color(0xFFFFAF3A),
+                            Color(0xFFFF8C1F),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(200),
+                        border: Border.all(
+                            color: const Color(0xFFFFFED6)
+                                .withValues(alpha: 0.8),
+                            width: 0.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFEA000)
+                                .withValues(alpha: 0.45),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
                       child: Row(children: [
                         const Icon(Icons.add, size: 14, color: Colors.white),
                         const SizedBox(width: 4),
@@ -86,6 +109,13 @@ class ActivityListPage extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: AppColors.neonGreen,
                             borderRadius: BorderRadius.circular(200),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFEA000)
+                                    .withValues(alpha: 0.6),
+                                blurRadius: 6,
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -143,81 +173,99 @@ class _HotCard extends StatelessWidget {
     return Container(
       width: 135,
       margin: const EdgeInsets.only(right: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(7),
-        color: AppColors.cardSurface,
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipPath(
-                  clipper: const HexagonClipper(),
-                  child: Container(
-                    width: 37,
-                    height: 37,
-                    color: AppColors.hexFill,
-                    child: Icon(activity.tag.icon,
-                        size: 16, color: Colors.white),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Expanded(
-                  child: Text(
-                    activity.title(lang),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
+      child: CustomPaint(
+        foregroundPainter: const GoldCardBorderPainter(),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(7),
+            color: AppColors.cardSurface,
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              // Gold wash from the top-right corner (Figma layer 2 @20%).
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0.75, -0.95),
+                      radius: 1.0,
+                      colors: [
+                        const Color(0xFFFFC000).withValues(alpha: 0.18),
+                        Colors.transparent,
+                      ],
                     ),
                   ),
                 ),
-                Text(
-                  '${activity.participants} $joinedLabel',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption
-                      .copyWith(fontSize: 10, color: AppColors.textMuted),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(8, 2, 8, 3),
-              decoration: const BoxDecoration(
-                color: Color(0xFF0D0900),
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(7),
-                  bottomLeft: Radius.circular(10),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(9),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GlowHexagon(
+                      width: 32,
+                      height: 36.5,
+                      strokeWidth: 0.6,
+                      child: Icon(activity.tag.icon,
+                          size: 15, color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Text(
+                        activity.title(lang),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${activity.participants} $joinedLabel',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.caption
+                          .copyWith(fontSize: 10, color: AppColors.textMuted),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.local_fire_department,
-                      size: 10, color: Color(0xFFF05005)),
-                  const SizedBox(width: 2),
-                  Text(
-                    'HOT',
-                    style: AppTextStyles.caption.copyWith(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.neonYellow,
+              // HOT ribbon: 4px below the top edge, flush right, rounded left.
+              Positioned(
+                top: 4,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(8, 2, 8, 3),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF0D0900),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(7.5),
+                      bottomLeft: Radius.circular(7.5),
                     ),
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.local_fire_department,
+                          size: 10, color: Color(0xFFF05005)),
+                      const SizedBox(width: 2),
+                      Text(
+                        'HOT',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.neonYellow,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -5,11 +5,11 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../shared/models/activity.dart';
-import '../../../shared/widgets/hexagon.dart';
-import '../../../shared/widgets/ip_tag_chip.dart';
+import 'gold_glow.dart';
 
-/// Event list card per the Figma comp: info column on the left, orbit-ring
-/// art with a hexagon icon on the right.
+/// Event list card per the Frame 4 Figma spec: info column on the left
+/// (bordered tag chip, title, meta rows), glowing outlined hexagon icon
+/// over a warm radial glow on the right, 1px gradient border.
 class ActivityCard extends StatelessWidget {
   final ActivityItem activity;
   final String lang;
@@ -22,33 +22,59 @@ class ActivityCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
         height: 123,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(7),
-          color: AppColors.cardSurface,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            Positioned(
-              right: -18,
-              top: 0,
-              bottom: 0,
-              child: Image.asset(
-                'assets/images/decorations/fig_orbit_rings.png',
-                width: 150,
-                fit: BoxFit.contain,
-              ),
+        child: CustomPaint(
+          foregroundPainter: const GoldCardBorderPainter(),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(7),
+              color: AppColors.cardSurface,
             ),
-            Positioned(
-              right: 34,
-              top: 21,
-              child: ClipPath(
-                clipper: const HexagonClipper(),
-                child: Container(
-                  width: 81,
-                  height: 81,
-                  color: AppColors.hexFill,
-                  child: Center(
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                // Warm glow behind the hexagon (replaces the old orbit art).
+                Positioned(
+                  right: 10,
+                  top: -20,
+                  bottom: -20,
+                  width: 160,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFFFFC000).withValues(alpha: 0.20),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Faint gold wash near the top-left of the card.
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(-0.55, -1.1),
+                        radius: 1.0,
+                        colors: [
+                          const Color(0xFFFFC000).withValues(alpha: 0.10),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Sparkles around the hexagon.
+                _spark(right: 32, top: 16, size: 3, alpha: 0.9),
+                _spark(right: 118, top: 78, size: 2, alpha: 0.6),
+                _spark(right: 44, top: 100, size: 2.5, alpha: 0.7),
+                // Glowing outlined hexagon with the category icon.
+                Positioned(
+                  right: 50,
+                  top: 21.5,
+                  child: GlowHexagon(
+                    width: 70,
+                    height: 80,
                     child: ShaderMask(
                       blendMode: BlendMode.srcIn,
                       shaderCallback: (b) => const LinearGradient(
@@ -60,57 +86,83 @@ class ActivityCard extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IpTagChip(tag: activity.tag, small: true),
-                      const Spacer(),
-                      if (activity.joined)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.neonGreen,
-                            borderRadius: BorderRadius.circular(10),
+                      Row(
+                        children: [
+                          _TagChip(label: activity.tag.name(lang)),
+                          const Spacer(),
+                          if (activity.joined)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppColors.neonGreen,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text('✓',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.ctaText,
+                                    fontWeight: FontWeight.w700,
+                                  )),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: 185,
+                        child: Text(
+                          activity.title(lang),
+                          style: AppTextStyles.tt(
+                            size: 15.5,
+                            weight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            height: 1.15,
                           ),
-                          child: Text('✓',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.ctaText,
-                                fontWeight: FontWeight.w700,
-                              )),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                      ),
+                      const SizedBox(height: 7),
+                      _row(Icons.schedule,
+                          DateFormat('MM/dd HH:mm').format(activity.time)),
+                      const SizedBox(height: 4),
+                      _row(Icons.location_on_outlined, activity.location(lang)),
+                      const SizedBox(height: 4),
+                      _row(Icons.group_outlined,
+                          '${activity.participants}/${activity.maxParticipants}'),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: 170,
-                    child: Text(
-                      activity.title(lang),
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  _row(Icons.schedule,
-                      DateFormat('MM/dd HH:mm').format(activity.time)),
-                  const SizedBox(height: 3),
-                  _row(Icons.location_on_outlined, activity.location(lang)),
-                  const SizedBox(height: 3),
-                  _row(Icons.group_outlined,
-                      '${activity.participants}/${activity.maxParticipants}'),
-                ],
-              ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _spark(
+      {required double right,
+      required double top,
+      required double size,
+      required double alpha}) {
+    return Positioned(
+      right: right,
+      top: top,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xFFF5CA4B).withValues(alpha: alpha),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFF5CA4B).withValues(alpha: alpha * 0.8),
+              blurRadius: 4,
             ),
           ],
         ),
@@ -134,6 +186,38 @@ class ActivityCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Bordered text-only category chip (h18, r9, #110F05 fill, thin gold
+/// gradient border, #FDD570 label) per the Figma list-card spec.
+class _TagChip extends StatelessWidget {
+  final String label;
+  const _TagChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 18,
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.chipSurface,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(
+          color: const Color(0xFFD68D1F).withValues(alpha: 0.55),
+          width: 0.5,
+        ),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.tt(
+          size: 10.5,
+          weight: FontWeight.w600,
+          color: AppColors.neonYellow.withValues(alpha: 0.8),
+        ),
+      ),
     );
   }
 }
