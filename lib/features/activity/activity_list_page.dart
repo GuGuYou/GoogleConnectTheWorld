@@ -33,14 +33,20 @@ class ActivityListPage extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
               child: Row(
                 children: [
-                  Flexible(
-                    child: GradientText(ref.tr('activity_title'),
-                        style: AppTextStyles.h1),
+                  // 标题区独占一个 Expanded，让 Host Event 药丸贴右边缘
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: GradientText(ref.tr('activity_title'),
+                              style: AppTextStyles.h1),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.auto_awesome,
+                            size: 14, color: Color(0xFFFFE523)),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.auto_awesome,
-                      size: 14, color: Color(0xFFFFE523)),
-                  const Spacer(),
                   GestureDetector(
                     onTap: () => context.push('/activity/create'),
                     child: Container(
