@@ -6,13 +6,22 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import 'scene_models.dart';
 
-/// Clean "hive" home: thin gold-outline octagon rooms with hand-drawn line-art
-/// icons (game / movie / music) and a global-chat bubble cluster, over a dark
-/// starfield. Static / visual only — tapping does not navigate.
+/// Clean "hive" home: thin gold-outline octagon rooms holding an icon (game /
+/// movie / music) and a global-chat bubble cluster, over a dark starfield.
+/// Static / visual only — tapping does not navigate.
+///
+/// Room icons use image assets (drop transparent PNGs at the paths in
+/// [_iconAsset]); until a file exists the hand-drawn line-art is shown.
 class HiveRenderScene extends StatelessWidget {
   final List<SceneRoom> rooms;
 
   const HiveRenderScene({super.key, required this.rooms});
+
+  static const _iconAsset = <int, String>{
+    0: 'assets/images/decorations/hive_game.png',
+    1: 'assets/images/decorations/hive_movie.png',
+    2: 'assets/images/decorations/hive_music.png',
+  };
 
   int _count(int i, int fallback) =>
       (i >= 0 && i < rooms.length) ? rooms[i].onlineCount : fallback;
@@ -37,14 +46,14 @@ class HiveRenderScene extends StatelessWidget {
             Positioned.fill(
               child: CustomPaint(
                 painter: _ScenePainter(
-                  size: size,
-                  game: game,
-                  movie: movie,
-                  music: music,
-                  r: r,
-                ),
+                    size: size, centers: [game, movie, music], r: r),
               ),
             ),
+
+            // Room icons (image asset, line-art fallback)
+            _icon(game, r, 0),
+            _icon(movie, r, 1),
+            _icon(music, r, 2),
 
             // Global chat bubble cluster
             _GlobalChat(center: chat, width: size.width),
@@ -57,6 +66,22 @@ class HiveRenderScene extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+
+  Widget _icon(Offset c, double r, int kind) {
+    final s = r * 1.35;
+    return Positioned(
+      left: c.dx - s / 2,
+      top: c.dy - s / 2,
+      width: s,
+      height: s,
+      child: Image.asset(
+        _iconAsset[kind]!,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) =>
+            CustomPaint(painter: _IconPainter(kind)),
+      ),
     );
   }
 
@@ -122,7 +147,6 @@ class _GlobalChat extends StatelessWidget {
   final double width;
   const _GlobalChat({required this.center, required this.width});
 
-  // (dx, dy) as fractions of the cluster radius; text; filled?
   static const _bubbles = <(double, double, String, bool)>[
     (-0.5, -0.6, '你好', false),
     (-0.02, -0.72, 'HI', true),
@@ -142,7 +166,7 @@ class _GlobalChat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cr = 0.27 * width; // cluster radius
+    final cr = 0.27 * width;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -169,8 +193,7 @@ class _ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final emoji = text.runes.length == 1 && text.codeUnitAt(0) > 0x2000;
     return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: emoji ? 7 : 9, vertical: emoji ? 5 : 5),
+      padding: EdgeInsets.symmetric(horizontal: emoji ? 7 : 9, vertical: 5),
       decoration: BoxDecoration(
         color: filled ? const Color(0xFFE7A83A) : const Color(0xFF161206),
         borderRadius: BorderRadius.circular(12),
@@ -193,21 +216,15 @@ class _ChatBubble extends StatelessWidget {
 }
 
 // ===========================================================================
-// Scene painter — starfield, octagon outlines, line-art icons
+// Scene painter — starfield + octagon outlines
 // ===========================================================================
 
 class _ScenePainter extends CustomPainter {
   final Size size;
-  final Offset game, movie, music;
+  final List<Offset> centers;
   final double r;
 
-  _ScenePainter({
-    required this.size,
-    required this.game,
-    required this.movie,
-    required this.music,
-    required this.r,
-  });
+  _ScenePainter({required this.size, required this.centers, required this.r});
 
   static const _gold = Color(0xFFD9A63A);
   static const _goldBright = Color(0xFFF0C56A);
@@ -225,10 +242,9 @@ class _ScenePainter extends CustomPainter {
         ).createShader(Offset.zero & s),
     );
     _stars(canvas, s);
-
-    _room(canvas, game, _drawJoystick);
-    _room(canvas, movie, _drawMovie);
-    _room(canvas, music, _drawHeadphones);
+    for (final c in centers) {
+      _octagonRoom(canvas, c);
+    }
   }
 
   void _stars(Canvas canvas, Size s) {
@@ -241,10 +257,14 @@ class _ScenePainter extends CustomPainter {
     }
   }
 
-  // Outline octagon room + centered icon.
-  void _room(Canvas canvas, Offset c, void Function(Canvas, Offset, double) icon) {
-    final path = _octagon(c, r);
-    // faint glow
+  void _octagonRoom(Canvas canvas, Offset c) {
+    final path = Path();
+    for (var i = 0; i < 8; i++) {
+      final a = math.pi / 8 + i * math.pi / 4;
+      final p = Offset(c.dx + r * math.cos(a), c.dy + r * math.sin(a));
+      i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
+    }
+    path.close();
     canvas.drawPath(
       path,
       Paint()
@@ -260,30 +280,45 @@ class _ScenePainter extends CustomPainter {
         ..strokeWidth = 1.6
         ..color = _gold.withValues(alpha: 0.85),
     );
-    icon(canvas, c, r * 0.62);
   }
 
-  Path _octagon(Offset c, double r) {
-    final path = Path();
-    for (var i = 0; i < 8; i++) {
-      final a = math.pi / 8 + i * math.pi / 4;
-      final p = Offset(c.dx + r * math.cos(a), c.dy + r * math.sin(a));
-      i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
+  @override
+  bool shouldRepaint(covariant _ScenePainter old) => old.size != size;
+}
+
+// ===========================================================================
+// Line-art icon fallback (used until image assets are supplied)
+// ===========================================================================
+
+class _IconPainter extends CustomPainter {
+  final int kind; // 0 game, 1 movie, 2 music
+  const _IconPainter(this.kind);
+
+  static const _goldBright = Color(0xFFF0C56A);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final k = size.width * 0.42;
+    final line = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = _goldBright;
+    switch (kind) {
+      case 1:
+        _movie(canvas, c, k, line);
+        break;
+      case 2:
+        _music(canvas, c, k, line);
+        break;
+      default:
+        _joystick(canvas, c, k, line);
     }
-    return path..close();
   }
 
-  Paint get _line => Paint()
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 2.4
-    ..strokeCap = StrokeCap.round
-    ..strokeJoin = StrokeJoin.round
-    ..color = _goldBright;
-
-  // ── icons ───────────────────────────────────────────────────────────────
-  void _drawJoystick(Canvas canvas, Offset c, double k) {
-    final line = _line;
-    // isometric base (diamond top + depth)
+  void _joystick(Canvas canvas, Offset c, double k, Paint line) {
     final top = Path()
       ..moveTo(c.dx - 0.55 * k, c.dy + 0.35 * k)
       ..lineTo(c.dx, c.dy + 0.12 * k)
@@ -291,11 +326,9 @@ class _ScenePainter extends CustomPainter {
       ..lineTo(c.dx, c.dy + 0.58 * k)
       ..close();
     canvas.drawPath(top, line);
-    // depth
     canvas.drawLine(c.translate(-0.55 * k, 0.35 * k),
         c.translate(-0.55 * k, 0.5 * k), line);
-    canvas.drawLine(
-        c.translate(0, 0.58 * k), c.translate(0, 0.73 * k), line);
+    canvas.drawLine(c.translate(0, 0.58 * k), c.translate(0, 0.73 * k), line);
     canvas.drawLine(c.translate(0.55 * k, 0.35 * k),
         c.translate(0.55 * k, 0.5 * k), line);
     canvas.drawPath(
@@ -305,11 +338,9 @@ class _ScenePainter extends CustomPainter {
         ..lineTo(c.dx + 0.55 * k, c.dy + 0.5 * k),
       line,
     );
-    // stick + ball
     canvas.drawLine(
         c.translate(-0.02 * k, 0.32 * k), c.translate(-0.1 * k, -0.4 * k), line);
     canvas.drawCircle(c.translate(-0.12 * k, -0.52 * k), 0.14 * k, line);
-    // buttons
     canvas.drawOval(
         Rect.fromCenter(
             center: c.translate(0.24 * k, 0.4 * k),
@@ -324,28 +355,27 @@ class _ScenePainter extends CustomPainter {
         line);
   }
 
-  void _drawMovie(Canvas canvas, Offset c, double k) {
-    final line = _line;
-    // clapperboard (left)
+  void _movie(Canvas canvas, Offset c, double k, Paint line) {
     final bc = c.translate(-0.32 * k, 0.12 * k);
-    final board = RRect.fromRectAndRadius(
-        Rect.fromCenter(center: bc, width: 0.9 * k, height: 0.6 * k),
-        Radius.circular(0.05 * k));
-    canvas.drawRRect(board, line);
-    // clapper top bar
-    final clapper = Path()
-      ..moveTo(bc.dx - 0.45 * k, bc.dy - 0.3 * k)
-      ..lineTo(bc.dx + 0.45 * k, bc.dy - 0.42 * k)
-      ..lineTo(bc.dx + 0.45 * k, bc.dy - 0.24 * k)
-      ..lineTo(bc.dx - 0.45 * k, bc.dy - 0.12 * k)
-      ..close();
-    canvas.drawPath(clapper, line);
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromCenter(center: bc, width: 0.9 * k, height: 0.6 * k),
+            Radius.circular(0.05 * k)),
+        line);
+    canvas.drawPath(
+      Path()
+        ..moveTo(bc.dx - 0.45 * k, bc.dy - 0.3 * k)
+        ..lineTo(bc.dx + 0.45 * k, bc.dy - 0.42 * k)
+        ..lineTo(bc.dx + 0.45 * k, bc.dy - 0.24 * k)
+        ..lineTo(bc.dx - 0.45 * k, bc.dy - 0.12 * k)
+        ..close(),
+      line,
+    );
     for (var i = 0; i < 3; i++) {
       final t = -0.3 + i * 0.28;
       canvas.drawLine(bc.translate(t * k, -0.3 * k),
           bc.translate((t + 0.08) * k, -0.16 * k), line);
     }
-    // film reel (right)
     final rc = c.translate(0.34 * k, 0.16 * k);
     canvas.drawCircle(rc, 0.4 * k, line);
     canvas.drawCircle(rc, 0.12 * k, line);
@@ -358,17 +388,14 @@ class _ScenePainter extends CustomPainter {
     }
   }
 
-  void _drawHeadphones(Canvas canvas, Offset c, double k) {
-    final line = _line;
+  void _music(Canvas canvas, Offset c, double k, Paint line) {
     final hc = c.translate(-0.12 * k, 0.05 * k);
-    // band
     canvas.drawArc(
         Rect.fromCenter(center: hc, width: 0.9 * k, height: 0.85 * k),
         math.pi,
         math.pi,
         false,
         line);
-    // ear cups
     for (final side in [-1.0, 1.0]) {
       canvas.drawRRect(
           RRect.fromRectAndRadius(
@@ -379,7 +406,6 @@ class _ScenePainter extends CustomPainter {
               Radius.circular(0.08 * k)),
           line);
     }
-    // music note (upper-right, kept inside the octagon)
     final nc = c.translate(0.38 * k, -0.24 * k);
     canvas.drawOval(
         Rect.fromCenter(
@@ -398,10 +424,11 @@ class _ScenePainter extends CustomPainter {
     canvas.drawLine(nc.translate(0.33 * k, 0.22 * k),
         nc.translate(0.33 * k, -0.38 * k), line);
     canvas.drawLine(
-        nc.translate(-0.03 * k, -0.28 * k), nc.translate(0.33 * k, -0.38 * k),
+        nc.translate(-0.03 * k, -0.28 * k),
+        nc.translate(0.33 * k, -0.38 * k),
         line..strokeWidth = 3);
   }
 
   @override
-  bool shouldRepaint(covariant _ScenePainter old) => old.size != size;
+  bool shouldRepaint(covariant _IconPainter old) => old.kind != kind;
 }
