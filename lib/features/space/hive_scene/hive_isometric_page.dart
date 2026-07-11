@@ -32,11 +32,7 @@ class HiveIsometricPage extends ConsumerWidget {
       }
     }
 
-    return HiveRenderScene(
-      rooms: sceneState.rooms,
-      onEnterRoom: (i) => ref.read(hiveSceneProvider.notifier).enterRoom(i),
-      onSwitchToMap: onSwitchToMap,
-    );
+    return HiveRenderScene(rooms: sceneState.rooms);
   }
 }
 
