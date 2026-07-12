@@ -74,13 +74,23 @@ class HiveRenderScene extends ConsumerWidget {
               ),
             ),
 
-            // 房间插画（实心金 PNG；缺资源时回退绘制占位）
+            // Game 插画 + 标签先画；位置保持在六边形下部，可被下两格遮挡
             _icon(game, r, 0, scale: 0.74, dy: -0.07),
+            _label(game, r, ref.tr('space_room_game')),
+
+            // 重绘 Movie / Music 活跃格，盖住 Game 标签落在交叠区的部分
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _ActiveHexOverlayPainter(
+                  centers: [movie, music],
+                  r: r,
+                ),
+              ),
+            ),
+
+            // Movie / Music 插画 + 标签（叠在 Game 标签之上）
             _icon(movie, r, 1, scale: 0.59, dy: 0),
             _icon(music, r, 2, scale: 0.70, dy: -0.25),
-
-            // 房间标签（金色，位于六边形下部内侧；无计数徽章）
-            _label(game, r, ref.tr('space_room_game')),
             _label(movie, r, ref.tr('space_room_movie')),
             _label(music, r, ref.tr('space_room_music')),
 
@@ -197,7 +207,7 @@ class _HoneycombPainter extends CustomPainter {
   static const _innerGlow = Color(0xFFD68D1F);
 
   /// 圆角尖顶六边形路径。
-  Path _hexPath(Offset c, double radius, double corner) {
+  static Path hexPath(Offset c, double radius, double corner) {
     final pts = List.generate(6, (i) {
       final a = -math.pi / 2 + i * math.pi / 3;
       return Offset(c.dx + radius * math.cos(a), c.dy + radius * math.sin(a));
@@ -223,8 +233,8 @@ class _HoneycombPainter extends CustomPainter {
     return path..close();
   }
 
-  void _cell(Canvas canvas, Offset c, double radius, double opacity) {
-    final path = _hexPath(c, radius, radius * 0.08);
+  static void paintCell(Canvas canvas, Offset c, double radius, double opacity) {
+    final path = hexPath(c, radius, radius * 0.08);
     canvas.drawPath(
         path, Paint()..color = _cellFill.withValues(alpha: opacity));
     // 顶部内侧金色柔光（近似设计稿 inner shadow #D68D1F @62%）
@@ -252,6 +262,10 @@ class _HoneycombPainter extends CustomPainter {
         ..color = _gold.withValues(alpha: 0.85 * opacity),
     );
   }
+
+  void _cell(Canvas canvas, Offset c, double radius, double opacity) =>
+      paintCell(canvas, c, radius, opacity);
+
 
   @override
   void paint(Canvas canvas, Size s) {
@@ -324,6 +338,25 @@ class _HoneycombPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _HoneycombPainter old) =>
       old.size != size || old.r != r;
+}
+
+/// 在 Game 标签之上重绘指定活跃格，使标签可被其它格子遮挡。
+class _ActiveHexOverlayPainter extends CustomPainter {
+  final List<Offset> centers;
+  final double r;
+
+  _ActiveHexOverlayPainter({required this.centers, required this.r});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final c in centers) {
+      _HoneycombPainter.paintCell(canvas, c, r, 1.0);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ActiveHexOverlayPainter old) =>
+      old.r != r || old.centers != centers;
 }
 
 // ===========================================================================
