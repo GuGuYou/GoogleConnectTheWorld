@@ -38,6 +38,9 @@ class UserProfile {
     String? bio,
     List<IpTag>? tags,
     VirtualAvatar? virtualAvatar,
+    double? lat,
+    double? lng,
+    String? city,
   }) {
     return UserProfile(
       id: id,
@@ -46,9 +49,9 @@ class UserProfile {
       virtualAvatar: virtualAvatar ?? this.virtualAvatar,
       bio: bio ?? this.bio,
       tags: tags ?? this.tags,
-      lat: lat,
-      lng: lng,
-      city: city,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      city: city ?? this.city,
       online: online,
       verified: verified,
       age: age,

@@ -23,6 +23,28 @@ import 'mock_data_source.dart';
 
 final mockProvider = Provider<MockDataSource>((ref) => MockDataSource.instance);
 
+/// 地图假数据世代号：每次按定位重新生成后递增，驱动附近用户等 Provider 刷新。
+final mapDataEpochProvider = StateProvider<int>((ref) => 0);
+
+/// 打开地图时：按当前定位生成假数据到内存，并同步活动/留言板/当前用户坐标。
+/// autoDispose：离开地图后下次再进会重新生成。
+final mapFakeDataReadyProvider = FutureProvider.autoDispose<({double lat, double lng})>((ref) async {
+  // 只用 read：同一次地图会话内定位刷新（如点「回到我的位置」）不重复生成假数据。
+  // autoDispose 保证离开地图后再进入会重新生成。
+  final fix = await ref.read(currentLocationProvider.future);
+  final center = fix.position;
+  final mock = ref.read(mockProvider);
+
+  mock.regenerateAround(center.latitude, center.longitude);
+
+  ref.read(currentUserProvider.notifier).syncFromMock();
+  ref.read(activitiesProvider.notifier).resyncFromMock();
+  ref.read(boardsProvider.notifier).resyncFromMock();
+  ref.read(mapDataEpochProvider.notifier).state++;
+
+  return (lat: center.latitude, lng: center.longitude);
+});
+
 /// 设备/用户唯一标识，用于后端统计每日生成配额（首次生成随机生成并持久化）
 final deviceTokenProvider = Provider<String>((ref) {
   final prefs = ref.watch(sharedPrefsProvider);
@@ -60,6 +82,10 @@ class CurrentUserNotifier extends Notifier<UserProfile> {
 
   /// 用户可关注的最大标签数（鼓励聚焦）
   int get maxTags => 8;
+
+  void syncFromMock() {
+    state = ref.read(mockProvider).me;
+  }
 
   void updateTags(List<IpTag> tags) {
     final capped = tags.take(maxTags).toList();
@@ -113,6 +139,7 @@ class UserWithDistance {
 
 /// 附近同好：按距离排序 + 计算匹配度（可被距离过滤）
 final nearbyUsersProvider = Provider<List<UserWithDistance>>((ref) {
+  ref.watch(mapDataEpochProvider); // 地图假数据重生后刷新
   final mock = ref.watch(mockProvider);
   final me = ref.watch(currentUserProvider);
   final list = mock.users.map((u) {
@@ -136,6 +163,10 @@ final activitiesProvider =
 class ActivitiesNotifier extends Notifier<List<ActivityItem>> {
   @override
   List<ActivityItem> build() => [...ref.read(mockProvider).activities];
+
+  void resyncFromMock() {
+    state = [...ref.read(mockProvider).activities];
+  }
 
   void toggleJoin(String id) {
     state = [
@@ -276,6 +307,10 @@ final boardsProvider =
 class BoardsNotifier extends Notifier<List<Board>> {
   @override
   List<Board> build() => [...ref.read(mockProvider).boards];
+
+  void resyncFromMock() {
+    state = [...ref.read(mockProvider).boards];
+  }
 
   /// 发布留言（含内容审核）。
   /// 返回 (Board?, String?) — 成功返回留言对象，失败返回拦截原因。
@@ -447,7 +482,7 @@ final wallTagFilterProvider = StateProvider<Set<IpTag>>(
 final visibleWallSpotsProvider = Provider<List<WallSpot>>((ref) {
   final spots = ref.watch(wallSpotsProvider);
   final fallback = ref.watch(mapCenterProvider);
-  final loc = ref.watch(currentLocationProvider).valueOrNull;
+  final loc = ref.watch(currentLocationProvider).valueOrNull?.position;
   final lat = loc?.latitude ?? fallback.latitude;
   final lng = loc?.longitude ?? fallback.longitude;
   final filters = ref.watch(wallTagFilterProvider);

@@ -12,17 +12,27 @@ import '../models/board.dart';
 
 /// 全局 Mock 数据源（单例）。所有页面数据均来源于此。
 /// 切换真实后端时只需替换为 RemoteDataSource，业务层零改动。
+///
+/// 地图相关假数据（附近用户 / 活动 / 留言板）可在打开地图时按当前定位
+/// 调用 [regenerateAround] 重新生成，并保存在内存中。
 class MockDataSource {
   MockDataSource._() {
     _generate();
   }
   static final MockDataSource instance = MockDataSource._();
 
-  // 中心点：深圳南山区
+  /// 默认中心点：深圳南山区（定位失败时的降级坐标）。
   static const double centerLat = 22.5429;
   static const double centerLng = 113.9414;
 
-  final _rnd = Random(20260627); // 固定种子，演示数据稳定
+  /// 当前假数据围绕的中心（打开地图后会更新为用户定位）。
+  double _activeLat = centerLat;
+  double _activeLng = centerLng;
+
+  double get activeCenterLat => _activeLat;
+  double get activeCenterLng => _activeLng;
+
+  Random _rnd = Random(20260627);
 
   // ---- 标签库 ----
   late final List<IpTag> tags;
@@ -62,14 +72,12 @@ class MockDataSource {
       IpTag(id: 'm2', nameZh: '说唱', nameEn: 'Hip-Hop', category: 'music', icon: Icons.mic),
     ];
 
-    // 当前用户（坐标经过模糊化）
-    final meFuzzed = GpsFuzzer.fuzzSeeded(centerLat, centerLng, 42);
+    final meFuzzed = GpsFuzzer.fuzzSeeded(_activeLat, _activeLng, 42);
     me = UserProfile(
       id: 'me',
       nickname: 'NeonDrifter',
       avatarSeed: 'me_seed_42',
       virtualAvatar: VirtualAvatar.seeded('me_seed_42'),
-      // 留空 → 展示随语言切换的默认签名（default_bio）；用户编辑后写入自定义文本。
       bio: '',
       tags: [tags[0], tags[3], tags[5], tags[9]],
       lat: meFuzzed.lat,
@@ -84,6 +92,29 @@ class MockDataSource {
     _genUsers();
     _genActivities();
     _genConversations();
+    _genBoards();
+  }
+
+  /// 按给定中心重新生成地图假数据（附近用户 / 活动 / 留言板），保存在内存中。
+  /// 保留当前用户资料（昵称/标签/头像等）与会话数据，仅更新坐标与周边内容。
+  void regenerateAround(double lat, double lng) {
+    _activeLat = lat;
+    _activeLng = lng;
+    _rnd = Random(
+      DateTime.now().millisecondsSinceEpoch ^
+          (lat * 1e6).round() ^
+          (lng * 1e6).round(),
+    );
+
+    final meFuzzed = GpsFuzzer.fuzzSeeded(lat, lng, 42);
+    me = me.copyWith(lat: meFuzzed.lat, lng: meFuzzed.lng);
+
+    users.clear();
+    activities.clear();
+    boards.clear();
+
+    _genUsers();
+    _genActivities();
     _genBoards();
   }
 
@@ -114,17 +145,15 @@ class MockDataSource {
       final tagCount = 2 + _rnd.nextInt(4);
       final shuffled = [...tags]..shuffle(_rnd);
       final userTags = shuffled.take(tagCount).toList();
-      // 原始坐标围绕中心点 ±0.05° 抖动
-      final rawLat = centerLat + (_rnd.nextDouble() - 0.5) * 0.1;
-      final rawLng = centerLng + (_rnd.nextDouble() - 0.5) * 0.1;
-      // GPS 模糊化（GDPR 合规）
+      // 原始坐标围绕中心点 ±0.05° 抖动（约 ±5km）
+      final rawLat = _activeLat + (_rnd.nextDouble() - 0.5) * 0.1;
+      final rawLng = _activeLng + (_rnd.nextDouble() - 0.5) * 0.1;
       final fuzzed = GpsFuzzer.fuzzSeeded(rawLat, rawLng, 100 + i);
       users.add(
         UserProfile(
           id: 'u$i',
           nickname: _names[i % _names.length] + (i >= _names.length ? '${i ~/ _names.length}' : ''),
           avatarSeed: 'seed_$i',
-          // 按序号分配捏脸参数，地图上相邻用户头像更易区分。
           virtualAvatar: VirtualAvatar(
             source: AvatarSource.local,
             style: AvatarVisualStyle.cute,
@@ -163,12 +192,12 @@ class MockDataSource {
       'Zelda Figure Swap', 'Esports Bar Night', 'Anime Song KTV', 'TV Series Marathon',
       'Spy x Family Screening', 'Game OST Concert', 'Comic Workshop', 'Retro Console Expo',
     ];
-    const locZh = ['南山科技园', '深圳湾万象城', '海岸城', '欢乐海岸', '后海地铁站', '世界之窗', '蛇口网谷'];
-    const locEn = ['Nanshan Tech Park', 'MixC Bay', 'Coastal City', 'OCT Harbour', 'Houhai Station', 'Window of the World', 'Shekou Net Valley'];
+    const locZh = ['市中心', '公园入口', '地铁站旁', '商业街', '咖啡街', '图书馆', '体育场'];
+    const locEn = ['Downtown', 'Park Gate', 'Metro Exit', 'Shopping Street', 'Cafe Row', 'Library', 'Stadium'];
     for (var i = 0; i < 20; i++) {
       final tag = tags[_rnd.nextInt(tags.length)];
-      final rawLat = centerLat + (_rnd.nextDouble() - 0.5) * 0.08;
-      final rawLng = centerLng + (_rnd.nextDouble() - 0.5) * 0.08;
+      final rawLat = _activeLat + (_rnd.nextDouble() - 0.5) * 0.08;
+      final rawLng = _activeLng + (_rnd.nextDouble() - 0.5) * 0.08;
       final fuzzed = GpsFuzzer.fuzzSeeded(rawLat, rawLng, 200 + i);
       final lat = fuzzed.lat;
       final lng = fuzzed.lng;
@@ -181,8 +210,8 @@ class MockDataSource {
           category: tag.category,
           tag: tag,
           time: DateTime.now().add(Duration(days: 1 + _rnd.nextInt(20), hours: _rnd.nextInt(12))),
-          locationZh: '深圳·${locZh[i % locZh.length]}',
-          locationEn: 'Shenzhen · ${locEn[i % locEn.length]}',
+          locationZh: '附近·${locZh[i % locZh.length]}',
+          locationEn: 'Nearby · ${locEn[i % locEn.length]}',
           lat: lat,
           lng: lng,
           hostId: users[_rnd.nextInt(users.length)].id,
@@ -223,23 +252,23 @@ class MockDataSource {
   }
 
   void _genBoards() {
-    // 10 个留言板坐标（原始），距中心约 0.5–1.8km，生成时全部模糊化
-    final rawSpotCoords = <(double, double)>[
-      (centerLat + 0.0045, centerLng + 0.0030),
-      (centerLat - 0.0055, centerLng + 0.0045),
-      (centerLat + 0.0030, centerLng - 0.0060),
-      (centerLat - 0.0070, centerLng - 0.0025),
-      (centerLat + 0.0080, centerLng + 0.0055),
-      (centerLat + 0.0020, centerLng + 0.0090),
-      (centerLat - 0.0035, centerLng - 0.0075),
-      (centerLat + 0.0065, centerLng - 0.0040),
-      (centerLat - 0.0015, centerLng + 0.0070),
-      (centerLat + 0.0095, centerLng - 0.0010),
-      (centerLat + 0.0120, centerLng + 0.0080), // ~1.8km，仍在 2km 内
+    // 相对中心的偏移（约 0.5–1.8km），随 [regenerateAround] 平移到用户当前位置。
+    final rawSpotOffsets = <(double, double)>[
+      (0.0045, 0.0030),
+      (-0.0055, 0.0045),
+      (0.0030, -0.0060),
+      (-0.0070, -0.0025),
+      (0.0080, 0.0055),
+      (0.0020, 0.0090),
+      (-0.0035, -0.0075),
+      (0.0065, -0.0040),
+      (-0.0015, 0.0070),
+      (0.0095, -0.0010),
+      (0.0120, 0.0080),
     ];
     const contents = [
       '路过这里，发现有不少同好留过言，好温暖',
-      '第一次来南山，求原神搭子一起刷深渊',
+      '第一次来这里，求原神搭子一起刷深渊',
       '咒术回战太好看了，有人一起二刷吗',
       '塞尔达玩家打卡！这片草地让我想起海拉鲁',
       '周五电音局就在这附近，留言留个位',
@@ -255,7 +284,7 @@ class MockDataSource {
       '鬼灭之刃粉丝集合，附近有没有 cos 搭子',
       '电子音乐爱好者在此留下足迹',
       '权力的游戏老粉，重温经典中',
-      '蝙蝠侠漫画党，南山附近有同好吗',
+      '蝙蝠侠漫画党，附近有同好吗',
       '最后生还者通关留念，剧情太戳了',
       '原神玩家日常打卡，深渊又满了',
       '路过留言，祝每一位同好都能找到搭子',
@@ -266,8 +295,10 @@ class MockDataSource {
       '像素风爱好者打卡，8-bit 万岁',
     ];
     var msgIdx = 0;
-    for (var s = 0; s < rawSpotCoords.length; s++) {
-      final (rawLat, rawLng) = rawSpotCoords[s];
+    for (var s = 0; s < rawSpotOffsets.length; s++) {
+      final (dLat, dLng) = rawSpotOffsets[s];
+      final rawLat = _activeLat + dLat;
+      final rawLng = _activeLng + dLng;
       final spotFuzzed = GpsFuzzer.fuzzSeeded(rawLat, rawLng, 300 + s);
       final spotLat = spotFuzzed.lat;
       final spotLng = spotFuzzed.lng;

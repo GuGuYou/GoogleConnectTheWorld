@@ -35,6 +35,7 @@ const _kMapCornerRadius = 20.0;
 const _kMapBottomMaskHeight = 80.0;
 
 /// 地图视图：Google Maps + 附近用户光点 + 活动 pin + 异步留言墙（Lobby 系统）。
+/// 每次进入时按当前定位在内存中生成假数据。
 class NearbyMapView extends ConsumerWidget {
   const NearbyMapView({super.key});
 
@@ -44,8 +45,25 @@ class NearbyMapView extends ConsumerWidget {
       return const _MapFallback(messageKey: 'map_key_missing');
     }
 
-    final fallback = ref.watch(mapCenterProvider);
-    final LatLng center = ref.watch(currentLocationProvider).valueOrNull ?? fallback;
+    final fakeData = ref.watch(mapFakeDataReadyProvider);
+    return fakeData.when(
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.neonYellow),
+      ),
+      error: (_, __) => const _MapFallback(messageKey: 'map_load_error'),
+      data: (seed) => _NearbyMapBody(seedCenter: LatLng(seed.lat, seed.lng)),
+    );
+  }
+}
+
+class _NearbyMapBody extends ConsumerWidget {
+  final LatLng seedCenter;
+  const _NearbyMapBody({required this.seedCenter});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final LatLng center =
+        ref.watch(currentLocationProvider).valueOrNull?.position ?? seedCenter;
     final usingReal = ref.watch(usingRealLocationProvider);
     final nearby = ref.watch(nearbyUsersProvider);
     final activities = ref.watch(activitiesProvider);
@@ -98,6 +116,8 @@ class NearbyMapView extends ConsumerWidget {
                       MapMarkerIcons.activity.codePoint,
                       MapMarkerIcons.board.codePoint,
                       'nearby_avatar_v2',
+                      seedCenter.latitude,
+                      seedCenter.longitude,
                     )),
                     center: center,
                     circles: circles,
@@ -315,7 +335,7 @@ class _MapBottomMask extends ConsumerWidget {
 }
 
 /// Web 上等待 Google Maps JS SDK 就绪后再渲染，避免 ROADMAP undefined 崩溃。
-class _DeferredGoogleMap extends StatefulWidget {
+class _DeferredGoogleMap extends ConsumerStatefulWidget {
   final LatLng center;
   final Set<Circle> circles;
   final List<UserWithDistance> nearbyUsers;
@@ -340,10 +360,10 @@ class _DeferredGoogleMap extends StatefulWidget {
   });
 
   @override
-  State<_DeferredGoogleMap> createState() => _DeferredGoogleMapState();
+  ConsumerState<_DeferredGoogleMap> createState() => _DeferredGoogleMapState();
 }
 
-class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
+class _DeferredGoogleMapState extends ConsumerState<_DeferredGoogleMap> {
   late final Future<bool> _ready = waitForGoogleMapsReady();
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
@@ -359,7 +379,16 @@ class _DeferredGoogleMapState extends State<_DeferredGoogleMap> {
   Future<void> _recenterMap() async {
     final controller = _mapController;
     if (controller == null) return;
-    await controller.animateCamera(CameraUpdate.newCameraPosition(_homeCamera));
+
+    // 重新拉定位（解决权限刚授权 / 上次超时后 Provider 仍缓存演示坐标）。
+    ref.invalidate(currentLocationProvider);
+    final fix = await ref.read(currentLocationProvider.future);
+    final target = fix.position;
+    final camera = CameraPosition(
+      target: target,
+      zoom: MapConfig.initialZoomForLatitude(target.latitude),
+    );
+    await controller.animateCamera(CameraUpdate.newCameraPosition(camera));
   }
 
   @override

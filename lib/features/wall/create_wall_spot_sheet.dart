@@ -63,7 +63,7 @@ class _CreateWallSpotSheetState extends ConsumerState<_CreateWallSpotSheet> {
     if (_selectedTagIds.isEmpty || text.isEmpty) return;
 
     final fallback = ref.read(mapCenterProvider);
-    final loc = ref.read(currentLocationProvider).valueOrNull ?? fallback;
+    final loc = ref.read(currentLocationProvider).valueOrNull?.position ?? fallback;
     final me = ref.read(currentUserProvider);
     final selectedTags = me.tags.where((t) => _selectedTagIds.contains(t.id)).toList();
 
@@ -114,7 +114,8 @@ class _CreateWallSpotSheetState extends ConsumerState<_CreateWallSpotSheet> {
   Widget build(BuildContext context) {
     final me = ref.watch(currentUserProvider);
     final fallback = ref.watch(mapCenterProvider);
-    final LatLng loc = ref.watch(currentLocationProvider).valueOrNull ?? fallback;
+    final LatLng loc =
+        ref.watch(currentLocationProvider).valueOrNull?.position ?? fallback;
     final usingReal = ref.watch(usingRealLocationProvider);
     final hasMessage = _messageController.text.trim().isNotEmpty;
     final canCreate = _selectedTagIds.isNotEmpty && hasMessage;
