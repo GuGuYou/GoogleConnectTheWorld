@@ -15,7 +15,11 @@ extension ContextX on BuildContext {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.bg2,
-          content: Text(message),
+          content: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textPrimary),
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: AppColors.neonPurple, width: 1),

@@ -149,6 +149,7 @@ class NearbyMapView extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + navBarHeight + bottomInset),
               child: GlassCard(
                 blur: 20,
+                color: AppColors.surface,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,

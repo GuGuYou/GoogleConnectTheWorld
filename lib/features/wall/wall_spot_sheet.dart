@@ -75,6 +75,7 @@ class _WallSpotSheetState extends ConsumerState<_WallSpotSheet> {
       padding: EdgeInsets.only(bottom: bottom),
       child: GlassCard(
         blur: 20,
+        color: AppColors.surface,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.58),
           child: Column(

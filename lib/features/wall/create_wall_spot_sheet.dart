@@ -125,6 +125,7 @@ class _CreateWallSpotSheetState extends ConsumerState<_CreateWallSpotSheet> {
       padding: EdgeInsets.only(bottom: bottom),
       child: GlassCard(
         blur: 20,
+        color: AppColors.surface,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
