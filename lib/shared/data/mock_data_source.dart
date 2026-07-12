@@ -13,8 +13,8 @@ import '../models/board.dart';
 /// 全局 Mock 数据源（单例）。所有页面数据均来源于此。
 /// 切换真实后端时只需替换为 RemoteDataSource，业务层零改动。
 ///
-/// 地图相关假数据（附近用户 / 活动 / 留言板）可在打开地图时按当前定位
-/// 调用 [regenerateAround] 重新生成，并保存在内存中。
+/// 应用启动时请求定位后，通过 [regenerateAround] 按用户当前位置
+/// 重新生成附近用户 / 活动 / 留言板，并保存在内存中（会话内只生成一次）。
 class MockDataSource {
   MockDataSource._() {
     _generate();

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'shared/data/repositories.dart';
 
 class NicheTribeApp extends ConsumerStatefulWidget {
   const NicheTribeApp({super.key});
@@ -35,6 +36,9 @@ class _NicheTribeAppState extends ConsumerState<NicheTribeApp>
 
   @override
   Widget build(BuildContext context) {
+    // 启动即请求定位并按当前位置生成 mock（用户/留言板/活动），全会话只跑一次。
+    ref.watch(mockDataBootstrapProvider);
+
     final router = ref.watch(routerProvider);
     final locale = ref.watch(localeProvider);
 

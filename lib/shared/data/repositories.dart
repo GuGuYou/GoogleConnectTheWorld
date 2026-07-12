@@ -23,14 +23,13 @@ import 'mock_data_source.dart';
 
 final mockProvider = Provider<MockDataSource>((ref) => MockDataSource.instance);
 
-/// 地图假数据世代号：每次按定位重新生成后递增，驱动附近用户等 Provider 刷新。
+/// 假数据世代号：启动时按定位生成后递增，驱动附近用户等 Provider 刷新。
 final mapDataEpochProvider = StateProvider<int>((ref) => 0);
 
-/// 打开地图时：按当前定位生成假数据到内存，并同步活动/留言板/当前用户坐标。
-/// autoDispose：离开地图后下次再进会重新生成。
-final mapFakeDataReadyProvider = FutureProvider.autoDispose<({double lat, double lng})>((ref) async {
-  // 只用 read：同一次地图会话内定位刷新（如点「回到我的位置」）不重复生成假数据。
-  // autoDispose 保证离开地图后再进入会重新生成。
+/// 应用启动时：请求定位权限 → 按当前位置生成 nearby 用户 / 留言板 / 活动到内存。
+/// 非 autoDispose：整个会话只生成一次，打开地图不再重复生成。
+final mockDataBootstrapProvider =
+    FutureProvider<({double lat, double lng})>((ref) async {
   final fix = await ref.read(currentLocationProvider.future);
   final center = fix.position;
   final mock = ref.read(mockProvider);

@@ -35,7 +35,7 @@ const _kMapCornerRadius = 20.0;
 const _kMapBottomMaskHeight = 80.0;
 
 /// 地图视图：Google Maps + 附近用户光点 + 活动 pin + 异步留言墙（Lobby 系统）。
-/// 每次进入时按当前定位在内存中生成假数据。
+/// Mock 数据在应用启动时按定位生成，此处只消费内存中的结果。
 class NearbyMapView extends ConsumerWidget {
   const NearbyMapView({super.key});
 
@@ -45,25 +45,18 @@ class NearbyMapView extends ConsumerWidget {
       return const _MapFallback(messageKey: 'map_key_missing');
     }
 
-    final fakeData = ref.watch(mapFakeDataReadyProvider);
-    return fakeData.when(
-      loading: () => const Center(
+    // 若启动引导尚未完成，等一下；已完成则立刻用内存中的 mock。
+    final bootstrap = ref.watch(mockDataBootstrapProvider);
+    if (bootstrap.isLoading) {
+      return const Center(
         child: CircularProgressIndicator(color: AppColors.neonYellow),
-      ),
-      error: (_, __) => const _MapFallback(messageKey: 'map_load_error'),
-      data: (seed) => _NearbyMapBody(seedCenter: LatLng(seed.lat, seed.lng)),
-    );
-  }
-}
+      );
+    }
 
-class _NearbyMapBody extends ConsumerWidget {
-  final LatLng seedCenter;
-  const _NearbyMapBody({required this.seedCenter});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final LatLng center =
-        ref.watch(currentLocationProvider).valueOrNull?.position ?? seedCenter;
+    final fallback = ref.watch(mapCenterProvider);
+    final seed = bootstrap.valueOrNull;
+    final LatLng center = ref.watch(currentLocationProvider).valueOrNull?.position ??
+        (seed != null ? LatLng(seed.lat, seed.lng) : fallback);
     final usingReal = ref.watch(usingRealLocationProvider);
     final nearby = ref.watch(nearbyUsersProvider);
     final activities = ref.watch(activitiesProvider);
@@ -116,8 +109,6 @@ class _NearbyMapBody extends ConsumerWidget {
                       MapMarkerIcons.activity.codePoint,
                       MapMarkerIcons.board.codePoint,
                       'nearby_avatar_v2',
-                      seedCenter.latitude,
-                      seedCenter.longitude,
                     )),
                     center: center,
                     circles: circles,
