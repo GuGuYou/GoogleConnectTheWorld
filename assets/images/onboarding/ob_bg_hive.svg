@@ -1,0 +1,39 @@
+<svg width="960" height="1214" viewBox="0 0 960 1214" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="softStar" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="3"/>
+    </filter>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a140c"/>
+      <stop offset="100%" stop-color="#0c0905"/>
+    </linearGradient>
+    <radialGradient id="warmGlow" cx="50%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#2E1A00"/>
+      <stop offset="100%" stop-color="#0c0905" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="960" height="1214" fill="url(#bgGrad)"/>
+  <rect width="960" height="1214" fill="url(#warmGlow)"/>
+
+  <!-- Soft translucent hex decorations -->
+  <path d="M60 100 L120 65 L180 100 L180 170 L120 205 L60 170 Z" fill="#241d10" opacity="0.35"/>
+  <path d="M780 80 L840 45 L900 80 L900 150 L840 185 L780 150 Z" fill="#241d10" opacity="0.35"/>
+  <path d="M10 240 L60 210 L110 240 L110 300 L60 330 L10 300 Z" fill="#241d10" opacity="0.35"/>
+  <path d="M850 200 L900 170 L950 200 L950 260 L900 290 L850 260 Z" fill="#241d10" opacity="0.35"/>
+  <path d="M20 940 L90 900 L160 940 L160 1020 L90 1060 L20 1020 Z" fill="#241d10" opacity="0.35"/>
+  <path d="M840 920 L910 880 L950 920 L950 980 L910 1020 L840 980 Z" fill="#241d10" opacity="0.35"/>
+  <path d="M440 10 L520 10 L560 50 L520 90 L440 90 L400 50 Z" fill="#241d10" opacity="0.35"/>
+  <path d="M400 1050 L480 1010 L560 1050 L560 1130 L480 1170 L400 1130 Z" fill="#241d10" opacity="0.25"/>
+  <path d="M200 500 L250 470 L300 500 L300 560 L250 590 L200 560 Z" fill="#241d10" opacity="0.2"/>
+  <path d="M680 520 L730 490 L780 520 L780 580 L730 610 L680 580 Z" fill="#241d10" opacity="0.2"/>
+
+  <!-- Star particles -->
+  <circle cx="130" cy="1080" r="4" fill="#fff8d0" filter="url(#softStar)" opacity="0.85"/>
+  <circle cx="200" cy="30" r="3" fill="#fff8d0" filter="url(#softStar)" opacity="0.85"/>
+  <circle cx="770" cy="90" r="5" fill="#fff8d0" filter="url(#softStar)" opacity="0.85"/>
+  <circle cx="830" cy="970" r="3" fill="#fff8d0" filter="url(#softStar)" opacity="0.85"/>
+  <circle cx="60" cy="860" r="3" fill="#fff8d0" filter="url(#softStar)" opacity="0.85"/>
+  <circle cx="900" cy="400" r="2.5" fill="#fff8d0" filter="url(#softStar)" opacity="0.7"/>
+  <circle cx="40" cy="480" r="2" fill="#fff8d0" filter="url(#softStar)" opacity="0.7"/>
+</svg>

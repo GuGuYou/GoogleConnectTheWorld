@@ -21,7 +21,6 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   // ── Palette aliases → canonical Figma tokens (AppColors) ───────
   static const darkBg = AppColors.bg0;
-  static const warmGlow = Color(0xFF2E1A00);
   static const amberDark = Color(0xFFE47701);
   static const amberGold = AppColors.neonYellow;
   static const creamWhite = AppColors.textPrimary;
@@ -58,10 +57,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            colors: [warmGlow, darkBg],
-            center: Alignment(0.0, -0.4),
-            radius: 1.4,
+          color: darkBg,
+          image: DecorationImage(
+            image: AssetImage('assets/images/onboarding/ob_bg_hive.png'),
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
           ),
         ),
         child: SafeArea(

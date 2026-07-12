@@ -1,7 +1,7 @@
 name: gobuzz
 description: "GoBuzz — LBS + IP 标签兴趣社交 App（Cyber Neon 风格）"
 publish_to: 'none'
-version: 0.1.4
+version: 0.1.5
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
