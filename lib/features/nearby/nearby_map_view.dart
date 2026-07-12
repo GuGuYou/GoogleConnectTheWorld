@@ -452,6 +452,7 @@ class _DeferredGoogleMapState extends ConsumerState<_DeferredGoogleMap> {
           virtualAvatar: n.user.virtualAvatar,
           ringColor: color,
           online: n.user.online,
+          showHexFrame: n.user.showHexFrame,
         );
         markers.add(
           Marker(

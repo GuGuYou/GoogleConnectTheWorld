@@ -87,6 +87,7 @@ class MockDataSource {
       verified: true,
       age: 23,
       gender: 'f',
+      showHexFrame: false,
     );
 
     _genUsers();
@@ -164,6 +165,7 @@ class MockDataSource {
           verified: _rnd.nextDouble() > 0.75,
           age: 18 + _rnd.nextInt(12),
           gender: _rnd.nextBool() ? 'f' : 'm',
+          showHexFrame: false,
         ),
       );
     }

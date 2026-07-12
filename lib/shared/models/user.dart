@@ -16,6 +16,8 @@ class UserProfile {
   final bool verified;
   final int age;
   final String gender; // m / f
+  /// 地图用户气泡是否绘制六边形外框。
+  final bool showHexFrame;
 
   const UserProfile({
     required this.id,
@@ -31,6 +33,7 @@ class UserProfile {
     this.verified = false,
     this.age = 22,
     this.gender = 'f',
+    this.showHexFrame = true,
   });
 
   UserProfile copyWith({
@@ -41,6 +44,7 @@ class UserProfile {
     double? lat,
     double? lng,
     String? city,
+    bool? showHexFrame,
   }) {
     return UserProfile(
       id: id,
@@ -56,6 +60,7 @@ class UserProfile {
       verified: verified,
       age: age,
       gender: gender,
+      showHexFrame: showHexFrame ?? this.showHexFrame,
     );
   }
 

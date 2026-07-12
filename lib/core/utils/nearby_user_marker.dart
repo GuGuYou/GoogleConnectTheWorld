@@ -29,6 +29,8 @@ class NearbyUserMarker {
     VirtualAvatar? virtualAvatar,
     required Color ringColor,
     bool online = false,
+    /// true 显示六边形框；false 仅显示圆形头像。
+    bool showHexFrame = true,
     double size = 48,
   }) async {
     final avatarSig = virtualAvatar != null
@@ -39,7 +41,7 @@ class NearbyUserMarker {
             '${virtualAvatar.mouthIndex}_${virtualAvatar.accessoryIndex}_'
             '${virtualAvatar.style.index}'
         : avatarSeed;
-    final key = '${userId}_${avatarSig}_${ringColor.toARGB32()}_$online';
+    final key = '${userId}_${avatarSig}_${ringColor.toARGB32()}_${online}_$showHexFrame';
     final cached = _cache[key];
     if (cached != null) return cached;
 
@@ -50,14 +52,16 @@ class NearbyUserMarker {
     final center = Offset(size / 2, size / 2);
 
     final hexRadius = size / 2 - 3;
-    final hex = MapIconBitmap.roundedHexagonPath(
-      center: center,
-      radius: hexRadius,
-      cornerRadius: 5,
-    );
-    MapIconBitmap.paintHexShell(canvas, hex, ringColor);
+    if (showHexFrame) {
+      final hex = MapIconBitmap.roundedHexagonPath(
+        center: center,
+        radius: hexRadius,
+        cornerRadius: 5,
+      );
+      MapIconBitmap.paintHexShell(canvas, hex, ringColor);
+    }
 
-    // 头像内切于六边形，以 hex 中心对齐
+    // 头像内切于六边形（或无框时占同等区域），以中心对齐
     final avatarDiameter = hexRadius * 1.55;
     final avatarRect = Rect.fromCenter(
       center: center,
