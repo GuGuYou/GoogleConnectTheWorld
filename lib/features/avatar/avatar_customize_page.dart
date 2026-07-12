@@ -7,42 +7,37 @@ import '../../core/providers/avatar_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
+import '../../shared/models/virtual_avatar.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/gradient_text.dart';
 import '../../shared/widgets/neon_background.dart';
 import '../../shared/widgets/neon_button.dart';
-import 'widgets/layered_avatar.dart';
-import 'widgets/virtual_avatar_view.dart';
 
-/// Avatar customizer (Figma "Customize Avatar"): part rows over a live,
-/// layer-composed watercolor avatar. Option chips show the part sprites
-/// themselves (like the Figma comp); every choice updates the preview and
-/// persists to [avatarDraftProvider].
 class AvatarCustomizePage extends ConsumerWidget {
   final String returnLocation;
   const AvatarCustomizePage({super.key, this.returnLocation = '/tag-select'});
 
+  static const _avatars = [
+    'assets/avatars_1/avatar-1.jpg',
+    'assets/avatars_1/avatar-2.jpg',
+    'assets/avatars_1/avatar-3.jpg',
+    'assets/avatars_1/avatar-4.jpg',
+    'assets/avatars_1/avatar-5.jpg',
+    'assets/avatars_1/avatar-6.jpg',
+    'assets/avatars_1/avatar-7.jpg',
+  ];
+
+  int _selectedIndex(VirtualAvatar avatar) {
+    final url = avatar.generatedImageUrl;
+    if (url == null || !url.startsWith('asset:')) return 0;
+    final idx = _avatars.indexOf(url.substring('asset:'.length));
+    return idx < 0 ? 0 : idx;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final avatar = ref.watch(avatarDraftProvider);
-    final n = ref.read(avatarDraftProvider.notifier);
-
-    final rows = <_RowCfg>[
-      _RowCfg('avatar_face', Icons.face, AvatarParts.faceCount,
-          avatar.faceIndex, n.setFace, AvatarParts.face),
-      _RowCfg('avatar_hair', Icons.content_cut, AvatarParts.hairCount,
-          avatar.hairIndex, n.setHair, (i) => i == 0 ? null : AvatarParts.hair(i)),
-      _RowCfg('avatar_eyes', Icons.visibility, AvatarParts.eyeCount,
-          avatar.eyeIndex, n.setEyes, AvatarParts.eyes),
-      _RowCfg('avatar_mouth', Icons.sentiment_satisfied, AvatarParts.mouthCount,
-          avatar.mouthIndex, n.setMouth, AvatarParts.mouth),
-      _RowCfg('avatar_accessory', Icons.auto_awesome, AvatarParts.accCount,
-          avatar.accessoryIndex, n.setAccessory,
-          (i) => i == 0 ? null : AvatarParts.acc(i)),
-      _RowCfg('avatar_background', Icons.gradient, AvatarParts.bgCount,
-          avatar.backgroundIndex, n.setBackground, AvatarParts.bg,
-          cover: true),
-    ];
+    final selected = _selectedIndex(avatar);
 
     return Scaffold(
       appBar: AppBar(
@@ -58,36 +53,49 @@ class AvatarCustomizePage extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             children: [
               Center(
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: AppColors.neonYellow.withValues(alpha: 0.5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.glowOrange.withValues(alpha: 0.28),
-                        blurRadius: 34,
-                        spreadRadius: 3,
-                      ),
-                    ],
+                child: ClipOval(
+                  child: Image.asset(
+                    _avatars[selected],
+                    width: 112,
+                    height: 112,
+                    fit: BoxFit.cover,
                   ),
-                  child: VirtualAvatarView(avatar: avatar, size: 124),
                 ),
               ),
               const SizedBox(height: 22),
-              for (final r in rows) ...[
-                _PartRow(cfg: r),
-                const SizedBox(height: 12),
-              ],
-              const SizedBox(height: 10),
+              Text(
+                ref.tr('avatar_preset_desc'),
+                style: AppTextStyles.body,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 18),
+              GlassCard(
+                padding: const EdgeInsets.all(12),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: _avatars.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    return _PresetAvatarTile(
+                      asset: _avatars[index],
+                      selected: selected == index,
+                      onTap: () => ref.read(avatarDraftProvider.notifier).setPresetAvatar(_avatars[index]),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 22),
               NeonButton(
                 label: ref.tr('avatar_save_next'),
                 icon: Icons.check,
                 onPressed: () {
-                  ref
-                      .read(currentUserProvider.notifier)
-                      .updateVirtualAvatar(avatar);
+                  ref.read(currentUserProvider.notifier).updateVirtualAvatar(ref.read(avatarDraftProvider));
                   context.go(returnLocation);
                 },
               ),
@@ -99,95 +107,14 @@ class AvatarCustomizePage extends ConsumerWidget {
   }
 }
 
-class _RowCfg {
-  final String labelKey;
-  final IconData icon;
-  final int count;
-  final int value;
-  final ValueChanged<int> onSelect;
-
-  /// Part sprite for option [i]; null renders the "none" chip.
-  final String? Function(int) asset;
-
-  /// Fill the chip (backgrounds) instead of containing with padding.
-  final bool cover;
-
-  const _RowCfg(this.labelKey, this.icon, this.count, this.value,
-      this.onSelect, this.asset,
-      {this.cover = false});
-}
-
-class _PartRow extends ConsumerWidget {
-  final _RowCfg cfg;
-  const _PartRow({required this.cfg});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      child: Row(
-        children: [
-          Icon(cfg.icon, size: 22, color: AppColors.neonYellow),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 64,
-            child: Text(
-              ref.tr(cfg.labelKey),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.caption.copyWith(
-                fontSize: 11,
-                color: AppColors.neonYellow,
-                fontWeight: FontWeight.w700,
-                height: 1.15,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Container(
-              height: 48,
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              decoration: BoxDecoration(
-                color: AppColors.cardSurface,
-                borderRadius: BorderRadius.circular(7),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (var i = 0; i < cfg.count; i++) ...[
-                      if (i != 0) const SizedBox(width: 6),
-                      _OptionChip(
-                        selected: cfg.value % cfg.count == i,
-                        asset: cfg.asset(i),
-                        cover: cfg.cover,
-                        onTap: () => cfg.onSelect(i),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Option chip showing the part sprite itself (Figma comp style); a slashed
-/// circle for the "none" option; gold ring when selected.
-class _OptionChip extends StatelessWidget {
+class _PresetAvatarTile extends StatelessWidget {
+  final String asset;
   final bool selected;
-  final String? asset;
-  final bool cover;
   final VoidCallback onTap;
 
-  const _OptionChip({
-    required this.selected,
+  const _PresetAvatarTile({
     required this.asset,
-    required this.cover,
+    required this.selected,
     required this.onTap,
   });
 
@@ -197,33 +124,39 @@ class _OptionChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        width: 38,
-        height: 38,
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: selected ? AppColors.neonGreen : Colors.transparent,
-            width: 2,
+            color: selected ? AppColors.neonGreen : AppColors.glassBorder,
+            width: selected ? 3 : 1,
           ),
+          boxShadow: selected
+              ? [BoxShadow(color: AppColors.neonGreen.withValues(alpha: 0.35), blurRadius: 16)]
+              : null,
         ),
-        child: Container(
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFF17130A),
-          ),
-          clipBehavior: Clip.antiAlias,
-          padding: cover || asset == null
-              ? EdgeInsets.zero
-              : const EdgeInsets.all(5),
-          child: asset == null
-              ? const Icon(Icons.block,
-                  size: 16, color: AppColors.textMuted)
-              : Image.asset(
-                  asset!,
-                  fit: cover ? BoxFit.cover : BoxFit.contain,
-                  filterQuality: FilterQuality.medium,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(asset, fit: BoxFit.cover),
+              if (selected)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      color: AppColors.neonGreen,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check, size: 18, color: AppColors.ctaText),
+                  ),
                 ),
+            ],
+          ),
         ),
       ),
     );

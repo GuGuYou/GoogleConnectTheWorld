@@ -6,7 +6,7 @@ enum AvatarSource {
 }
 
 /// 默认预设头像（Frame 2 主视觉小男孩）。
-const kDefaultAvatarAsset = 'asset:assets/images/avatars/default_boy.png';
+const kDefaultAvatarAsset = 'asset:assets/avatars_1/avatar-1.jpg';
 
 enum AvatarVisualStyle {
   cute,

@@ -10,7 +10,7 @@ class PresetAvatars {
   /// 所有预设头像资源路径
   static final List<String> all = List.generate(
     count,
-    (i) => 'assets/avatars_1/avatar-${i + 1}.png',
+    (i) => 'assets/avatars_1/avatar-${i + 1}.jpg',
   );
 
   /// 根据 index 取预设头像路径（稳定、无 hash 碰撞）
