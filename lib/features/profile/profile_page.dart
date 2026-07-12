@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../features/avatar/widgets/virtual_avatar_view.dart';
@@ -23,6 +24,7 @@ class ProfilePage extends ConsumerWidget {
     final friendCount = ref.watch(friendsProvider).length;
     final unread = ref.watch(unreadTotalProvider);
     final bio = ref.watch(myBioProvider);
+    final displayName = me.name(ref.watch(localeProvider).languageCode);
 
     return NeonBackground(
       child: Stack(
@@ -89,14 +91,14 @@ class ProfilePage extends ConsumerWidget {
                                     online: true)
                                 : AvatarPlaceholder(
                                     seed: me.avatarSeed,
-                                    label: me.nickname,
+                                    label: displayName,
                                     size: 96,
                                     online: true),
                           ),
                         ],
                       ),
                       const SizedBox(height: 14),
-                      GradientText(me.nickname, style: AppTextStyles.h1),
+                      GradientText(displayName, style: AppTextStyles.h1),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisSize: MainAxisSize.min,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/distance.dart';
@@ -25,6 +26,8 @@ class UserDetailPage extends ConsumerWidget {
     final dist = haversineKm(me.lat, me.lng, user.lat, user.lng);
     final common = user.commonTags(me.tags);
     final rate = user.matchRate(me.tags);
+    final lang = ref.watch(localeProvider).languageCode;
+    final displayName = user.name(lang);
 
     return Scaffold(
       body: Stack(
@@ -68,12 +71,12 @@ class UserDetailPage extends ConsumerWidget {
                                     online: user.online)
                                 : AvatarPlaceholder(
                                     seed: user.avatarSeed,
-                                    label: user.nickname,
+                                    label: displayName,
                                     size: 110,
                                     glow: true,
                                     online: user.online),
                             const SizedBox(height: 14),
-                            GradientText(user.nickname,
+                            GradientText(displayName,
                                 style: AppTextStyles.h1),
                             const SizedBox(height: 6),
                             Text(

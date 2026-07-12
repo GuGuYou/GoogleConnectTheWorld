@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/mock_data_source.dart';
@@ -29,7 +30,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   void initState() {
     super.initState();
     final me = ref.read(currentUserProvider);
-    _nickname = TextEditingController(text: me.nickname);
+    final lang = ref.read(localeProvider).languageCode;
+    _nickname = TextEditingController(text: me.name(lang));
     // 未自定义时用随语言切换的默认签名预填，避免出现空白输入框。
     _bio = TextEditingController(text: ref.read(myBioProvider));
     _selectedTags = me.tags.map((e) => e.id).toSet();

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
@@ -445,7 +446,7 @@ class _CenterAvatar extends StatelessWidget {
 // 外围头像（带细金色环 + 年龄徽章 + 名字标签）
 // ══════════════════════════════════════════════════════════════════
 
-class _OuterAvatar extends StatelessWidget {
+class _OuterAvatar extends ConsumerWidget {
   final UserWithDistance user;
   final double size;
   final int index;
@@ -456,7 +457,10 @@ class _OuterAvatar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final name = user.user.name(ref.watch(localeProvider).languageCode);
+    final shortName =
+        name.length > 6 ? '${name.substring(0, 6)}…' : name;
     return SizedBox(
       width: size,
       height: size,
@@ -492,7 +496,7 @@ class _OuterAvatar extends StatelessWidget {
                               )
                             : AvatarPlaceholder(
                                 seed: user.user.avatarSeed,
-                                label: user.user.nickname,
+                                label: name,
                                 size: size - 14,
                               ),
                       ),
@@ -537,9 +541,7 @@ class _OuterAvatar extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              user.user.nickname.length > 6
-                  ? '${user.user.nickname.substring(0, 6)}…'
-                  : user.user.nickname,
+              shortName,
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 10,
@@ -643,13 +645,14 @@ class _BottomSummary extends StatelessWidget {
   }
 }
 
-class _UserCard extends StatelessWidget {
+class _UserCard extends ConsumerWidget {
   final UserWithDistance user;
   const _UserCard({required this.user});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final u = user.user;
+    final name = u.name(ref.watch(localeProvider).languageCode);
     return Container(
       width: 200,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -667,7 +670,7 @@ class _UserCard extends StatelessWidget {
               ? VirtualAvatarView(avatar: u.virtualAvatar!, size: 40)
               : AvatarPlaceholder(
                   seed: u.avatarSeed,
-                  label: u.nickname,
+                  label: name,
                   size: 40,
                 ),
           const SizedBox(width: 8),
@@ -677,7 +680,7 @@ class _UserCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '${u.nickname}, ${u.age}',
+                  '$name, ${u.age}',
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 12,

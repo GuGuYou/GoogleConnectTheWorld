@@ -4,7 +4,8 @@ import 'virtual_avatar.dart';
 /// 用户资料模型
 class UserProfile {
   final String id;
-  final String nickname;
+  final String nicknameZh;
+  final String nicknameEn;
   final String avatarSeed; // 用于生成占位头像渐变
   final VirtualAvatar? virtualAvatar;
   final String bio;
@@ -21,7 +22,8 @@ class UserProfile {
 
   const UserProfile({
     required this.id,
-    required this.nickname,
+    required this.nicknameZh,
+    required this.nicknameEn,
     required this.avatarSeed,
     this.virtualAvatar,
     required this.bio,
@@ -36,8 +38,16 @@ class UserProfile {
     this.showHexFrame = true,
   });
 
+  /// 按语言取昵称（与标签 / 活动的 zh·en 模式一致）。
+  String name(String lang) => lang == 'en' ? nicknameEn : nicknameZh;
+
+  /// 无语言上下文时的默认展示（中文）。
+  String get nickname => nicknameZh;
+
   UserProfile copyWith({
     String? nickname,
+    String? nicknameZh,
+    String? nicknameEn,
     String? bio,
     List<IpTag>? tags,
     VirtualAvatar? virtualAvatar,
@@ -46,9 +56,12 @@ class UserProfile {
     String? city,
     bool? showHexFrame,
   }) {
+    final zh = nicknameZh ?? nickname ?? this.nicknameZh;
+    final en = nicknameEn ?? nickname ?? this.nicknameEn;
     return UserProfile(
       id: id,
-      nickname: nickname ?? this.nickname,
+      nicknameZh: zh,
+      nicknameEn: en,
       avatarSeed: avatarSeed,
       virtualAvatar: virtualAvatar ?? this.virtualAvatar,
       bio: bio ?? this.bio,

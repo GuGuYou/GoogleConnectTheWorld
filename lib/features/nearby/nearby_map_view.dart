@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../core/config/map_config.dart';
 import '../../core/config/map_marker_icons.dart';
 import '../../core/l10n/app_text.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/providers/location_provider.dart';
 import '../../core/utils/distance.dart';
 import '../../core/utils/google_maps_ready.dart';
@@ -135,6 +136,7 @@ class NearbyMapView extends ConsumerWidget {
     // 预留底部导航栏高度 (64) + 系统手势条高度，避免与底部 Tab 重叠
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
     const navBarHeight = 64.0;
+    final displayName = n.user.name(ref.read(localeProvider).languageCode);
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -158,13 +160,13 @@ class NearbyMapView extends ConsumerWidget {
                       children: [
                         n.user.virtualAvatar != null
                             ? VirtualAvatarView(avatar: n.user.virtualAvatar!, size: 56, online: n.user.online)
-                            : AvatarPlaceholder(seed: n.user.avatarSeed, label: n.user.nickname, size: 56, online: n.user.online),
+                            : AvatarPlaceholder(seed: n.user.avatarSeed, label: displayName, size: 56, online: n.user.online),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(n.user.nickname, style: AppTextStyles.title),
+                              Text(displayName, style: AppTextStyles.title),
                               Text('${ref.tr('match_rate')} ${n.matchRate}%', style: AppTextStyles.caption.copyWith(color: AppColors.neonPink)),
                             ],
                           ),

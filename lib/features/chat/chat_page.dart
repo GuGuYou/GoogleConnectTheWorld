@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
@@ -86,6 +87,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final peerId = widget.conversationId.replaceFirst('conv_', '');
     final peer = mock.userById(peerId);
     final messages = ref.watch(chatProvider(widget.conversationId));
+    final peerName = peer.name(ref.watch(localeProvider).languageCode);
 
     // 停留在会话里时对方回复也直接标记已读，并滚到底部
     ref.listen(chatProvider(widget.conversationId), (_, __) {
@@ -119,7 +121,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                             online: peer.online)
                         : AvatarPlaceholder(
                             seed: peer.avatarSeed,
-                            label: peer.nickname,
+                            label: peerName,
                             size: 40,
                             online: peer.online),
                     const SizedBox(width: 10),
@@ -127,7 +129,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(peer.nickname, style: AppTextStyles.bodyStrong),
+                          Text(peerName, style: AppTextStyles.bodyStrong),
                           Text(peer.online ? ref.tr('online') : peer.city,
                               style: AppTextStyles.caption),
                         ],

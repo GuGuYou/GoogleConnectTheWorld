@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/utils/extensions.dart';
@@ -19,6 +20,7 @@ class ChatListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final convs = ref.watch(conversationsProvider);
     final mock = ref.watch(mockProvider);
+    final lang = ref.watch(localeProvider).languageCode;
 
     return Scaffold(
       body: NeonBackground(
@@ -65,6 +67,7 @@ class ChatListPage extends ConsumerWidget {
                   itemBuilder: (c, i) {
                     final conv = convs[i];
                     final peer = mock.userById(conv.peerId);
+                    final peerName = peer.name(lang);
                     return ListTile(
                       onTap: () => context.push('/chat/${conv.id}'),
                       contentPadding: const EdgeInsets.symmetric(vertical: 6),
@@ -75,11 +78,11 @@ class ChatListPage extends ConsumerWidget {
                               online: peer.online)
                           : AvatarPlaceholder(
                               seed: peer.avatarSeed,
-                              label: peer.nickname,
+                              label: peerName,
                               size: 50,
                               online: peer.online),
                       title:
-                          Text(peer.nickname, style: AppTextStyles.bodyStrong),
+                          Text(peerName, style: AppTextStyles.bodyStrong),
                       subtitle: Text(
                         conv.lastMessage,
                         maxLines: 1,

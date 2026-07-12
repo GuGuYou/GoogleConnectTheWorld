@@ -75,7 +75,8 @@ class MockDataSource {
     final meFuzzed = GpsFuzzer.fuzzSeeded(_activeLat, _activeLng, 42);
     me = UserProfile(
       id: 'me',
-      nickname: 'NeonDrifter',
+      nicknameZh: '霓虹旅人',
+      nicknameEn: 'NeonDrifter',
       avatarSeed: 'me_seed_42',
       virtualAvatar: PresetAvatars.asVirtualAvatar('me_seed_42'),
       bio: '',
@@ -119,13 +120,22 @@ class MockDataSource {
     _genBoards();
   }
 
-  static const _names = [
+  static const _namesEn = [
     'AuroraByte', 'PixelFox', 'NovaRin', 'GlitchKoi', 'EchoMira',
     'ZephyrAce', 'LunaVolt', 'CipherJin', 'NeonOtaku', 'VividHana',
     'SaberLily', 'ByteMochi', 'RaiDenki', 'MistyQu', 'KuroNeko',
     'SoraWave', 'HikariX', 'ChronoMei', 'IrisGlow', 'TankaShu',
     'VelvetRei', 'OrbitYuki', 'CrimsonAo', 'PrismKai', 'SilkMomo',
     'DriftKaze', 'EmberSayu', 'JadeRyu', 'PolarToki', 'FuzzyMint',
+  ];
+
+  static const _namesZh = [
+    '极光字节', '像素狐', '新星凛', '故障锦鲤', '回声米拉',
+    '西风王牌', '月神伏特', '密文锦', '霓虹宅', '绚彩花',
+    '剑百合', '字节麻薯', '雷电气', '雾隐曲', '黑猫',
+    '穹波', '光X', '时计芽衣', '虹辉', '短歌树',
+    '丝绒零', '轨道雪', '绯红苍', '棱镜凯', '绸桃',
+    '漂流风', '余烬小柚', '翡翠龙', '极地时', '软萌薄荷',
   ];
 
   static const _bios = [
@@ -142,6 +152,12 @@ class MockDataSource {
   ];
 
   void _genUsers() {
+    // 打乱头像顺序，保证前 N 个用户头像互不重复（N = 预设库大小）
+    final avatarOrder =
+        List.generate(PresetAvatars.count, (i) => i)..shuffle(_rnd);
+    final nameOrder =
+        List.generate(_namesEn.length, (i) => i)..shuffle(_rnd);
+
     for (var i = 0; i < 50; i++) {
       final tagCount = 2 + _rnd.nextInt(4);
       final shuffled = [...tags]..shuffle(_rnd);
@@ -150,13 +166,17 @@ class MockDataSource {
       final rawLat = _activeLat + (_rnd.nextDouble() - 0.5) * 0.1;
       final rawLng = _activeLng + (_rnd.nextDouble() - 0.5) * 0.1;
       final fuzzed = GpsFuzzer.fuzzSeeded(rawLat, rawLng, 100 + i);
-      final seed = 'seed_$i';
+      final avatarIdx = avatarOrder[i % avatarOrder.length];
+      final nameIdx = nameOrder[i % nameOrder.length];
+      final suffix = i >= nameOrder.length ? '${i ~/ nameOrder.length}' : '';
+      final seed = 'preset_$avatarIdx';
       users.add(
         UserProfile(
           id: 'u$i',
-          nickname: _names[i % _names.length] + (i >= _names.length ? '${i ~/ _names.length}' : ''),
+          nicknameZh: '${_namesZh[nameIdx]}$suffix',
+          nicknameEn: '${_namesEn[nameIdx]}$suffix',
           avatarSeed: seed,
-          virtualAvatar: PresetAvatars.asVirtualAvatar(seed),
+          virtualAvatar: PresetAvatars.asVirtualAvatarAt(avatarIdx),
           bio: _bios[i % _bios.length],
           tags: userTags,
           lat: fuzzed.lat,

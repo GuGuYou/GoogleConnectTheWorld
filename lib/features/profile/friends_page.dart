@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/l10n/app_text.dart';
+import '../../core/providers/locale_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../shared/data/repositories.dart';
@@ -91,6 +92,8 @@ class _FriendTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final lang = ref.watch(localeProvider).languageCode;
+    final displayName = user.name(lang);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: GlassCard(
@@ -103,7 +106,7 @@ class _FriendTile extends ConsumerWidget {
                     avatar: user.virtualAvatar!, size: 48, online: user.online)
                 : AvatarPlaceholder(
                     seed: user.avatarSeed,
-                    label: user.nickname,
+                    label: displayName,
                     size: 48,
                     online: user.online),
             const SizedBox(width: 12),
@@ -111,7 +114,7 @@ class _FriendTile extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(user.nickname, style: AppTextStyles.bodyStrong),
+                  Text(displayName, style: AppTextStyles.bodyStrong),
                   const SizedBox(height: 2),
                   Text(
                     isFriend

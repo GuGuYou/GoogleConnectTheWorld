@@ -240,6 +240,7 @@ class _PlazaSceneViewState extends ConsumerState<PlazaSceneView>
   void _showUserSheet(
       BuildContext context, WidgetRef ref, UserWithDistance n, String lang) {
     final u = n.user;
+    final displayName = u.name(lang);
     final accent = u.tags.isNotEmpty ? u.tags.first.color : _honey;
     showModalBottomSheet(
       context: context,
@@ -268,7 +269,7 @@ class _PlazaSceneViewState extends ConsumerState<PlazaSceneView>
                 children: [
                   AvatarPlaceholder(
                     seed: u.avatarSeed,
-                    label: u.nickname,
+                    label: displayName,
                     size: 58,
                     online: u.online,
                     glow: true,
@@ -282,7 +283,7 @@ class _PlazaSceneViewState extends ConsumerState<PlazaSceneView>
                           children: [
                             Flexible(
                               child: Text(
-                                u.nickname,
+                                displayName,
                                 style: AppTextStyles.title
                                     .copyWith(color: Colors.white),
                                 overflow: TextOverflow.ellipsis,
@@ -686,14 +687,17 @@ class _BreathingGlow extends StatelessWidget {
 }
 
 /// 名字铭牌：统一叠加在最上层渲染，不会被相邻蜂室遮挡。
-class _HexLabel extends StatelessWidget {
+class _HexLabel extends ConsumerWidget {
   final UserProfile user;
   final bool isMe;
   const _HexLabel({required this.user, required this.isMe});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final online = user.online;
+    final label = isMe
+        ? 'YOU'
+        : user.name(ref.watch(localeProvider).languageCode);
     return Container(
       constraints: const BoxConstraints(maxWidth: 96),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -729,7 +733,7 @@ class _HexLabel extends StatelessWidget {
           const SizedBox(width: 4),
           Flexible(
             child: Text(
-              isMe ? 'YOU' : user.nickname,
+              label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

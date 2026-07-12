@@ -93,7 +93,24 @@ class CurrentUserNotifier extends Notifier<UserProfile> {
   }
 
   void updateProfile({String? nickname, String? bio}) {
-    state = state.copyWith(nickname: nickname, bio: bio);
+    if (nickname != null) {
+      final lang = ref.read(localeProvider).languageCode;
+      // 编辑资料时只更新当前语言侧昵称，另一侧保留；若两侧原本相同则同步。
+      final syncBoth = state.nicknameZh == state.nicknameEn;
+      state = lang == 'en'
+          ? state.copyWith(
+              nicknameEn: nickname,
+              nicknameZh: syncBoth ? nickname : null,
+              bio: bio,
+            )
+          : state.copyWith(
+              nicknameZh: nickname,
+              nicknameEn: syncBoth ? nickname : null,
+              bio: bio,
+            );
+    } else {
+      state = state.copyWith(bio: bio);
+    }
     ref.read(mockProvider).me = state;
   }
 

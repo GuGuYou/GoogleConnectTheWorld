@@ -79,13 +79,13 @@ class ActivityDetailPage extends ConsumerWidget {
                   // 主办人
                   Row(
                     children: [
-                      AvatarPlaceholder(seed: host.avatarSeed, label: host.nickname, size: 44),
+                      AvatarPlaceholder(seed: host.avatarSeed, label: host.name(lang), size: 44),
                       const SizedBox(width: 10),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(ref.tr('activity_host'), style: AppTextStyles.caption),
-                          Text(host.nickname, style: AppTextStyles.bodyStrong),
+                          Text(host.name(lang), style: AppTextStyles.bodyStrong),
                         ],
                       ),
                     ],
