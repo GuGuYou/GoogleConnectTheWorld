@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n/app_text.dart';
@@ -63,14 +65,38 @@ class MessageBubble extends StatelessWidget {
   }
 
   Widget _imageContent() {
+    final provider = _resolveImage(message.content);
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: 160,
-        height: 120,
-        decoration: const BoxDecoration(gradient: AppColors.cyanPurple),
-        child: const Icon(Icons.image, color: Colors.white, size: 40),
-      ),
+      child: provider != null
+          ? Image(
+              image: provider,
+              width: 160,
+              height: 120,
+              fit: BoxFit.cover,
+            )
+          : Container(
+              width: 160,
+              height: 120,
+              decoration: const BoxDecoration(gradient: AppColors.cyanPurple),
+              child: const Icon(Icons.image, color: Colors.white, size: 40),
+            ),
     );
+  }
+
+  static ImageProvider? _resolveImage(String content) {
+    if (content.startsWith('data:')) {
+      final commaIdx = content.indexOf(',');
+      if (commaIdx == -1) return null;
+      try {
+        return MemoryImage(base64Decode(content.substring(commaIdx + 1)));
+      } catch (_) {
+        return null;
+      }
+    }
+    if (content.startsWith('http://') || content.startsWith('https://')) {
+      return NetworkImage(content);
+    }
+    return null;
   }
 }

@@ -224,7 +224,7 @@ class MockDataSource {
     const lastZh = [
       '哈喽！看你也喜欢原神，周末一起刷本？',
       '好呀好呀，我也在补这部番！',
-      '[图片]',
+      '周末一起刷？我雷神练好了',
       '那约个时间线下面基吧～',
       '收到，到时候喊我！',
       '在吗？看你报名了那个活动',
@@ -325,9 +325,8 @@ class MockDataSource {
       ChatMessage(id: '${convId}_0', conversationId: convId, senderId: 'system', type: MessageType.system, content: 'matched', time: now.subtract(const Duration(hours: 2))),
       ChatMessage(id: '${convId}_1', conversationId: convId, senderId: convId, type: MessageType.text, content: '哈喽！看你头像也是原神玩家呀～', time: now.subtract(const Duration(minutes: 58))),
       ChatMessage(id: '${convId}_2', conversationId: convId, senderId: 'me', type: MessageType.text, content: '对呀！主修雷神，最近在抓深渊满星', time: now.subtract(const Duration(minutes: 55))),
-      ChatMessage(id: '${convId}_3', conversationId: convId, senderId: convId, type: MessageType.image, content: 'chat_img_1', time: now.subtract(const Duration(minutes: 50))),
-      ChatMessage(id: '${convId}_4', conversationId: convId, senderId: convId, type: MessageType.text, content: '这是我的角色配队，周末一起刷？', time: now.subtract(const Duration(minutes: 49))),
-      ChatMessage(id: '${convId}_5', conversationId: convId, senderId: 'me', type: MessageType.text, content: '可以啊！那约周六下午～', time: now.subtract(const Duration(minutes: 30))),
+      ChatMessage(id: '${convId}_3', conversationId: convId, senderId: convId, type: MessageType.text, content: '我也主雷神！周末一起刷？', time: now.subtract(const Duration(minutes: 49))),
+      ChatMessage(id: '${convId}_4', conversationId: convId, senderId: 'me', type: MessageType.text, content: '可以啊！那约周六下午～', time: now.subtract(const Duration(minutes: 30))),
     ];
   }
 
@@ -339,14 +338,30 @@ class MockDataSource {
 
   /// 自动回复一条消息（IM mock）
   ChatMessage autoReply(String convId) {
-    const replies = ['哈哈哈确实！', '那必须的～', '好呀，等你！', '我也这么觉得 [图片]', '冲冲冲！'];
+    const replies = [
+      '哈哈哈确实！',
+      '那必须的～',
+      '好呀，等你！',
+      '我也这么觉得',
+      '冲冲冲！',
+      '可以可以，就这么定了',
+      '周末有空，到时候喊我',
+      '哈哈你也太懂了',
+      '行～',
+      '收到～有消息随时说',
+      '哇这个想法不错诶',
+      '同意！下次一起组队',
+      '好嘞，到点了提醒我一声',
+      '嘿嘿我也正想说这个',
+      '没问题，随时开黑',
+    ];
     final r = replies[Random().nextInt(replies.length)];
     return ChatMessage(
       id: '${convId}_${DateTime.now().millisecondsSinceEpoch}',
       conversationId: convId,
       senderId: convId,
-      type: r.contains('[图片]') ? MessageType.image : MessageType.text,
-      content: r.contains('[图片]') ? 'chat_img_reply' : r,
+      type: MessageType.text,
+      content: r,
       time: DateTime.now(),
     );
   }

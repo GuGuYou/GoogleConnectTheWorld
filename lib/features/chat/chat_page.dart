@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/l10n/app_text.dart';
 import '../../core/theme/app_colors.dart';
@@ -42,19 +45,39 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.dispose();
   }
 
-  void _send({bool image = false}) {
-    final text = _input.text.trim();
-    if (!image && text.isEmpty) return;
-    ref
-        .read(chatProvider(widget.conversationId).notifier)
-        .send(text, isImage: image);
-    _input.clear();
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(_scroll.position.maxScrollExtent + 200,
             duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
     });
+  }
+
+  void _send() {
+    final text = _input.text.trim();
+    if (text.isEmpty) return;
+    ref.read(chatProvider(widget.conversationId).notifier).send(text);
+    _input.clear();
+    _scrollToBottom();
+  }
+
+  /// 与头像「Import a Photo」相同：相册选图 → data URI → 作为图片消息发送。
+  Future<void> _pickAndSendImage() async {
+    final file = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 768,
+      maxHeight: 768,
+      imageQuality: 85,
+    );
+    if (file == null || !mounted) return;
+    final bytes = await file.readAsBytes();
+    final mime = file.mimeType ?? 'image/jpeg';
+    ref.read(chatProvider(widget.conversationId).notifier).send(
+          'data:$mime;base64,${base64Encode(bytes)}',
+          isImage: true,
+        );
+    _scrollToBottom();
   }
 
   @override
@@ -158,7 +181,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   child: Row(
                     children: [
                       IconButton(
-                        onPressed: () => _send(image: true),
+                        onPressed: _pickAndSendImage,
                         icon: const Icon(Icons.image_outlined,
                             color: AppColors.neonCyan),
                       ),

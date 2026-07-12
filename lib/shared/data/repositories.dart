@@ -278,7 +278,8 @@ class ChatNotifier extends FamilyNotifier<List<ChatMessage>, String> {
       conversationId: arg,
       senderId: 'me',
       type: isImage ? MessageType.image : MessageType.text,
-      content: isImage ? 'my_img' : text,
+      // 图片消息：content 为 data URI（或占位标识）
+      content: text,
       time: DateTime.now(),
     );
     state = [...state, msg];

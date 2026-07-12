@@ -6,7 +6,7 @@ class ChatMessage {
   final String conversationId;
   final String senderId; // 'me' 表示当前用户
   final MessageType type;
-  final String content; // 文本内容 或 图片占位标识
+  final String content; // 文本内容，或图片 data URI / URL
   final DateTime time;
 
   const ChatMessage({
