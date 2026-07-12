@@ -28,6 +28,7 @@ class PresetAvatars {
     final base = VirtualAvatar.seeded('preset_$i');
     return base.copyWith(
       source: AvatarSource.photo,
+      seed: 'preset_avatar:${all[i]}',
       generatedImageUrl: 'asset:${all[i]}',
     );
   }
@@ -37,6 +38,7 @@ class PresetAvatars {
     final base = VirtualAvatar.seeded(seed);
     return base.copyWith(
       source: AvatarSource.photo,
+      seed: 'mock_preset_avatar:${fromSeed(seed)}',
       generatedImageUrl: 'asset:${fromSeed(seed)}',
     );
   }
