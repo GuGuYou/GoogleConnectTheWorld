@@ -6,15 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/app_text.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../shared/widgets/gold_glow.dart';
 import 'scene_models.dart';
 
-/// Clean "hive" home: thin gold-outline octagon rooms holding an icon (game /
-/// movie / music) and a global-chat bubble cluster, over a dark starfield.
-/// Each region is tappable — [onRoomTap] receives the rooms-list index
-/// (game 0 / movie 1 / music 3) and [onGlobalChatTap] fires for the cluster.
+/// Hive home per the Hive.svg redesign: a full-screen honeycomb of rounded
+/// pointy-top hexagons — three opaque "active" room cells (solid-gold PNG
+/// art + gold label, no count badges) over a lattice of 10%-opacity ghost
+/// cells that dissolves into a gold-chrome glass chat panel at the bottom.
 ///
-/// Room icons use image assets (transparent PNGs at the paths in
-/// [_iconAsset]); if a file is missing the hand-drawn line-art is shown.
+/// Regions are tappable — [onRoomTap] receives the rooms-list index
+/// (game 0 / movie 1 / music 3) and [onGlobalChatTap] fires for the panel.
 class HiveRenderScene extends ConsumerWidget {
   final List<SceneRoom> rooms;
   final void Function(int roomIndex)? onRoomTap;
@@ -33,64 +34,63 @@ class HiveRenderScene extends ConsumerWidget {
     2: 'assets/images/decorations/hive_music.png',
   };
 
-  int _count(int i, int fallback) =>
-      (i >= 0 && i < rooms.length) ? rooms[i].onlineCount : fallback;
+  // 设计稿（375×812，场景区 ≈ y100..726）折算的场景内相对坐标。
+  static const _gameC = Offset(0.486, 0.153);
+  static const _movieC = Offset(0.279, 0.368);
+  static const _musicC = Offset(0.692, 0.368);
+  static const _chatTop = 0.585; // 聊天面板顶部
+  static const _chatHeight = 0.33;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
-        Offset px(double x, double y) =>
-            Offset(x * size.width, y * size.height);
-        final r = 0.185 * size.width;
-        final cr = 0.27 * size.width;
-        // 聊天区外框八边形半径（略大于气泡簇）
-        final chatR = 0.29 * size.width;
+        Offset px(Offset f) => Offset(f.dx * size.width, f.dy * size.height);
+        final r = 0.222 * size.width; // 六边形中心→顶点
 
-        final game = px(0.27, 0.18);
-        final movie = px(0.73, 0.18);
-        final music = px(0.5, 0.42);
-        final chat = px(0.5, 0.79);
-
-        // 世界频道人数 = 各房间在线人数之和（无房间数据时兜底 12）
-        final globalCount = rooms.isEmpty
-            ? 12
-            : rooms.fold<int>(0, (s, room) => s + room.onlineCount);
+        final game = px(_gameC);
+        final movie = px(_movieC);
+        final music = px(_musicC);
+        final chatRect = Rect.fromLTWH(
+          0.043 * size.width,
+          _chatTop * size.height,
+          0.914 * size.width,
+          _chatHeight * size.height,
+        );
 
         return Stack(
           clipBehavior: Clip.none,
           children: [
+            // 蜂窝网格（活跃格 + 幽灵格）+ 星尘 + 底部渐隐
             Positioned.fill(
               child: CustomPaint(
-                painter: _ScenePainter(
+                painter: _HoneycombPainter(
                   size: size,
-                  centers: [game, movie, music],
+                  actives: [game, movie, music],
                   r: r,
-                  chatCenter: chat,
-                  chatR: chatR,
+                  fadeTop: _chatTop - 0.09,
                 ),
               ),
             ),
 
-            // Room icons (image asset, line-art fallback)
-            _icon(game, r, 0),
-            _icon(movie, r, 1),
-            _icon(music, r, 2),
+            // 房间插画（实心金 PNG；缺资源时回退绘制占位）
+            _icon(game, r, 0, scale: 0.74, dy: -0.07),
+            _icon(movie, r, 1, scale: 0.59, dy: 0),
+            _icon(music, r, 2, scale: 0.70, dy: -0.25),
 
-            // Global chat bubble cluster
-            _GlobalChat(center: chat, width: size.width),
+            // 房间标签（金色，位于六边形下部内侧；无计数徽章）
+            _label(game, r, ref.tr('space_room_game')),
+            _label(movie, r, ref.tr('space_room_movie')),
+            _label(music, r, ref.tr('space_room_music')),
 
-            // Labels + count badges
-            _label(game, r, ref.tr('space_room_game'), _count(0, 4)),
-            _label(movie, r, ref.tr('space_room_movie'), _count(1, 4)),
-            _label(music, r, ref.tr('space_room_music'), _count(3, 4)),
-            _label(chat, chatR, ref.tr('space_local_chat'), globalCount),
+            // 附近聊天：金色描边玻璃面板 + 气泡
+            Positioned.fromRect(
+              rect: chatRect,
+              child: _ChatPanel(title: ref.tr('space_local_chat')),
+            ),
 
-            // Single tap layer with point-in-region resolution. Rooms win
-            // over the chat cluster and the nearest octagon wins among
-            // rooms, so overlapping rectangles (landscape / short windows)
-            // can never steal each other's taps.
+            // 单击层：房间优先（最近六边形），其次聊天面板
             Positioned.fill(
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -98,8 +98,7 @@ class HiveRenderScene extends ConsumerWidget {
                   d.localPosition,
                   rooms: [(0, game), (1, movie), (3, music)],
                   r: r,
-                  chat: chat,
-                  cr: cr,
+                  chatRect: chatRect,
                 ),
               ),
             ),
@@ -109,21 +108,57 @@ class HiveRenderScene extends ConsumerWidget {
     );
   }
 
+  Widget _icon(Offset c, double r, int kind,
+      {required double scale, required double dy}) {
+    final hexW = r * math.sqrt(3); // 六边形平边宽
+    final s = hexW * scale;
+    return Positioned(
+      left: c.dx - s / 2,
+      top: c.dy - s / 2 + dy * r,
+      width: s,
+      height: s,
+      child: Image.asset(
+        _iconAsset[kind]!,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  Widget _label(Offset c, double r, String text) {
+    return Positioned(
+      left: c.dx - 100,
+      top: c.dy + 0.52 * r,
+      width: 200,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTextStyles.tt(
+          size: 11.5,
+          weight: FontWeight.w700,
+          color: AppColors.neonYellow,
+          letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+
   /// Maps a tap point to a region. Room indices follow the seeded rooms
-  /// list: 0 game, 1 cinema, 3 music — matching the label counts.
+  /// list: 0 game, 1 cinema, 3 music.
   void _resolveTap(
     Offset p, {
     required List<(int, Offset)> rooms,
     required double r,
-    required Offset chat,
-    required double cr,
+    required Rect chatRect,
   }) {
-    // 1) Octagon bodies — nearest center within the octagon's radius wins.
     int? best;
     var bestDist = double.infinity;
     for (final (index, c) in rooms) {
       final d = (p - c).distance;
-      if (d <= r * 1.05 && d < bestDist) {
+      if (d <= r * 1.02 && d < bestDist) {
         best = index;
         bestDist = d;
       }
@@ -132,154 +167,274 @@ class HiveRenderScene extends ConsumerWidget {
       onRoomTap?.call(best);
       return;
     }
-    // 2) Label rows (200px wide, 34px tall, right under each octagon).
-    for (final (index, c) in rooms) {
-      if ((p.dx - c.dx).abs() <= 100 &&
-          p.dy >= c.dy + r &&
-          p.dy <= c.dy + r + 34) {
-        onRoomTap?.call(index);
-        return;
-      }
-    }
-    // 3) Local chat cluster (octagon frame) + its label.
-    if ((p.dx - chat.dx).abs() <= 1.15 * cr &&
-        p.dy >= chat.dy - 1.1 * cr &&
-        p.dy <= chat.dy + 1.1 * cr + 40) {
+    if (chatRect.inflate(6).contains(p)) {
       onGlobalChatTap?.call();
     }
   }
-
-  Widget _icon(Offset c, double r, int kind) {
-    final s = r * 1.35;
-    return Positioned(
-      left: c.dx - s / 2,
-      top: c.dy - s / 2,
-      width: s,
-      height: s,
-      child: Image.asset(
-        _iconAsset[kind]!,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) =>
-            CustomPaint(painter: _IconPainter(kind)),
-      ),
-    );
-  }
-
-  Widget _label(Offset c, double r, String text, int count) {
-    return Positioned(
-      left: c.dx - 100,
-      top: c.dy + r + 8,
-      width: 200,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.tt(
-                size: 13,
-                weight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 0.6,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          _CountBadge(count),
-        ],
-      ),
-    );
-  }
 }
 
-class _CountBadge extends StatelessWidget {
-  final int count;
-  const _CountBadge(this.count);
+// ===========================================================================
+// Honeycomb painter — bg, stars, active + ghost hex cells, bottom fade
+// ===========================================================================
+
+class _HoneycombPainter extends CustomPainter {
+  final Size size;
+  final List<Offset> actives;
+  final double r;
+  final double fadeTop;
+
+  _HoneycombPainter({
+    required this.size,
+    required this.actives,
+    required this.r,
+    required this.fadeTop,
+  });
+
+  static const _bg = Color(0xFF050605);
+  static const _cellFill = Color(0xFF141212);
+  static const _gold = Color(0xFFFFC000);
+  static const _goldBright = Color(0xFFF0C56A);
+  static const _innerGlow = Color(0xFFD68D1F);
+
+  /// 圆角尖顶六边形路径。
+  Path _hexPath(Offset c, double radius, double corner) {
+    final pts = List.generate(6, (i) {
+      final a = -math.pi / 2 + i * math.pi / 3;
+      return Offset(c.dx + radius * math.cos(a), c.dy + radius * math.sin(a));
+    });
+    final path = Path();
+    for (var i = 0; i < 6; i++) {
+      final prev = pts[(i + 5) % 6];
+      final cur = pts[i];
+      final next = pts[(i + 1) % 6];
+      final inV = (cur - prev);
+      final outV = (next - cur);
+      final inDir = inV / inV.distance;
+      final outDir = outV / outV.distance;
+      final p1 = cur - inDir * corner;
+      final p2 = cur + outDir * corner;
+      if (i == 0) {
+        path.moveTo(p1.dx, p1.dy);
+      } else {
+        path.lineTo(p1.dx, p1.dy);
+      }
+      path.quadraticBezierTo(cur.dx, cur.dy, p2.dx, p2.dy);
+    }
+    return path..close();
+  }
+
+  void _cell(Canvas canvas, Offset c, double radius, double opacity) {
+    final path = _hexPath(c, radius, radius * 0.08);
+    canvas.drawPath(
+        path, Paint()..color = _cellFill.withValues(alpha: opacity));
+    // 顶部内侧金色柔光（近似设计稿 inner shadow #D68D1F @62%）
+    canvas.save();
+    canvas.clipPath(path);
+    canvas.drawRect(
+      Rect.fromLTWH(c.dx - radius, c.dy - radius, radius * 2, radius * 0.9),
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _innerGlow.withValues(alpha: 0.30 * opacity),
+            Colors.transparent,
+          ],
+        ).createShader(
+            Rect.fromLTWH(c.dx - radius, c.dy - radius, radius * 2, radius)),
+    );
+    canvas.restore();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.33
+        ..color = _gold.withValues(alpha: 0.85 * opacity),
+    );
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 20,
-      height: 20,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(colors: [Color(0xFFFFD98A), Color(0xFFE0951F)]),
-        shape: BoxShape.circle,
-      ),
-      child: Text(
-        count > 99 ? '99' : '$count',
-        style: AppTextStyles.tt(
-            size: 10, weight: FontWeight.w700, color: AppColors.ctaText),
-      ),
+  void paint(Canvas canvas, Size s) {
+    // 背景 + 顶部暖光
+    canvas.drawRect(
+      Offset.zero & s,
+      Paint()
+        ..shader = const RadialGradient(
+          center: Alignment(0, -0.2),
+          radius: 1.1,
+          colors: [Color(0xFF1C1403), Color(0xFF0A0803), _bg],
+          stops: [0.0, 0.55, 1.0],
+        ).createShader(Offset.zero & s),
+    );
+    _stars(canvas, s);
+
+    // 蜂窝网格：以 game 格为锚点铺设，活跃格满亮，其余 10% 幽灵格。
+    final anchor = actives[0];
+    final hexW = r * math.sqrt(3);
+    final pitchX = hexW + 0.028 * s.width; // 设计稿 155/375
+    final pitchY = 1.5 * r + 0.014 * s.width * 1.5; // 约 133.5/375 比例
+
+    final activeSet = actives.map((a) => '${a.dx.round()}_${a.dy.round()}')
+        .toSet();
+
+    for (var row = -1; row <= 3; row++) {
+      for (var col = -2; col <= 2; col++) {
+        final x = anchor.dx + col * pitchX + (row.isOdd ? pitchX / 2 : 0);
+        final y = anchor.dy + row * pitchY;
+        // 越界太多的跳过
+        if (x < -hexW || x > s.width + hexW || y > s.height + r) continue;
+        final key = '${x.round()}_${y.round()}';
+        if (activeSet.contains(key)) continue;
+        _cell(canvas, Offset(x, y), r, 0.10);
+      }
+    }
+    for (final c in actives) {
+      _cell(canvas, c, r, 1.0);
+    }
+
+    // 蜂巢向聊天面板渐隐
+    final fadeRect = Rect.fromLTWH(
+        0, fadeTop * s.height, s.width, 0.14 * s.height);
+    canvas.drawRect(
+      fadeRect,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [_bg.withValues(alpha: 0), _bg],
+        ).createShader(fadeRect),
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(0, fadeRect.bottom, s.width, s.height - fadeRect.bottom),
+      Paint()..color = _bg,
     );
   }
+
+  void _stars(Canvas canvas, Size s) {
+    final rnd = math.Random(11);
+    final paint = Paint();
+    for (var i = 0; i < 70; i++) {
+      final o = Offset(rnd.nextDouble() * s.width, rnd.nextDouble() * s.height);
+      paint.color =
+          _goldBright.withValues(alpha: 0.15 + rnd.nextDouble() * 0.5);
+      canvas.drawCircle(o, 0.5 + rnd.nextDouble() * 1.3, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HoneycombPainter old) =>
+      old.size != size || old.r != r;
 }
 
 // ===========================================================================
-// Global chat bubble cluster
+// Chat panel — gold-chrome glass card with dark-glass bubbles
 // ===========================================================================
 
-class _GlobalChat extends StatelessWidget {
-  final Offset center;
-  final double width;
-  const _GlobalChat({required this.center, required this.width});
+class _ChatPanel extends StatelessWidget {
+  final String title;
+  const _ChatPanel({required this.title});
 
-  static const _bubbles = <(double, double, String, bool)>[
-    (-0.5, -0.6, '你好', false),
-    (-0.02, -0.72, 'HI', true),
-    (0.45, -0.56, 'Hello', false),
-    (-0.72, -0.2, '你好', true),
-    (-0.28, -0.24, '英语', true),
-    (0.14, -0.26, '😊', true),
-    (0.6, -0.18, 'Bonjour', true),
-    (-0.5, 0.18, 'Hola', false),
-    (-0.06, 0.14, '😐', false),
-    (0.34, 0.12, 'Hello', false),
-    (0.7, 0.2, 'Ciao', true),
-    (-0.28, 0.54, 'Konnichiwa', false),
-    (0.26, 0.52, 'Bonjour', true),
-    (0.66, 0.56, 'Privet', false),
+  /// (dx, dy) 相对面板中心（单位：面板半宽/半高）。
+  static const _bubbles = <(double, double, String)>[
+    (-0.66, -0.42, '你好'),
+    (-0.10, -0.55, 'HI'),
+    (0.48, -0.45, 'Hello'),
+    (-0.72, 0.02, '你好'),
+    (-0.28, -0.08, '英语'),
+    (0.12, -0.10, '😊'),
+    (0.62, -0.05, 'Bonjour'),
+    (-0.50, 0.36, 'Hola'),
+    (-0.05, 0.30, '😐'),
+    (0.36, 0.28, 'Hello'),
+    (0.72, 0.40, 'Ciao'),
+    (-0.28, 0.68, 'Konnichiwa'),
+    (0.24, 0.66, 'Bonjour'),
+    (0.66, 0.72, 'Privet'),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final cr = 0.27 * width;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        for (final b in _bubbles)
-          Positioned(
-            left: center.dx + b.$1 * cr,
-            top: center.dy + b.$2 * cr,
-            child: FractionalTranslation(
-              translation: const Offset(-0.5, -0.5),
-              child: _ChatBubble(text: b.$3, filled: b.$4),
-            ),
-          ),
-      ],
+    return CustomPaint(
+      foregroundPainter: const GoldCardBorderPainter(),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(7),
+          color: AppColors.cardSurface,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final w = c.maxWidth;
+            final h = c.maxHeight;
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // 顶部金色径向微光
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0, -1.05),
+                        radius: 1.0,
+                        colors: [
+                          const Color(0xFFFFC000).withValues(alpha: 0.10),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // 标题
+                Positioned(
+                  top: 0.055 * h,
+                  left: 0,
+                  right: 0,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.tt(
+                      size: 10,
+                      weight: FontWeight.w700,
+                      color: AppColors.neonYellow,
+                      letterSpacing: 2.2,
+                    ),
+                  ),
+                ),
+                // 气泡（统一暗玻璃 + 金描边）
+                for (final b in _bubbles)
+                  Positioned(
+                    left: w / 2 + b.$1 * (w / 2) * 0.86,
+                    top: h * 0.56 + b.$2 * (h / 2) * 0.72,
+                    child: FractionalTranslation(
+                      translation: const Offset(-0.5, -0.5),
+                      child: _GlassBubble(text: b.$3),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }
 
-class _ChatBubble extends StatelessWidget {
+class _GlassBubble extends StatelessWidget {
   final String text;
-  final bool filled;
-  const _ChatBubble({required this.text, required this.filled});
+  const _GlassBubble({required this.text});
 
   @override
   Widget build(BuildContext context) {
     final emoji = text.runes.length == 1 && text.codeUnitAt(0) > 0x2000;
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: emoji ? 7 : 9, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: emoji ? 6 : 9, vertical: 4.5),
       decoration: BoxDecoration(
-        color: filled ? const Color(0xFFE7A83A) : const Color(0xFF161206),
-        borderRadius: BorderRadius.circular(12),
-        border: filled
-            ? null
-            : Border.all(color: AppColors.neonYellow.withValues(alpha: 0.6)),
+        color: const Color(0xFF1D1909).withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(
+          color: const Color(0xFFD68D1F).withValues(alpha: 0.55),
+          width: 0.8,
+        ),
       ),
       child: Text(
         text,
@@ -288,237 +443,9 @@ class _ChatBubble extends StatelessWidget {
             : AppTextStyles.tt(
                 size: 11,
                 weight: FontWeight.w700,
-                color: filled ? AppColors.ctaText : AppColors.neonYellow,
+                color: AppColors.neonYellow,
               ),
       ),
     );
   }
-}
-
-// ===========================================================================
-// Scene painter — starfield + octagon outlines
-// ===========================================================================
-
-class _ScenePainter extends CustomPainter {
-  final Size size;
-  final List<Offset> centers;
-  final double r;
-  final Offset chatCenter;
-  final double chatR;
-
-  _ScenePainter({
-    required this.size,
-    required this.centers,
-    required this.r,
-    required this.chatCenter,
-    required this.chatR,
-  });
-
-  static const _gold = Color(0xFFD9A63A);
-  static const _goldBright = Color(0xFFF0C56A);
-
-  @override
-  void paint(Canvas canvas, Size s) {
-    canvas.drawRect(
-      Offset.zero & s,
-      Paint()
-        ..shader = const RadialGradient(
-          center: Alignment(0, -0.2),
-          radius: 1.1,
-          colors: [Color(0xFF1C1403), Color(0xFF0A0803), Color(0xFF050403)],
-          stops: [0.0, 0.55, 1.0],
-        ).createShader(Offset.zero & s),
-    );
-    _stars(canvas, s);
-    for (final c in centers) {
-      _octagonRoom(canvas, c, r);
-    }
-    // 附近聊天区外框（同款八边形描边）
-    _octagonRoom(canvas, chatCenter, chatR);
-  }
-
-  void _stars(Canvas canvas, Size s) {
-    final rnd = math.Random(11);
-    final paint = Paint();
-    for (var i = 0; i < 70; i++) {
-      final o = Offset(rnd.nextDouble() * s.width, rnd.nextDouble() * s.height);
-      paint.color = _goldBright.withValues(alpha: 0.15 + rnd.nextDouble() * 0.5);
-      canvas.drawCircle(o, 0.5 + rnd.nextDouble() * 1.3, paint);
-    }
-  }
-
-  void _octagonRoom(Canvas canvas, Offset c, double radius) {
-    final path = Path();
-    for (var i = 0; i < 8; i++) {
-      final a = math.pi / 8 + i * math.pi / 4;
-      final p = Offset(c.dx + radius * math.cos(a), c.dy + radius * math.sin(a));
-      i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
-    }
-    path.close();
-    canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 6
-        ..color = _gold.withValues(alpha: 0.12)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-    );
-    canvas.drawPath(
-      path,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6
-        ..color = _gold.withValues(alpha: 0.85),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _ScenePainter old) => old.size != size;
-}
-
-// ===========================================================================
-// Line-art icon fallback (used until image assets are supplied)
-// ===========================================================================
-
-class _IconPainter extends CustomPainter {
-  final int kind; // 0 game, 1 movie, 2 music
-  const _IconPainter(this.kind);
-
-  static const _goldBright = Color(0xFFF0C56A);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final c = Offset(size.width / 2, size.height / 2);
-    final k = size.width * 0.42;
-    final line = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.4
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..color = _goldBright;
-    switch (kind) {
-      case 1:
-        _movie(canvas, c, k, line);
-        break;
-      case 2:
-        _music(canvas, c, k, line);
-        break;
-      default:
-        _joystick(canvas, c, k, line);
-    }
-  }
-
-  void _joystick(Canvas canvas, Offset c, double k, Paint line) {
-    final top = Path()
-      ..moveTo(c.dx - 0.55 * k, c.dy + 0.35 * k)
-      ..lineTo(c.dx, c.dy + 0.12 * k)
-      ..lineTo(c.dx + 0.55 * k, c.dy + 0.35 * k)
-      ..lineTo(c.dx, c.dy + 0.58 * k)
-      ..close();
-    canvas.drawPath(top, line);
-    canvas.drawLine(c.translate(-0.55 * k, 0.35 * k),
-        c.translate(-0.55 * k, 0.5 * k), line);
-    canvas.drawLine(c.translate(0, 0.58 * k), c.translate(0, 0.73 * k), line);
-    canvas.drawLine(c.translate(0.55 * k, 0.35 * k),
-        c.translate(0.55 * k, 0.5 * k), line);
-    canvas.drawPath(
-      Path()
-        ..moveTo(c.dx - 0.55 * k, c.dy + 0.5 * k)
-        ..lineTo(c.dx, c.dy + 0.73 * k)
-        ..lineTo(c.dx + 0.55 * k, c.dy + 0.5 * k),
-      line,
-    );
-    canvas.drawLine(
-        c.translate(-0.02 * k, 0.32 * k), c.translate(-0.1 * k, -0.4 * k), line);
-    canvas.drawCircle(c.translate(-0.12 * k, -0.52 * k), 0.14 * k, line);
-    canvas.drawOval(
-        Rect.fromCenter(
-            center: c.translate(0.24 * k, 0.4 * k),
-            width: 0.16 * k,
-            height: 0.09 * k),
-        line);
-    canvas.drawOval(
-        Rect.fromCenter(
-            center: c.translate(0.36 * k, 0.46 * k),
-            width: 0.16 * k,
-            height: 0.09 * k),
-        line);
-  }
-
-  void _movie(Canvas canvas, Offset c, double k, Paint line) {
-    final bc = c.translate(-0.32 * k, 0.12 * k);
-    canvas.drawRRect(
-        RRect.fromRectAndRadius(
-            Rect.fromCenter(center: bc, width: 0.9 * k, height: 0.6 * k),
-            Radius.circular(0.05 * k)),
-        line);
-    canvas.drawPath(
-      Path()
-        ..moveTo(bc.dx - 0.45 * k, bc.dy - 0.3 * k)
-        ..lineTo(bc.dx + 0.45 * k, bc.dy - 0.42 * k)
-        ..lineTo(bc.dx + 0.45 * k, bc.dy - 0.24 * k)
-        ..lineTo(bc.dx - 0.45 * k, bc.dy - 0.12 * k)
-        ..close(),
-      line,
-    );
-    for (var i = 0; i < 3; i++) {
-      final t = -0.3 + i * 0.28;
-      canvas.drawLine(bc.translate(t * k, -0.3 * k),
-          bc.translate((t + 0.08) * k, -0.16 * k), line);
-    }
-    final rc = c.translate(0.34 * k, 0.16 * k);
-    canvas.drawCircle(rc, 0.4 * k, line);
-    canvas.drawCircle(rc, 0.12 * k, line);
-    for (var i = 0; i < 4; i++) {
-      final a = i * math.pi / 2 + math.pi / 4;
-      canvas.drawCircle(
-          rc.translate(0.24 * k * math.cos(a), 0.24 * k * math.sin(a)),
-          0.07 * k,
-          line);
-    }
-  }
-
-  void _music(Canvas canvas, Offset c, double k, Paint line) {
-    final hc = c.translate(-0.12 * k, 0.05 * k);
-    canvas.drawArc(
-        Rect.fromCenter(center: hc, width: 0.9 * k, height: 0.85 * k),
-        math.pi,
-        math.pi,
-        false,
-        line);
-    for (final side in [-1.0, 1.0]) {
-      canvas.drawRRect(
-          RRect.fromRectAndRadius(
-              Rect.fromCenter(
-                  center: hc.translate(side * 0.45 * k, 0.12 * k),
-                  width: 0.2 * k,
-                  height: 0.34 * k),
-              Radius.circular(0.08 * k)),
-          line);
-    }
-    final nc = c.translate(0.38 * k, -0.24 * k);
-    canvas.drawOval(
-        Rect.fromCenter(
-            center: nc.translate(-0.12 * k, 0.34 * k),
-            width: 0.2 * k,
-            height: 0.15 * k),
-        line);
-    canvas.drawOval(
-        Rect.fromCenter(
-            center: nc.translate(0.24 * k, 0.24 * k),
-            width: 0.2 * k,
-            height: 0.15 * k),
-        line);
-    canvas.drawLine(nc.translate(-0.03 * k, 0.32 * k),
-        nc.translate(-0.03 * k, -0.28 * k), line);
-    canvas.drawLine(nc.translate(0.33 * k, 0.22 * k),
-        nc.translate(0.33 * k, -0.38 * k), line);
-    canvas.drawLine(
-        nc.translate(-0.03 * k, -0.28 * k),
-        nc.translate(0.33 * k, -0.38 * k),
-        line..strokeWidth = 3);
-  }
-
-  @override
-  bool shouldRepaint(covariant _IconPainter old) => old.kind != kind;
 }

@@ -45,11 +45,11 @@ void main() {
       ),
     );
 
-    const w = 400.0, h = 800.0; // logical size
-    await tester.tapAt(const Offset(0.27 * w, 0.18 * h)); // game
-    await tester.tapAt(const Offset(0.73 * w, 0.18 * h)); // movie
-    await tester.tapAt(const Offset(0.5 * w, 0.42 * h)); // music
-    await tester.tapAt(const Offset(0.5 * w, 0.79 * h)); // global chat
+    const w = 400.0, h = 800.0; // logical size (Hive.svg honeycomb layout)
+    await tester.tapAt(const Offset(0.486 * w, 0.153 * h)); // game
+    await tester.tapAt(const Offset(0.279 * w, 0.368 * h)); // movie
+    await tester.tapAt(const Offset(0.692 * w, 0.368 * h)); // music
+    await tester.tapAt(const Offset(0.5 * w, 0.75 * h)); // local chat panel
     await tester.pump();
 
     expect(tapped, [0, 1, 3],
@@ -84,8 +84,8 @@ void main() {
     );
 
     const w = 800.0, h = 400.0;
-    await tester.tapAt(const Offset(0.5 * w, 0.42 * h)); // music center
-    await tester.tapAt(const Offset(0.27 * w, 0.18 * h)); // game center
+    await tester.tapAt(const Offset(0.692 * w, 0.368 * h)); // music center
+    await tester.tapAt(const Offset(0.486 * w, 0.153 * h)); // game center
     await tester.pump();
 
     expect(tapped, [3, 0],
