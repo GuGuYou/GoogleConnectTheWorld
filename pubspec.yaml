@@ -107,6 +107,7 @@ flutter:
     - assets/images/placeholders/
     - assets/data/
     - assets/avatars/
+    - assets/avatars_1/
     - secrets/google_maps_api_key.json
 
   fonts:

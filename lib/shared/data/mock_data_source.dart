@@ -7,8 +7,8 @@ import '../models/activity.dart';
 import '../models/ip_tag.dart';
 import '../models/message.dart';
 import '../models/user.dart';
-import '../models/virtual_avatar.dart';
 import '../models/board.dart';
+import 'preset_avatars.dart';
 
 /// 全局 Mock 数据源（单例）。所有页面数据均来源于此。
 /// 切换真实后端时只需替换为 RemoteDataSource，业务层零改动。
@@ -77,7 +77,7 @@ class MockDataSource {
       id: 'me',
       nickname: 'NeonDrifter',
       avatarSeed: 'me_seed_42',
-      virtualAvatar: VirtualAvatar.seeded('me_seed_42'),
+      virtualAvatar: PresetAvatars.asVirtualAvatar('me_seed_42'),
       bio: '',
       tags: [tags[0], tags[3], tags[5], tags[9]],
       lat: meFuzzed.lat,
@@ -149,21 +149,13 @@ class MockDataSource {
       final rawLat = _activeLat + (_rnd.nextDouble() - 0.5) * 0.1;
       final rawLng = _activeLng + (_rnd.nextDouble() - 0.5) * 0.1;
       final fuzzed = GpsFuzzer.fuzzSeeded(rawLat, rawLng, 100 + i);
+      final seed = 'seed_$i';
       users.add(
         UserProfile(
           id: 'u$i',
           nickname: _names[i % _names.length] + (i >= _names.length ? '${i ~/ _names.length}' : ''),
-          avatarSeed: 'seed_$i',
-          virtualAvatar: VirtualAvatar(
-            source: AvatarSource.local,
-            style: AvatarVisualStyle.cute,
-            seed: 'seed_$i',
-            colorIndex: i % 6,
-            faceIndex: i % 3,
-            eyeIndex: (i ~/ 2) % 4,
-            mouthIndex: (i ~/ 3) % 4,
-            accessoryIndex: i % 5,
-          ),
+          avatarSeed: seed,
+          virtualAvatar: PresetAvatars.asVirtualAvatar(seed),
           bio: _bios[i % _bios.length],
           tags: userTags,
           lat: fuzzed.lat,

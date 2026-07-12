@@ -1,22 +1,33 @@
-/// 预设头像库（图片来自 DiceBear，已下载到 assets/avatars）。
-/// 通过 seed 稳定映射到一张预设头像，让头像更生动、产品更吸引人。
+import '../models/virtual_avatar.dart';
+
+/// 预设头像库（mock / 演示用户照片，位于 assets/avatars_1）。
+/// 通过 seed 稳定映射到一张预设头像。
 class PresetAvatars {
   PresetAvatars._();
 
-  static const int count = 16;
+  static const int count = 7;
 
   /// 所有预设头像资源路径
   static final List<String> all = List.generate(
     count,
-    (i) => 'assets/avatars/avatar_${(i + 1).toString().padLeft(2, '0')}.png',
+    (i) => 'assets/avatars_1/avatar-${i + 1}.png',
   );
 
-  /// 根据 seed 稳定取一张预设头像
+  /// 根据 seed 稳定取一张预设头像路径
   static String fromSeed(String seed) {
     final idx = seed.hashCode.abs() % count;
     return all[idx];
   }
 
+  /// 根据 seed 生成带照片的 [VirtualAvatar]（供 mock 用户使用）
+  static VirtualAvatar asVirtualAvatar(String seed) {
+    final base = VirtualAvatar.seeded(seed);
+    return base.copyWith(
+      source: AvatarSource.photo,
+      generatedImageUrl: 'asset:${fromSeed(seed)}',
+    );
+  }
+
   /// 资源路径 -> 是否合法预设
-  static bool isPreset(String path) => path.startsWith('assets/avatars/');
+  static bool isPreset(String path) => path.startsWith('assets/avatars_1/');
 }
