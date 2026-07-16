@@ -94,17 +94,10 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/ui/
-    - assets/images/backgrounds/
-    - assets/images/banners/
-    - assets/images/icons/
     - assets/images/decorations/
     - assets/images/branding/
-    - assets/images/splash/
-    - assets/images/onboarding/
     - assets/images/avatars/
     - assets/images/avatars/parts/
-    - assets/images/placeholders/
     - assets/data/
     - assets/avatars/
     - assets/avatars_1/
