@@ -26,6 +26,7 @@ class AvatarDraftNotifier extends Notifier<VirtualAvatar> {
   void setPresetAvatar(String assetPath) {
     state = state.copyWith(
       source: AvatarSource.photo,
+      seed: 'preset_avatar:$assetPath',
       generatedImageUrl: 'asset:$assetPath',
     );
   }

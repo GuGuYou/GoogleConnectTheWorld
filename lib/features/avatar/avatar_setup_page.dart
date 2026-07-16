@@ -9,8 +9,8 @@ import '../../core/l10n/app_text.dart';
 import '../../core/providers/avatar_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../shared/data/preset_avatars.dart';
 import '../../shared/data/repositories.dart';
-import '../../shared/models/virtual_avatar.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/gradient_text.dart';
 import '../../shared/widgets/neon_background.dart';
@@ -94,9 +94,19 @@ class AvatarSetupPage extends ConsumerWidget {
                             desc: ref.tr('avatar_cute_desc'),
                             primary: true,
                             onTap: () {
-                              ref
-                                  .read(avatarDraftProvider.notifier)
-                                  .setStyle(AvatarVisualStyle.cute);
+                              final currentAvatar = ref.read(currentUserProvider).virtualAvatar;
+                              final imageUrl = currentAvatar?.generatedImageUrl;
+                              final isUserPreset = currentAvatar?.seed.startsWith('preset_avatar:') ?? false;
+                              final presetPath = imageUrl != null && imageUrl.startsWith('asset:')
+                                  ? imageUrl.substring('asset:'.length)
+                                  : null;
+                              if (isUserPreset && presetPath != null && PresetAvatars.isPreset(presetPath)) {
+                                ref.read(avatarDraftProvider.notifier).applyGenerated(currentAvatar!);
+                              } else {
+                                ref
+                                    .read(avatarDraftProvider.notifier)
+                                    .setPresetAvatar('assets/avatars_1/avatar-1.jpg');
+                              }
                               context.push(_next('/avatar-customize'));
                             },
                           ),
